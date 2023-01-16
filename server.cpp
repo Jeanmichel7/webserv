@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/13 14:22:43 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/16 12:28:23 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,30 +20,31 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-int main(int argc, char **argv, char **env)
+int main( void )
 {
 	struct sockaddr_in interface;
 	
-	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	interface.sin_addr.s_addr = htonl(INADDR_ANY);
 	interface.sin_port = htons(80);
-	memset(interface.sin_zero, '\0', sizeof interface.sin_zero);
+	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	bind(socket_fd, (const struct sockaddr *)&interface, sizeof(interface));
 	listen(socket_fd, 5);
-	int fd = open("test.html", O_RDWR);
-	char test[10000] = {0};
-	read(fd, &test, 10000);
-	int len = strlen(test);
 	while(1)
 	{
+		int fd = open("test.html", O_RDWR);
+		char test[550] = {0};
+		read(fd, &test, 550);
 		char buffer[1024] = {0};
+
+		
 		printf("\n+++++++ Waiting for new connection ++++++++\n\n");
 		int listen_socket = accept(socket_fd, (struct sockaddr *)&interface, (socklen_t *)&interface);
 		read(listen_socket, buffer, 1024);
-		printf("%s\n", buffer);
 		
-		write(listen_socket, test, len);
+		printf("%s\n", buffer);
+		write(listen_socket, test, 550);
 		printf("------------------Hello message sent-------------------\n");
 		close(listen_socket);
+		close(fd);
 	}
 }

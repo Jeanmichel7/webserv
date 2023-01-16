@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 13:43:13 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/13 13:53:40 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/14 13:35:12 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,14 +18,13 @@
 #include <stdio.h>
 #include <string.h>
 
-int main(int argc, char **argv, char **env)
+int main(int argc, char **argv)
 {
 	struct sockaddr_in interface;
 	char buffer[1024];
 	char test[] = "Hello from client\n";
 	
 	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-	memset(&interface.sin_addr, '\0', sizeof interface.sin_addr);
 	interface.sin_family = AF_INET;
 	interface.sin_port = htons(80);
 	if(inet_pton(AF_INET, "127.0.0.1", &interface.sin_addr) <= 0)
@@ -42,7 +41,7 @@ int main(int argc, char **argv, char **env)
 		send(socket_fd , test , strlen(test) , 0);
 	else
 		send(socket_fd , argv[1] , strlen(argv[1]) , 0);
-	int valread = read( socket_fd , buffer, 1024);
+	read( socket_fd , buffer, 1024);
 	printf("%s\n",buffer );
 	return 0;
 }
