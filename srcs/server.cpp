@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/16 12:28:23 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/19 12:25:13 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,12 +26,17 @@ int main( void )
 	
 	interface.sin_addr.s_addr = htonl(INADDR_ANY);
 	interface.sin_port = htons(80);
+	
+	
 	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	
 	bind(socket_fd, (const struct sockaddr *)&interface, sizeof(interface));
+	
 	listen(socket_fd, 5);
+
 	while(1)
 	{
-		int fd = open("test.html", O_RDWR);
+		int fd = open("srcs/site/test.html", O_RDWR);
 		char test[550] = {0};
 		read(fd, &test, 550);
 		char buffer[1024] = {0};

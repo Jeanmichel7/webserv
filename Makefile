@@ -6,7 +6,7 @@
 #    By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/01/16 12:29:52 by lomasson         ###   ########.fr        #
+#    Updated: 2023/01/16 13:57:58 by lomasson         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,9 +18,9 @@ CC = c++
 
 CFLAGS = -Wall -Werror -Wextra -std=c++98 -g3
 
-SRCS_CLIENT = client.cpp
+SRCS_CLIENT = srcs/client.cpp
 
-SRCS_SERVER = server.cpp
+SRCS_SERVER = srcs/server.cpp
 
 OBJS_CLIENT = $(SRCS_CLIENT:%.cpp=%.o)
 

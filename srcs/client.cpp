@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 13:43:13 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/14 13:35:12 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/19 12:19:58 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,8 @@ int main(int argc, char **argv)
 	char buffer[1024];
 	char test[] = "Hello from client\n";
 	
-	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
+	
 	interface.sin_family = AF_INET;
 	interface.sin_port = htons(80);
 	if(inet_pton(AF_INET, "127.0.0.1", &interface.sin_addr) <= 0)
