@@ -1,62 +1,53 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   request.hpp                                        :+:      :+:    :+:   */
+/*   settings.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/16 14:00:16 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/18 12:29:45 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/20 14:12:02 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef REQUEST_HPP
-# define REQUEST_HPP
+#ifndef SETTINGS_HPP
+# define SETTINGS_HPP
 
 # include <iostream>
 # include <sys/socket.h>
 # include <sys/types.h>
 # include <netinet/ip.h>
 # include <arpa/inet.h>
+# include <string>
+# include <sys/stat.h>
+# include <fcntl.h>
+# include <unistd.h>
+# include <stdio.h>
+# include <string.h>
+# include "Config.hpp"
+# include <exception>
+# include <ctime>
 # include <cstring>
+# include <vector>
+# include <sstream>
+# include <sys/event.h>
 
-class request
+class settings
 {
-	private:
-	protected:
 	public:
-		request();
-		request(request const& base);
-		~request();
-		request& operator =(request const& base);
+		struct	sockaddr_in interface;
+		int	build();
+		std::string	get(Config const& config);
+		int	settings::execute_cgi(std::string path);
+		std::string	date( void );
+		settings();
+		~settings();
+		class badCreation : public std::exception
+		{
+			virtual const char* what() const throw(){
+				return ("settings::ErrorCreationInterfaceNetwork");
+			}
+		};
 };
-
-typedef struct	s_methods
-{
-	bool	isget;
-	bool	ispost;
-	bool	isdelete;
-} t_methods;
-
-class Location
-{
-	public:
-		t_methods	_methods;
-		std::string	root;
-}
-
-
-class Config_data
-{
-	public:
-		Config_data();
-		std::string server_name;
-		int					port; 
-		uint32_t		ip;
-		t_methods	methods;
-		std::string	root;
-		std::string index;
-		std::vector<location> location_tab;
-}
 
 #endif

@@ -1,3 +1,5 @@
 client
 server
 *.o
+.vscode
+test.cpp
