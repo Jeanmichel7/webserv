@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/24 15:21:43 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/24 17:33:42 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,22 +52,19 @@ typedef struct s_methods
 class Request
 {
 public:
-	typedef std::vector<std::pair<std::string, std::string> > 						t_accept;
-	typedef std::vector<std::pair<std::string, std::string> >::iterator 	t_accept_it;
-
+	typedef std::vector< std::pair< std::string, std::string > > 						t_accept;
+	typedef std::vector< std::pair< std::string, std::string > >::iterator 	t_accept_it;
 	typedef std::vector< t_language > 																		t_language;
 	typedef std::vector< t_language >::iterator 													t_language_it;
-
 	typedef std::vector< std::pair< std::string, int > > 									t_encoding;
 	typedef std::vector< std::pair< std::string, int > >::iterator 				t_encoding_it;
-
 
 	Request();
 	Request(Request const& src);
 	~Request();
 	Request &operator= (Request const& src);
-
-	Request parse(char* brut_request);
+	
+	void parse(char* brut_request);
 
 	void setMethod(std::string str_method) {
 		if (str_method == "GET")
@@ -77,7 +74,6 @@ public:
 		else if (str_method == "DELETE")
 			method.isDelete = true;
 	}
-
 
 	t_methods			method;
 	std::string   str_method;
