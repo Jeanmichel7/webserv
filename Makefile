@@ -6,7 +6,7 @@
 #    By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/01/24 15:23:42 by jrasser          ###   ########.fr        #
+#    Updated: 2023/01/24 15:52:58 by jrasser          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,10 +18,11 @@ END						= \033[0m
 CHECK 				= ✓
 
 SRCS_CLIENT 	= srcs/client.cpp
-SRCS_SERVER 	= srcs/Config.cpp \
-								srcs/Request.cpp \
+SRCS_SERVER 	= srcs/server.cpp \
 								srcs/Settings.cpp \
-								srcs/server.cpp \
+								srcs/Config.cpp \
+								srcs/Request.cpp \
+								
 								
 
 NAME_CLIENT 	= client
