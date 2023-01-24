@@ -3,34 +3,35 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/24 14:27:56 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/24 15:39:58 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "includes/settings.hpp"
-#include "includes/Config.hpp"
+#include "server.hpp"
+// #include "Settings.hpp"
+// #include "Config.hpp"
 
 
 int main( void )
 {
-	// Config			config;
-	settings		server;
+	// Config			config();
+	Settings		server;
 	int				socket_server;
 	int				timeout = 0;
 	struct kevent	srv;
 	
 
 	int ke = kqueue();
-	int fd = open("srcs/site/test.html", O_RDWR);
+	int fd = open("http/index.html", O_RDWR);
 	try
 	{
 		socket_server = server.build();
 		EV_SET(&srv, socket_server, EVFILT_READ | EVFILT_WRITE , EV_ADD | EV_ENABLE, 0, 0, NULL);
 		if (socket_server == -1 || ke == -1 || listen(socket_server, 10) == -1 || kevent(ke, &srv, 1, NULL, 0, NULL) == -1)
-			throw settings::badCreation();
+			throw Settings::badCreation();
 		char test[550] = {0};
 		read(fd, &test, 550);
 		while(1)
@@ -47,7 +48,11 @@ int main( void )
 			{
 				int socket_client = accept(socket_server, (struct sockaddr *)&server.interface, (socklen_t *)&server.interface);
 				read(socket_client, buffer, 1024);
-				
+
+
+
+
+
 				printf("%s\n", buffer);
 				close(socket_client);
 				write(socket_client, test, 550);
@@ -67,7 +72,6 @@ int main( void )
 
 
 /* PLAN
-
 Si GET:
 	recuperer le lien vers la ressource voulu
 	verifier son existence
@@ -86,8 +90,4 @@ Si DELETE:
 	recuperer la cible
 	verifier l'existence du fichier
 	supprimer la cible
-
-
-
-
 */

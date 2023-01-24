@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/24 14:25:55 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/24 15:25:05 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "includes/settings.hpp"
+#include "Settings.hpp"
 
-int	settings::build()
+int	Settings::build()
 {
 	int	socket_fd;
 	
@@ -26,7 +26,7 @@ int	settings::build()
 	return (socket_fd);
 }
 
-std::string	settings::date( void )
+std::string	Settings::date( void )
 {
 	time_t tmm = time(0);
 	std::string rdate, s, tmp;
@@ -42,12 +42,16 @@ std::string	settings::date( void )
 	return (rdate);
 }
 
-int	settings::execute_cgi(std::string path)
-{
+// int	Settings::execute_cgi(std::string path)
+// {
 	
-}
+// }
 
-// std::string	settings::get(Config const& config)
+// std::string	Settings::get(Config const& config) {
+
+// }
+
+// std::string	Settings::get(Config const& config)
 // {
 // 	std::string	reponse = "HTTP/1.1";
 // 	int fd = open(config.getFile("srcs/site/test.html").c_str(), O_RDONLY);
@@ -60,16 +64,16 @@ int	settings::execute_cgi(std::string path)
 // 	}
 // 	else
 // 		reponse.append(" 200 OK\n");
-// 	reponse += settings::date() + "\nserver: WebServ";
+// 	reponse += Settings::date() + "\nserver: WebServ";
 	
 // 	return (reponse);
 // }
 
-settings::settings()
+Settings::Settings()
 {
 			
 }
-settings::~settings()
+Settings::~Settings()
 {
 			
 }

@@ -3,52 +3,66 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+         #
+#    By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/01/24 11:15:09 by lomasson         ###   ########.fr        #
+#    Updated: 2023/01/24 15:23:42 by jrasser          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME_CLIENT = client
+BLU						= \033[0;34m
+GRN						= \033[0;32m
+RED						= \033[0;31m
+RST						= \033[2K\r
+END						= \033[0m
+CHECK 				= ✓
 
-NAME_SERVER = server
+SRCS_CLIENT 	= srcs/client.cpp
+SRCS_SERVER 	= srcs/Config.cpp \
+								srcs/Request.cpp \
+								srcs/Settings.cpp \
+								srcs/server.cpp \
+								
 
-CC = c++
+NAME_CLIENT 	= client
+NAME_SERVER 	= server
 
-CFLAGS = -Wall -Werror -Wextra -std=c++98 -g3
+OBJS_DIR			= objs/
+OBJS_CLIENT		= $(addprefix $(OBJS_DIR), $(notdir $(SRCS_CLIENT:.cpp=.o)))
+OBJS_SERVER		= $(addprefix $(OBJS_DIR), $(notdir $(SRCS_SERVER:.cpp=.o)))
 
-SRCS_CLIENT = srcs/client.cpp
+RM						= @rm -rf
+CC 						= g++
 
-SRCS_SERVER = srcs/server.cpp srcs/settings.cpp
+CFLAGS 				= -Wall -Wextra -std=c++98
+CPPFLAGS			= -I./includes
+DEBEUG 				= -g3 -fsanitize=address
 
-OBJS_CLIENT = $(SRCS_CLIENT:%.cpp=%.o)
+all: $(NAME_SERVER) $(NAME_CLIENT)
 
-OBJS_SERVER = $(SRCS_SERVER:%.cpp=%.o)
+objs/%.o: srcs/*%.cpp
+		@mkdir -p $(OBJS_DIR)
+		@${CC} $(CPPFLAGS) -o $@ -c $< ${CFLAGS} ${DEBEUG}
+		@printf	"$(RST) ${BLU}$ [BUILD]${RST} '$<' $(END)"
 
-.PHONY: all
-
-all: $(NAME_CLIENT) $(NAME_SERVER)
-
-%.o: %.cpp
-		$(CC) -c $(CFLAGS) $< -o $@
 
 $(NAME_CLIENT): $(OBJS_CLIENT)
-		$(CC) $(CFLAGS) $(OBJS_CLIENT) -o $@
-		@printf "\n\033[0;32mExecutable name: ./$(NAME_CLIENT)\033[0;32m\n"
+		@$(CC) $(OBJS_CLIENT) -o $@ $(CFLAGS) ${DEBEUG}
+		@echo "$(RST) $(GRN)[Compiled] $(END)	./$(NAME_CLIENT)	$(CHECK) "
 		
 $(NAME_SERVER): $(OBJS_SERVER)
-		$(CC) $(CFLAGS) $(OBJS_SERVER) -o $@
-		@printf "\n\033[0;32mExecutable name: ./$(NAME_SERVER)\033[0;32m\n"
-		
-.PHONY: clean fclean re
+		@$(CC) $(OBJS_SERVER) -o $@ $(CFLAGS) ${DEBEUG}
+		@echo "$(RST) $(GRN)[Compiled]$(END)	./$(NAME_SERVER)	$(CHECK)"
+
 
 clean:
-		rm -f $(OBJS_CLIENT)
-		rm -f $(OBJS_SERVER)
+		${RM} $(OBJS_CLIENT) $(OBJS_SERVER)
+		@echo "$(GRN) [Clean]$(END)	$(CHECK)"
 
 fclean: clean
-		rm -f $(NAME_CLIENT)
-		rm -f $(NAME_SERVER)
+		${RM} $(NAME_CLIENT) $(NAME_SERVER) $(OBJS_DIR)
+		@echo "$(GRN) [Fclean]$(END)	$(CHECK)"
 
 re: fclean all
+
+.PHONY: all clean fclean re

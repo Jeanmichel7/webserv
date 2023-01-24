@@ -3,20 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 13:43:13 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/19 12:19:58 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/24 15:27:48 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
+#include "client.hpp"
 
 int main(int argc, char **argv)
 {
