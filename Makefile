@@ -6,7 +6,7 @@
 #    By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/01/24 19:38:53 by jrasser          ###   ########.fr        #
+#    Updated: 2023/01/25 18:29:25 by jrasser          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,7 +22,6 @@ SRCS_SERVER 	= srcs/server.cpp \
 								srcs/Settings.cpp \
 								srcs/Config.cpp \
 								srcs/Request.cpp \
-								
 								
 
 NAME_CLIENT 	= client

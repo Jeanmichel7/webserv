@@ -6,11 +6,14 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/24 21:16:47 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/25 18:49:17 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
+
+#include <iostream>
+#include <string>
 
 // #include <iostream>
 
@@ -46,20 +49,28 @@ HTTP pour que la requête soit considérée comme valide.
 
 
 /* *************************************************** */
+/*                                                     */
 /*                        HEADER                       */
+/*                                                     */
 /* *************************************************** */
 
+/* ************************************* */
+/*               CONSTRCUTOR             */
+/* ************************************* */
 Request::Header::Header() 
 :
-  path(""),
-  parameters(""),
-  anchor(""),
-  protocole(""),
-  host("")
+  host(""),
+  checkedMethod(false),
+  checkedUri(false),
+  checkedProtocole(false)
 {
   method.isGet = false;
   method.isPost = false;
   method.isDelete = false;
+  method.path = "";
+  method.parameters = "";
+  method.anchor = "";
+  method.protocole = "";
   user_agent.compatibleMozilla = "";
   user_agent.version = "";
   user_agent.platform = "";
@@ -91,10 +102,10 @@ Request::Header &Request::Header::operator=(Header const &rhs)
   if (this != &rhs)
   {
     this->method = rhs.method;
-    this->path = rhs.path;
-    this->parameters = rhs.parameters;
-    this->anchor = rhs.anchor;
-    this->protocole = rhs.protocole;
+    this->method.path       = rhs.method.path;
+    this->method.parameters = rhs.method.parameters;
+    this->method.anchor     = rhs.method.anchor;
+    this->method.protocole  = rhs.method.protocole;
     this->host = rhs.host;
     this->user_agent = rhs.user_agent;
     this->accept = rhs.accept;
@@ -105,12 +116,98 @@ Request::Header &Request::Header::operator=(Header const &rhs)
 }
 
 
+/* ************************************* */
+/*                FUNCTION               */
+/* ************************************* */
+
+void Request::Header::parseHeader(std::string brut_header) {
+  std::string line;
+  std::string pos1;
+  std::string pos2;
+  std::string pos3;
+
+
+  //parse line 1
+
+
+  if (!checkSyntaxe(line) || !checkMethod(pos1) || !checkUri(pos2) || !checkProtocole(pos3)) {
+    std::cerr << "Header is not valid" << std::endl;
+  }
+}
+
+bool Request::Header::checkSyntaxe(std::string str) {
+  return (false);
+}
+
+bool Request::Header::checkMethod(std::string str) {
+
+  return (false);
+}
+
+bool Request::Header::checkUri(std::string str) {
+
+  return (false);
+}
+
+bool Request::Header::checkProtocole(std::string str) {
+
+  return (false);
+}
+
+
 
 /* *************************************************** */
+/*                                                     */
+/*                         BODY                        */
+/*                                                     */
+/* *************************************************** */
+
+/* ************************************* */
+/*               CONSTRCUTOR             */
+/* ************************************* */
+
+Request::Body::Body() {
+  return ;
+}
+
+Request::Body::Body(Body const &src) {
+  *this = src;
+  return ;
+}
+
+Request::Body::~Body() {
+  return ;
+}
+
+Request::Body &Request::Body::operator=(Body const &rhs) {
+  if (this != &rhs) {
+    this->body = rhs.body;
+  }
+  return (*this);
+}
+
+/* ************************************* */
+/*                FUNCTION               */
+/* ************************************* */
+
+void Request::Body::parseBody(std::string brut_body) {
+
+}
+
+
+
+
+
+
+
+
+/* *************************************************** */
+/*                                                     */
 /*                       REQUEST                       */
+/*                                                     */
 /* *************************************************** */
 
-Request::Request() : header(), body() {
+Request::Request() : Header(), Body() {
   return ; 
 }
 
@@ -131,23 +228,83 @@ Request &Request::operator=(Request const &rhs) {
   return (*this);
 }
 
-void Request::parseRequest(const char *brut_request) {
-  std::cout << "********************* \n" << brut_request << "\n*********************" << std::endl;
-  std::cout << "Request Brut size : " << strlen(brut_request) << std::endl;
+
+void Request::parseRequest(std::string req) {
+  std::cout << "********************* \n" << req << "\n*********************" << std::endl;
+  std::cout << "Request Brut size : " << req.size() << std::endl;
+
+  std::string method_line;
+  std::string header;
+  std::string body;
+
+  std::string::size_type size = req.size();
+  std::string::size_type pos;
+  std::string::size_type pos_fin_method_line;
+  std::string::size_type pos_header;
+  std::string::size_type pos_fin_header;
+  std::string::size_type pos_body;
+  std::string::size_type pos_fin_body;
+
+  pos = req.find("GET");
+  if (pos != std::string::npos)
+  {
+    this->header.method.isGet = true;
+    /* split request method */
+    method_line = req.substr(pos, req.find("\n"));
+    std::cout << "method line : " << method_line << std::endl;
+
+    /* split header */
+    pos_fin_method_line = req.find("\n");
+    header = req.substr(pos_fin_method_line + 1);
+    std::cout << "header : " << header << std::endl;
+
+    // /* split body */
+    // body = req.substr(pos_fin_header + 1);
+    // std::cout << "body : " << body << std::endl;
+
+    // pos2 = line.find(" ");
+    // pos3 = line.find("HTTP");
+    // this->path = line.substr(pos2 + 1, pos3 - pos2 - 1);
+    // pos4 = this->path.find("?");
+    // if (pos4 != std::string::npos)
+    // {
+    //   this->parameters = this->path.substr(pos4 + 1);
+    //   this->path = this->path.substr(0, pos4);
+    // }
+    // pos5 = this->path.find("#");
+    // if (pos5 != std::string::npos)
+    // {
+    //   this->anchor = this->path.substr(pos5 + 1);
+    //   this->path = this->path.substr(0, pos5);
+    // }
+    // this->protocole = line.substr(pos3 + 1);
+  }
+
+  pos = req.find("POST");
+  if (pos != std::string::npos)
+  {
+    this->header.method.isPost = true;
+    /* split request method */
+    method_line = req.substr(pos, req.find("\n"));
+    std::cout << "method line : " << method_line << std::endl;
+
+    /* split header */
+    pos_fin_method_line = req.find("\n");
+    pos_fin_header = req.substr(pos_fin_method_line + 2).find("\n\n");
+
+    std::cout << "TESTE : " << pos_fin_header << std::endl;
+
+    header = req.substr(pos_fin_method_line + 1, pos_fin_header);
+    std::cout << "header : " << header << std::endl;
 
 
-
-
-
-
-
-
-
-
+    /* split body */
+    body = req.substr(pos_fin_header + pos_fin_method_line + 4);
+    std::cout << "body : " << body << std::endl;
+  }
 
 
 }
-
 
 
 /*
@@ -187,7 +344,4 @@ void Request::parseRequest(const char *brut_request) {
     }
     this->protocole = line.substr(pos3 + 1);
   }
-
-
-
 */

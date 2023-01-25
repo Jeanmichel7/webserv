@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/24 21:03:14 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/25 14:58:29 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,83 +47,93 @@ typedef struct s_methods
 	bool isGet;
 	bool isPost;
 	bool isDelete;
+	bool isValid;
+	std::string 	path;
+	std::string 	parameters;
+	std::string 	anchor;
+	std::string 	protocole;
 } t_methods;
 
-class Request
-{
-public:
+struct Header {
 	typedef std::vector< std::pair< std::string, std::string > > 						t_accept;
 	typedef std::vector< std::pair< std::string, std::string > >::iterator 	t_accept_it;
-	typedef std::vector< t_language > 																		t_languages;
-	typedef std::vector< t_language >::iterator 													t_languages_it;
-	typedef std::vector< std::pair< std::string, int > > 									t_encodings;
-	typedef std::vector< std::pair< std::string, int > >::iterator 				t_encodings_it;
+	typedef std::vector< t_language > 																			t_languages;
+	typedef std::vector< t_language >::iterator 														t_languages_it;
+	typedef std::vector< std::pair< std::string, int > > 										t_encodings;
+	typedef std::vector< std::pair< std::string, int > >::iterator 					t_encodings_it;
 
-	struct Header
-	{
-		t_methods 		method;
-		std::string 	path;
-		std::string 	parameters;
-		std::string 	anchor;
-		std::string 	protocole;
-		std::string 	host;
-		t_user_agent 	user_agent;
-		t_accept 			accept;
-		t_languages 	accept_language;
-		t_encodings 	accept_encoding;
+	t_methods 		method;
+	std::string 	host;
+	t_user_agent 	user_agent;
+	t_accept 			accept;
+	t_languages 	accept_language;
+	t_encodings 	accept_encoding;
+	
+	std::string 	connection;
+	std::string 	authorization;
+	std::string 	cookie;
+	std::string 	origin;
+	
+	std::string 	content_type;
+	std::string 	content_length;
+	std::string 	content_encoding;
+	std::string 	content_language;
+	std::string 	content_location;
+	
+	bool 					checkedSyntaxe;
+	bool 					checkedMethod;
+	bool 					checkedUri;
+	bool 					checkedProtocole;
+	
+	Header();
+	Header(Header const& src);
+	~Header();
+	Header &operator= (Header const& src);
+	
+	void parseHeader(std::string brut_header);
+	bool checkSyntaxe(std::string request);
+	bool checkMethod(std::string method);
+	bool checkUri(std::string uri);
+	bool checkProtocole(std::string protocole);
+};
 
-		std::string 	connection;
-		std::string 	authorization;
-		std::string 	cookie;
-		std::string 	origin;
-		
-		std::string 	content_type;
-		std::string 	content_length;
-		std::string 	content_encoding;
-		std::string 	content_language;
-		std::string 	content_location;
 
-		Header();
-		Header(Header const& src);
-		~Header();
-		Header &operator= (Header const& src);
-	};
 
+struct Body {
 	typedef std::map< std::string, std::string > 							t_body;
 	typedef std::map< std::string, std::string >::iterator 		t_body_it;
 
-private:
-	Header 				header;
+	Body();
+	Body(Body const& src);
+	~Body();
+	Body &operator= (Body const& src);
+
+	void parseBody(std::string brut_body);
+
 	t_body 				body;
+};
+
+
+class Request : public Header, public Body
+{
+
+private:
+	Header 		header;
+	Body 			body;
 
 
 public:
 	Header 		getHeader() const { return (this->header);}
-	t_body 		getBody() const 	{ return (this->body);}
+	Body 			getBody() const 	{ return (this->body);}
 
-	void parseRequest(const char* brut_request);
-	void setHeader(Header header);
-	void setBody(t_body body);
-
-	// void printHeader();
-	// void printBody();
-	// void printRequest();
-
-
-
-
+	void parseRequest(std::string brut_request);
 
 
 	Request();
 	Request(Request const& src);
 	~Request();
 	Request &operator= (Request const& src);
-	
-
-
 
 };
-
-
 
 #endif
