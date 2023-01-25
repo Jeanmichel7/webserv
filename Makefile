@@ -6,7 +6,7 @@
 #    By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/01/24 15:52:58 by jrasser          ###   ########.fr        #
+#    Updated: 2023/01/24 19:38:53 by jrasser          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -40,6 +40,8 @@ CPPFLAGS			= -I./includes
 DEBEUG 				= -g3 -fsanitize=address
 
 all: $(NAME_SERVER) $(NAME_CLIENT)
+
+parsing: $(NAME_CLIENT)
 
 objs/%.o: srcs/*%.cpp
 		@mkdir -p $(OBJS_DIR)

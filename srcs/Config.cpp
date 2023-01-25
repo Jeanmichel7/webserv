@@ -310,7 +310,7 @@ bool yd::isPath(std::string const &s)
 	Tokenizer::Tokenizer(Config &config, std::string const &path)
 	{
 		std::ifstream config_file;
-		config_file.open(path, std::ios::in);
+		config_file.open(path.c_str(), std::ios::in);
 		if ( _file.is_open())
 		{
 			while (_file)
