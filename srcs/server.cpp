@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/25 12:37:17 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/25 12:42:50 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,13 +24,10 @@ int	ft_strlen(char *str)
 
 int main( void )
 {
-	// Config			config();
-
-
 	Config config;
 	try 
 	{
-	config = Config("/Users/ydumaine/webserv/srcs/conf.conf");
+	config = Config("srcs/conf.conf");
 	}
 	catch (std::runtime_error &e)
 	{
@@ -71,7 +68,7 @@ int main( void )
 			{
 				int socket_client = accept(socket_server, (struct sockaddr *)&server.interface, (socklen_t *)&server.interface);
 				read(socket_client, buffer, 1024);
-				std::string get = server.get();
+				std::string get = server.get(config);
 				printf("%s\n", buffer);
 				send(socket_client, get.c_str(), strlen(get.c_str()),0);
 				printf("------------------Hello message sent-------------------\n");

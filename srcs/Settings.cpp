@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/25 12:34:00 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/25 13:53:49 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,11 +62,12 @@ int	Settings::execute_cgi(std::string path)
 	return (1);
 }
 
-std::string	Settings::get( void )
+std::string	Settings::get( Config const& config )
 {
-	char buffer[5000] = {0};
+	char buffer[8000] = {0};
 	std::string	reponse = "HTTP/1.1";
-	int fd = open("http/index.html", O_RDONLY);
+	std::stringstream n;
+	int fd = open(config.getFile("/bg")->c_str(), O_RDONLY);
 	if (fd < 0)
 	{
 		fd = open("http/404.html", O_RDONLY);
@@ -76,10 +77,17 @@ std::string	Settings::get( void )
 	}
 	else
 		reponse.append(" 200 OK\n");
-	read(fd, &buffer, 5000);
+	read(fd, &buffer, 4000);
 	close(fd);
-	reponse += Settings::date() + "server: WebServ\n" + "Last-Modified: \n" + "Content-Length: 500\n" + "Content-Type: text/html\n" + "Connection: keep-alive\n\n" + buffer;
+	n << strlen(buffer);
+	reponse += Settings::date() + "server: " + *config.getName() + "\nLast-Modified: " + "\nContent-Length: " + n.str() + "\nContent-Type: text/html\n" + "Connection: keep-alive\n\n" + buffer;
+	return (reponse);
+}
 
+std::string Settings::post( Config const& config )
+{
+	std::string reponse;
+	(void)config;
 	return (reponse);
 }
 

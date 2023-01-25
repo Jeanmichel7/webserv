@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 13:43:13 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/24 15:27:48 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/25 13:39:15 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 int main(int argc, char **argv)
 {
 	struct sockaddr_in interface;
-	char buffer[1024];
+	char buffer[1024] = {0};
 	char test[] = "Hello from client\n";
 	
 	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
