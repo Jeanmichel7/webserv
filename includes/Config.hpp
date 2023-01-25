@@ -1,19 +1,13 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Config.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/01/24 15:11:48 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/24 15:22:21 by jrasser          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #ifndef CONFIG_HPP
-# define CONFIG_HPP
+#define CONFIG_HPP
+#include <string>
+#include <vector>
+#include <map>
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
 
-#include "server.hpp"
 
 struct	Methods
 {
@@ -22,11 +16,14 @@ struct	Methods
 	bool	isdelete;
 };
 
+
 //this class serv to extracte and create config and serveur object in a file 
 
 
 namespace yd{
-	bool isPath(std::string const &s);
+	bool isValidPathDir(std::string const &s);
+	bool isValidPathFile(std::string const &s);
+	int commonPathLenght(const std::string &path1, const std::string &path2);
 }
 
 class Tokenizer;
@@ -40,11 +37,14 @@ class Location
 		void setDirectoryListing(Tokenizer &tok);
 		void setCgi(Tokenizer &tok);
 		void setUploadFile(Tokenizer &tok);	
-		void setGet(Tokenizer &tok);
+		void setMethod(Tokenizer &tok);
+		void setPath(Tokenizer &tok);
+		std::string const *getCgi(std::string const &cgi) const;
 		void (Location::*selectSetter(std::string const &token))(Tokenizer &tok);
 		std::string _upload_file;
 		std::string _default_file;
 		std::string	_root;
+		std::string	_path;
 		std::map<std::string, std::string> _cgi;
 		int	_is_get;
 		int	_is_post;
@@ -76,13 +76,24 @@ class Server
 		void setPort(Tokenizer &tok);
 		void setMaxBody(Tokenizer &tok);
 		void setError(Tokenizer &tok);
+		void setDefaultServer();
 		void (Server::*selectSetter(std::string const &token))(Tokenizer &tok);
 		void addLocation(Location location);
+		void setDefault();
+		bool getDefault() const;
+		const std::string *getServerName() const ;
+		unsigned int getPort() const;
+		uint32_t getIp() const;
+		unsigned int getMaxBodySize() const;
+		const std::string *getErrorPages(unsigned int error) const ;
+		const Location &getLocation(std::string const &path) const;
+		bool checkServer();
 	private:
+		bool _default;
 		std::string _server_name;
-		int					_port;
+		unsigned int					_port;
 		uint32_t		_ip;
-		int _max_body_size;
+		unsigned int _max_body_size;
 		std::map<unsigned int, std::string> _error_pages;
 		std::vector<Location> _locations;
 		std::map<std::string, void (Server::*)(Tokenizer &tok)> _tokens;
@@ -93,33 +104,38 @@ class Server
 class Config
 {
 	public:
+		Config();
 		friend class Tokenizer;
 		Config(const std::string &path);
-		//void	selectServ(const std::string &host, const unsigned int port = 80, const unsigned int ip = 12701) {}
-		//const std::string &getFile(const std::string &path) const;
-		//const std::string &getError(const unsigned int error) const;
-		//const std::string &getCgi(const std::string &path, std::string cgi) const;
-		//const std::string &getUpload(const std::string &path) const;
-		//const bool getDirectoryListing(const std::string &path) const;
-		//const unsigned int &getMaxSize() const;
+		bool	selectServ(const unsigned int ip = 2130706433, const unsigned int port = 80);
+		const std::string *getFile(const std::string &path) const;
+		const Methods getMethod(const std::string &path) const;
+		const std::string *getError(const unsigned int error) const;
+		const std::string *getCgi(const std::string &path, const std::string &cgi) const;
+		const std::string *getUpload(const std::string &path) const;
+		bool getDirectoryListing(const std::string &path) const;
+		unsigned int getMaxSize() const;
 		void addServer(Server server);
-		//~Config();
+		const std::string *getName() const;
+		Config &operator=(Config const &other);
 	private : 
-		Config();
-	
+		const Location &getLocation(std::string const &path) const;
 		std::vector<Server> _server;
+		Server *_server_selected;
 };
 
 class Tokenizer
 {
 	public:
 		Tokenizer(Config &config, std::string const &path);
+		const std::string &getToken();
 		const std::string &nextToken();
 		const std::string &getTokenBefore();
-		const std::string &getToken();
+		const char &getTokenBack();
 	private:
 		std::string _token_before;
 		std::string _token;
+		std::string _str;
 		std::ifstream _file;
 		Server parsServer(); 
 		Location parsLocation();

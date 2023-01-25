@@ -1,46 +1,95 @@
+//--------------------------------------------------------------------------------------//
+//                                        Config                                        //
+//--------------------------------------------------------------------------------------//
+
 #include "Config.hpp"
 
-/*
-	const std::string &Config::getFile(const std::string &path) const
+	Config &Config::operator=(Config const &other)
 	{
-		return ("~/webServ/website/index.html");
+		if (this != &other)
+		{
+		_server = other._server;
+		_server_selected = other._server_selected;
+		}
+		return (*this);
 	}
-	const Method	&Config::getMethod(const std::string &path) const{
-		i.isget = true;
-		i.ispost = true;
-		i.isget = true;
-		return(i);
-	}
-	const std::string &Config::getError(const unsigned int error) const
+
+	Config::Config(): _server(), _server_selected()
 	{
-		return ("~/webServ/website/404.html");
 	}
-	const std::string &Config::getCgi(const std::string &path, const std::string &cgi)
+	bool	Config::selectServ(const unsigned int ip, const unsigned int port) 
 	{
-		return ("usr/bin/php");
+		for (unsigned int i = 0; i < _server.size(); i++)
+		{
+			if (_server[i].getIp() == ip && _server[i].getPort() == port)
+			{
+				_server_selected = &_server[i];
+				return (1);
+			}
+		}
+		return (0);
 	}
-	const unsigned int &Config::getMaxSize() const
+	const Location &Config::getLocation(const std::string &path) const 
 	{
-		return (10000000);
+		return(_server_selected->getLocation(path));
 	}
-	const std::string &Config::getUpload(const std::string &path) const
+	const std::string *Config::getFile(const std::string &path) const
 	{
-		return ("/bonjour")
+		const Location &loc = getLocation(path);
+		if (loc._default_file.size() == 0)
+			return (NULL);
+		else 
+			return(&loc._default_file);
 	}
+	const Methods	Config::getMethod(const std::string &path) const
+	{
+		const Location &loc = getLocation(path);
+		Methods rt;
+		if (loc._is_get == 1)
+			rt.isget = true;
+		if (loc._is_post == 1)
+			rt.ispost = true;
+		if (loc._is_delete == 1)
+			rt.isdelete = true;
+		return(rt);
+	}
+
+	const std::string *Config::getError(const unsigned int error) const
+	{
+		return (_server_selected->getErrorPages(error));
+	}
+	const std::string *Config::getCgi(const std::string &path, const std::string &cgi) const
+	{
+		const Location &loc = getLocation(path);
+		return (loc.getCgi(cgi));
+	}
+	
+	unsigned int Config::getMaxSize() const
+	{
+		return(_server_selected->getMaxBodySize());
+	}
+	
+	const std::string *Config::getUpload(const std::string &path) const
+	{
+		const Location &loc = getLocation(path);
+		return(&loc._upload_file);
+	}
+	
 	bool Config::getDirectoryListing(const std::string &path) const
 	{
-		return (true);
+		const Location &loc = getLocation(path);
+		return (loc._directory_listing);
 	}
-	std::string Config::getName(const std::string &path) const
+	const std::string *Config::getName() const
 	{
-		return (name);
+		return (_server_selected->getServerName());
 	}
-	*/
+	
 //--------------------------------------------------------------------------------------//
-//                                       Location                                       //
+//                                      libft Yann                                      //
 //--------------------------------------------------------------------------------------//
-
-bool yd::isPath(std::string const &s)
+	
+bool yd::isValidPathDir(std::string const &s)
 {
 	bool hasAlphaNum = false;
 	for (unsigned int i = 0; i < s.size(); i++) {
@@ -60,6 +109,55 @@ bool yd::isPath(std::string const &s)
 	return true;
 }
 
+bool yd::isValidPathFile(std::string const &s)
+{
+	    // Vérifier si le chemin contient deux fois "//"
+    std::string::size_type pos = s.find("//");
+    if (pos != std::string::npos) {
+        return false;
+    }
+
+    // Vérifier si le chemin ne contient que des caractères autorisés
+    for (std::string::size_type i = 0; i < s.size(); ++i) {
+        char c = s[i];
+        if (!isalnum(c) && c != '/' && c != '.') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+	int yd::commonPathLenght(const std::string &path1, const std::string &path2)
+	{
+    int length = 0;
+    for (unsigned int i = 0; i < path1.length() && i < path2.length(); i++) {
+        if (path1[i] == path2[i]) {
+            length++;
+        } else {
+            break;
+        }
+    }
+    return length;
+	}
+//--------------------------------------------------------------------------------------//
+//                                       Location                                       //
+//--------------------------------------------------------------------------------------//
+
+	std::string const *Location::getCgi(std::string const &cgi) const
+	{
+		std::string const *ptr;
+		try 
+		{
+			ptr = &_cgi.at(cgi);
+			return (ptr);
+		}
+		catch (std::out_of_range)
+		{
+			return (NULL);
+		}
+	}
+
 	void Location::setCgi(Tokenizer &tok)
 	{
 		if (tok.getToken()[0] != '.')
@@ -71,12 +169,12 @@ bool yd::isPath(std::string const &s)
 		}
 		if (tok.nextToken()[0] == ';')
 			throw (ConfigurationError("cgi need two arguments"));
-		if (!yd::isPath(tok.getToken()))
+		if (!yd::isValidPathDir(tok.getToken()))
 			throw (FormatError(tok.getToken(), "path /x/x/x"));
 		_cgi[tok.getTokenBefore()] = tok.getToken();
 	}
 
-	void Location::setGet(Tokenizer &tok)
+	void Location::setMethod(Tokenizer &tok)
 	{
 		if (tok.getToken() == "GET") 
 			_is_get = 1;
@@ -90,8 +188,8 @@ bool yd::isPath(std::string const &s)
 
 	void Location::setDefaultFile(Tokenizer &tok)
 	{
-		if (!yd::isPath(tok.getToken()))
-			throw (FormatError(tok.getToken(), "path /x/x/x"));
+		if (!yd::isValidPathFile(tok.getToken()))
+			throw (FormatError(tok.getToken(), "path /x/x/x.xx"));
 		else 
 			_default_file =  tok.getToken();
 	}
@@ -108,7 +206,7 @@ bool yd::isPath(std::string const &s)
 
 	void Location::setRoot(Tokenizer &tok)
 	{
-		if (!yd::isPath(tok.getToken()))
+		if (!yd::isValidPathDir(tok.getToken()))
 			throw (FormatError(tok.getToken(), "path /x/x/x"));
 		else 
 			_root =  tok.getToken();
@@ -116,10 +214,18 @@ bool yd::isPath(std::string const &s)
 
 	void Location::setUploadFile(Tokenizer &tok)	
 	{
-		if (!yd::isPath(tok.getToken()))
+		if (!yd::isValidPathDir(tok.getToken()))
 			throw (FormatError(tok.getToken(), "path /x/x/x"));
 		else 
-			_default_file = tok.getToken();
+			_upload_file = tok.getToken();
+	}
+
+		void Location::setPath(Tokenizer &tok)
+	{
+		if (!yd::isValidPathDir(tok.getToken()))
+			throw (FormatError(tok.getToken(), "path /x/x/x"));
+		else 
+			_path =  tok.getToken();
 	}
 
 
@@ -130,9 +236,9 @@ bool yd::isPath(std::string const &s)
 		_tokens["cgi"] = &Location::setCgi; 
 		_tokens["upload_file"] = &Location::setUploadFile; 
 		_tokens["root"] = &Location::setRoot;
-		_tokens["allow"] = &Location::setGet;
+		_tokens["allow"] = &Location::setMethod;
 		_tokens["default_file"] = &Location::setDefaultFile; 
-		_tokens["directory_lisiting"] = &Location::setDirectoryListing;
+		_tokens["directory_listing"] = &Location::setDirectoryListing;
 	}
 
 		void (Location::*Location::selectSetter(std::string const &token))(Tokenizer &tok)
@@ -150,6 +256,80 @@ bool yd::isPath(std::string const &s)
 //                                        Server                                        //
 //--------------------------------------------------------------------------------------//
 
+		bool Server::checkServer()
+		{
+			if (_port ==  INT_MAX)
+							throw (ConfigurationError("Port configuration is missing for a server"));
+			if (_ip ==  0)
+							throw (ConfigurationError("ip configuration is missing for a server"));
+			if (_locations.size() == 0)
+							throw (ConfigurationError("a server need at least one Location"));
+			for (unsigned int i = 0; i < _locations.size(); i++)
+			{
+				if (_locations[i]._root.empty())
+							throw (ConfigurationError("A location need at least a root"));
+			}
+			return (0);
+		}
+		const Location &Server::getLocation(std::string const &path) const
+		{
+			std::string path_select;
+			Location const *location_select;
+			Location const *location_choose;
+			int length = 0;
+			int prev_length = 0;
+			for (unsigned int i = 0; i < _locations.size(); i++)
+			{
+				location_select = &_locations[i];
+				prev_length = length;
+				length = yd::commonPathLenght(location_select->_path, path);
+				if (length > prev_length)
+				{	
+					location_choose = location_select;
+				}
+			}
+			return (*location_choose);
+		}
+
+		unsigned int Server::getPort() const
+		{
+			return (_port);
+		}
+		uint32_t Server::getIp() const
+		{
+			return (_ip);
+		}
+		unsigned int Server::getMaxBodySize() const
+		{
+			return (_max_body_size);
+		}
+		const std::string *Server::getServerName() const
+		{
+			return (&_server_name);
+		}
+		void Server::setDefault()
+		{
+			_default = 1;
+		}
+		bool Server::getDefault() const
+		{
+			return (_default);
+		}
+
+		const std::string *Server::getErrorPages(unsigned int error) const
+		{
+			std::string const *ptr;
+			try 
+			{
+				ptr = &_error_pages.at(error);
+				return (ptr);
+			}
+			catch (std::out_of_range)
+			{
+				return (NULL);
+			}
+		}
+
 		void Server::setPort(Tokenizer &tok)
 		{
 				if (atoi(tok.getToken().c_str()) <= 0 || atoi(tok.getToken().c_str()) > 65535)
@@ -161,8 +341,8 @@ bool yd::isPath(std::string const &s)
 		{
 			for (unsigned int i = 0; i < tok.getToken().length(); i++) 
 			{
-				if (!isalpha(tok.getToken()[i])) 
-					throw (FormatError(tok.getToken(), "alphanumeric characters"));
+				//if (!isalpha(tok.getToken()[i]) && tok.getToken()[i] != '.') 
+					//throw (FormatError(tok.getToken(), "alphanumeric characters"));
 			}
 			_server_name = tok.getToken();
 		}
@@ -190,26 +370,26 @@ bool yd::isPath(std::string const &s)
 		}
 
 		unsigned int num = 0;
-		for (unsigned int i = 0; i < tok.getToken().length(); i++) {
-				if (tok.getToken()[i] == '.') {
-						if (num < 0 || num > 255) {
+		unsigned int final_num = 0;
+		unsigned int octet = 3;
+		for (unsigned int i = 0; i <= tok.getToken().length(); i++) 
+		{
+				if (tok.getToken()[i] == '.' || i == tok.getToken().length())
+				{
+						if (num < 0 || num > 255) 
+						{
 							throw (FormatError(tok.getToken(), "numbers between 0 and 255"));
 						}
+						final_num = ((num << (8 * octet)) + final_num);
+						octet--;
 						num = 0;
-				} else {
+				} 
+				else 
+				{
 						num = num * 10 + (tok.getToken()[i] - '0');
 				}
 		}
-		if (num < 0 || num > 255) {
-				throw (FormatError(tok.getToken(), "numbers between 0 and 255"));
-		}
-		for (unsigned int i = 0; i < tok.getToken().length(); i++) {
-				if (tok.getToken()[i] == '.') {
-						continue;
-				}
-				num = num * 10 + (tok.getToken()[i] - '0');
-		}
-		_ip = num;
+		_ip = final_num;
 		}
 
 		void Server::setError(Tokenizer &tok)
@@ -225,13 +405,14 @@ bool yd::isPath(std::string const &s)
 				throw (ConfigurationError("redefinition of error page"));
 		}
 
-	Server::Server(): _server_name(), _port(), _ip(), _max_body_size(), 
+	Server::Server(): _server_name(), _port(INT_MAX), _ip(0), _max_body_size(), 
 	_error_pages(), _locations(), _tokens() 
 	{
 	_tokens["server_name"] = &Server::setServerName;
 	_tokens["max_body_size"] = &Server::setMaxBody; 
 	_tokens["port"] = &Server::setPort; 
 	_tokens["ip"] = &Server::setIp;
+	_tokens["error"] = &Server::setError;
 	}
 
 		void (Server::*Server::selectSetter(std::string const &token))(Tokenizer &tok)
@@ -255,12 +436,12 @@ bool yd::isPath(std::string const &s)
 // Exception gestion for token
 	Tokenizer::Unexpected::Unexpected(std::string token)  
 	{
-	std::cout << "\e[0;31mSyntax error near unexpected token`" + token + "\"\e[0m " << std::endl; 
+	std::cout << "\e[0;31mSyntax error near unexpected token `" + token + "\"\e[0m " << std::endl; 
 	}
 
 	FormatError::FormatError(std::string token, std::string expected_format)  
 	{
-	std::cout << "Format error \"" << token << "\"" << "Format expected : \"" << expected_format << "\"." << std::endl ; 
+	std::cout << "Format error \"" << token << "\" " << "Format expected : \"" << expected_format << "\"." << std::endl ; 
 	}
 
 	ConfigurationError::ConfigurationError(std::string message)
@@ -282,6 +463,14 @@ bool yd::isPath(std::string const &s)
 
 	void	Config::addServer(Server server)
 	{
+		bool default_already_set = 0;
+		for (unsigned int i = 0; i < _server.size(); i++)
+		{
+			if (_server[i].getPort())
+			_server[i].getDefault();
+		}
+		if (default_already_set == 0)
+		server.setDefault();
 		this->_server.push_back(server);
 	}
 
@@ -293,7 +482,19 @@ bool yd::isPath(std::string const &s)
 	const std::string &Tokenizer::nextToken()
 	{
 		_token_before = _token;
-		_file >> _token;
+		if (_str.empty())
+			_file >> _str;
+		if (_str.find(';') || _str[0] == ';')
+		{
+			if (_str[0] == ';')
+				_token = ";";
+			else 
+				_token = _str.substr(0,_str.find_first_of(';'));
+			if (_str[0] == ';')
+				_str.erase(0 , 1);
+			else 
+				_str.erase(0,_str.find_first_of(';'));
+		}
 		return (_token);
 	}
 
@@ -309,13 +510,15 @@ bool yd::isPath(std::string const &s)
 
 	Tokenizer::Tokenizer(Config &config, std::string const &path)
 	{
-		std::ifstream config_file;
-		config_file.open(path, std::ios::in);
+		_file.open(path, std::ios::in);
+		bool atLeastOneServer = 0;
 		if ( _file.is_open())
 		{
 			while (_file)
 			{
 				nextToken();
+				if (!_file)
+					return;
 				if (_token == "server")
 				{
 					nextToken();
@@ -323,6 +526,7 @@ bool yd::isPath(std::string const &s)
 					{
 						nextToken();
 						config.addServer(parsServer());	
+						atLeastOneServer = 1;
 					}
 					else
 						throw Tokenizer::Unexpected(_token);
@@ -332,7 +536,9 @@ bool yd::isPath(std::string const &s)
 			}
 		}
 		else
-				throw std::runtime_error("Couldn't open config file");
+				throw std::runtime_error("File error, couldn't open config file");
+			if (atLeastOneServer == 0)
+					throw (ConfigurationError("Webserv need at least one server configure to working"));
 		}
 
 	Server	Tokenizer::parsServer()
@@ -341,19 +547,11 @@ bool yd::isPath(std::string const &s)
 		void (Server::*pf)(Tokenizer &tok);
 		while (_token != "}")
 		{
-			if (getToken() != ";")
-					throw Tokenizer::Unexpected(_token);
-			nextToken();
 			if (_token == "location")
 			{
 				nextToken();
-				if (_token == "{")
-				{
-					nextToken();
-					server.addLocation(parsLocation());
-				}
-				else
-					throw Tokenizer::Unexpected(_token);
+				server.addLocation(parsLocation());
+				nextToken();
 			}
 			else
 			{
@@ -365,8 +563,12 @@ bool yd::isPath(std::string const &s)
 					throw (ConfigurationError(getTokenBefore() + "need at least one argument"));
 				(server.*pf)(*this);
 				nextToken();
+			if (getToken() != ";")
+					throw Tokenizer::Unexpected(_token);
+				nextToken();
 			}
 		}
+		server.checkServer();
 		return (server);
 	}
 
@@ -374,17 +576,23 @@ bool yd::isPath(std::string const &s)
 	{
 		Location location;
 		void (Location::*pf)(Tokenizer &tok);
-		while (_token != "}")
-		{
-			if (getToken() != ";")
+		location.setPath(*this);
+		nextToken();
+		if (getToken() != "{")
 					throw Tokenizer::Unexpected(_token);
+		nextToken();
+		while (getToken() != "}")
+		{
 			pf = location.selectSetter(_token);
 			if (pf == NULL)
 					throw Tokenizer::Unexpected(_token);
+			if (getToken() == ";")
+				throw (ConfigurationError(getTokenBefore() + "need at least one argument"));
 			nextToken();
-				if (getToken() == ";")
-					throw (ConfigurationError(getTokenBefore() + "need at least one argument"));
 			(location.*pf)(*this);
+			nextToken();
+			if (getToken() != ";")
+					throw Tokenizer::Unexpected(_token);
 			nextToken();
 		}
 		return (location);

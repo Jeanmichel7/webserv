@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/25 12:25:03 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/25 12:37:17 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,13 +24,30 @@ int	ft_strlen(char *str)
 
 int main( void )
 {
-	// Config			config;
+	// Config			config();
+
+
+	Config config;
+	try 
+	{
+	config = Config("/Users/ydumaine/webserv/srcs/conf.conf");
+	}
+	catch (std::runtime_error &e)
+	{
+		std::cout << e.what() << std::endl;
+		return (0);
+	}
+	catch (std::exception &e)
+	{
+		return (0);
+	}
 	Settings		server;
 	int				socket_server;
 	int				timeout = 0;
 	struct kevent	srv;
-	
 
+	config.selectServ();
+	std::cout << "file:" <<*config.getFile("/bg") << std::endl;
 	int ke = kqueue();
 	int fd = open("http/index.html", O_RDWR);
 	try
