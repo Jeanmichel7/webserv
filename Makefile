@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+         #
+#    By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/01/24 15:52:58 by jrasser          ###   ########.fr        #
+#    Updated: 2023/01/25 12:01:43 by lomasson         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -37,7 +37,7 @@ CC 						= g++
 
 CFLAGS 				= -Wall -Wextra -std=c++98
 CPPFLAGS			= -I./includes
-DEBEUG 				= -g3 -fsanitize=address
+DEBEUG 				= -g3 #-fsanitize=address
 
 all: $(NAME_SERVER) $(NAME_CLIENT)
 

@@ -14,14 +14,16 @@
 # define SETTINGS_HPP
 
 #include "server.hpp"
+#include "Config.hpp"
+class Config;
 
 class Settings
 {
 	public:
 		struct	sockaddr_in interface;
 		int	build();
-		// std::string	get(Config const& config);
-		// int	Settings::execute_cgi(std::string path);
+		std::string	get( void );
+		int	execute_cgi(std::string path);
 		std::string	date( void );
 		Settings();
 		~Settings();

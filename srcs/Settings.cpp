@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Settings.cpp                                       :+:      :+:    :+:   */
+/*   settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/24 15:58:22 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/25 12:34:00 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,39 +35,53 @@ std::string	Settings::date( void )
 	getline(str, rdate, ' ');
 	getline(str, tmp, ' ');
 	getline(str, s, ' ');
-	rdate += ", " + s + " " + tmp;
+	rdate = "date: " + rdate + ", " + s + " " + tmp;
 	getline(str, tmp, ' ');
 	getline(str, s, '\n');
-	rdate += " " + s + " " + tmp + " GMT";
+	rdate += " " + s + " " + tmp + " GMT\n";
 	return (rdate);
 }
 
-// int	Settings::execute_cgi(std::string path)
-// {
-	
-// }
+int	Settings::execute_cgi(std::string path)
+{
+	(void)path;
+	// int pip[2];
+	// char **env;
+	// pid_t pid = fork();
+	// if (pid == 0)
+	// {
+	// 	int	fd = open("tmp/resultcgi.txt", O_RDWR | O_TRUNC);
+	// 	dup2(STDOUT_FILENO, fd);
+		
+	// }
+	// else
+	// {
+	// 	waitpid(pid, 0, NULL);
+	// 	// execve();
+	// }
+	return (1);
+}
 
-// std::string	Settings::get(Config const& config) {
+std::string	Settings::get( void )
+{
+	char buffer[5000] = {0};
+	std::string	reponse = "HTTP/1.1";
+	int fd = open("http/index.html", O_RDONLY);
+	if (fd < 0)
+	{
+		fd = open("http/404.html", O_RDONLY);
+		if (fd < 0)
+			fd = open("http/404.html", O_RDONLY);
+		reponse.append(" 404 Not Found\n");
+	}
+	else
+		reponse.append(" 200 OK\n");
+	read(fd, &buffer, 5000);
+	close(fd);
+	reponse += Settings::date() + "server: WebServ\n" + "Last-Modified: \n" + "Content-Length: 500\n" + "Content-Type: text/html\n" + "Connection: keep-alive\n\n" + buffer;
 
-// }
-
-// std::string	Settings::get(Config const& config)
-// {
-// 	std::string	reponse = "HTTP/1.1";
-// 	int fd = open(config.getFile("srcs/site/test.html").c_str(), O_RDONLY);
-// 	if (fd < 0)
-// 	{
-// 		fd = open(config.getError(404).c_str(), O_RDONLY);
-// 		if (fd < 0)
-// 			fd = open("srcs/error_pages/404.html", O_RDONLY);
-// 		reponse.append(" 404 Not Found\n");
-// 	}
-// 	else
-// 		reponse.append(" 200 OK\n");
-// 	reponse += Settings::date() + "\nserver: WebServ";
-	
-// 	return (reponse);
-// }
+	return (reponse);
+}
 
 Settings::Settings()
 {

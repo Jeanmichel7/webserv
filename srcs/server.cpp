@@ -3,21 +3,28 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/24 15:39:58 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/25 12:25:03 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
 // #include "Settings.hpp"
-// #include "Config.hpp"
+#include "Config.hpp"
 
+int	ft_strlen(char *str)
+{
+	int i = 0;
+	while(str[i])
+		i++;
+	return (i);
+}
 
 int main( void )
 {
-	// Config			config();
+	// Config			config;
 	Settings		server;
 	int				socket_server;
 	int				timeout = 0;
@@ -36,7 +43,6 @@ int main( void )
 		read(fd, &test, 550);
 		while(1)
 		{
-			
 			char buffer[1024] = {0};
 			struct kevent event;
 			
@@ -48,15 +54,11 @@ int main( void )
 			{
 				int socket_client = accept(socket_server, (struct sockaddr *)&server.interface, (socklen_t *)&server.interface);
 				read(socket_client, buffer, 1024);
-
-
-
-
-
+				std::string get = server.get();
 				printf("%s\n", buffer);
-				close(socket_client);
-				write(socket_client, test, 550);
+				send(socket_client, get.c_str(), strlen(get.c_str()),0);
 				printf("------------------Hello message sent-------------------\n");
+				close(socket_client);
 				EV_SET(&event, socket_client, EVFILT_WRITE , EV_ADD | EV_ENABLE, 0, 0, &timeout);
 				if (kevent(ke, &event, 1, NULL, 0, NULL) == -1){}
 			}
