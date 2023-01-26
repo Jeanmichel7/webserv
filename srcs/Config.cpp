@@ -45,7 +45,7 @@
 			if (_buffer.back() == '/')
 				_buffer.pop_back();
 			pos = _buffer.rfind('/');
-			if (path == loc._path)
+			if (yd::compare_strings_ignoring_trailing_slash(path,loc._path))
 				return(&loc._default_file);
 			else 
 				return (&_buffer);
@@ -121,6 +121,15 @@ bool yd::isValidPathDir(std::string const &s)
 	return true;
 }
 
+bool yd::compare_strings_ignoring_trailing_slash(const std::string &str1, const std::string &str2) 
+{
+    size_t str1_size = str1.size(), str2_size = str2.size();
+    if(str1_size - (str1.back() == '/') != str2_size - (str2.back() == '/')) return false;
+    for (size_t i = 0; i < str1_size - (str1.back() == '/'); i++)
+        if (str1[i] != str2[i]) return false;
+    return true;
+}
+
 bool yd::isValidPathFile(std::string const &s)
 {
 	    // Vérifier si le chemin contient deux fois "//"
@@ -160,17 +169,23 @@ bool yd::isValidPathFile(std::string const &s)
 		{
 			count++;
 			return (count);
-
 		}
 		if (path1[i] == '/' && path2[i] == '/')
 		{
+			count++;
 			count++;
 			if (path1[i + 1] != '\0')
 				count = 0;
 			return (count);
 		}
+		if ((path1[i - 1] == '/' && path2[i - 1] == '/'))
+		{
+			count++;
+			return(count);
+		}
 		if (path1[i] == '/' && path2[i] == '\0')
 		{
+			count++;
 			count++;
 			if (path1[i + 1] != '\0')
 				count = 0;
@@ -179,10 +194,13 @@ bool yd::isValidPathFile(std::string const &s)
 		if (path1[i] == '\0' && path2[i] == '/')
 		{
 			count++;
+			count++;
 			return (count);
 		}
+		//std::cout << static_cast<int>(path1[i]) << std::endl;
 		if ((path1[i - 1] != '/' && path1[i] == '\0') && (path2[i - 1] != '/' && path2[i] == '\0'))
 		{
+			count++;
 			count++;
 			return (count);
 		}
@@ -261,6 +279,8 @@ bool yd::isValidPathFile(std::string const &s)
 	{
 		if (!yd::isValidPathDir(tok.getToken()))
 			throw (FormatError(tok.getToken(), "path /x/x/x"));
+		if (tok.getToken().back() == '/')
+			throw (FormatError(tok.getToken(), "/x/x/x"));
 		else 
 			_root =  tok.getToken();
 	}
@@ -276,7 +296,7 @@ bool yd::isValidPathFile(std::string const &s)
 		void Location::setPath(Tokenizer &tok)
 	{
 		if (!yd::isValidPathDir(tok.getToken()))
-			throw (FormatError(tok.getToken(), "path /x/x/x"));
+			throw (FormatError(tok.getToken(), "path /x/x/x or /x/x/x/"));
 		else 
 			_path =  tok.getToken();
 	}

@@ -24,6 +24,7 @@ namespace yd{
 	bool isValidPathDir(std::string const &s);
 	bool isValidPathFile(std::string const &s);
 	int comparePath(const std::string &path1, const std::string &path2);
+	bool compare_strings_ignoring_trailing_slash(const std::string &str1, const std::string &str2);
 }
 
 class Tokenizer;

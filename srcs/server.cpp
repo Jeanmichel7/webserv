@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/25 20:35:19 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/01/26 12:19:29 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ int main( void )
 	struct kevent	srv;
 
 	config.selectServ();
-	std::cout << *config.getFile("/bonjour") << std::endl;
+	std::cout << *config.getFile("/nolife") << std::endl;
 	int ke = kqueue();
 	int fd = open("http/index.html", O_RDWR);
 	try
