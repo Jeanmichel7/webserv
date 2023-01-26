@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/26 14:55:51 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/26 21:30:08 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include "server.hpp"
 using namespace std;
+
 
 struct Method {
 	string brut_method;
@@ -35,10 +36,11 @@ struct Method {
 	Method &operator= (Method const& src);
 
 	bool parseMethod( void );
-	bool checkMethod( void);
+	bool checkType( void);
 	bool checkUri( void );
 	bool checkProtocole( void );
 };
+
 
 struct Header {
 	typedef struct s_user_agent
@@ -70,9 +72,13 @@ struct Header {
 	string 				brut_header;
 	string 				host;
 	t_user_agent 	user_agent;
+	string				str_user_agent;
 	t_accept 			accept;
+	string				str_accept;
 	t_languages 	accept_language;
+	string				str_accept_language;
 	t_encodings 	accept_encoding;
+	string				str_accept_encoding;
 	
 	string 	connection;
 	string 	authorization;
@@ -90,11 +96,8 @@ struct Header {
 	~Header();
 	Header &operator= (Header const& src);
 	
-	void parseHeader( void );
+	bool parseHeader( void );
 	bool checkSyntaxe( void );
-	bool checkMethod( void );
-	bool checkUri( void );
-	bool checkProtocole( void );
 };
 
 
@@ -110,15 +113,13 @@ struct Body {
 	string 		brut_body;
 	t_body 		body;
 
-	void parseBody( void );
-
+	bool parseBody( void );
 };
 
 
-class Request : public Method, public Header, public Body
+struct Request
 {
 
-private:
 	Method 		method;
 	Header 		header;
 	Body 			body;
@@ -126,10 +127,9 @@ private:
 	bool splitRequest(string req);
 
 
-public:
-	Method 		getMethod() const { return (this->method);}
-	Header 		getHeader() const { return (this->header);}
-	Body 			getBody() 	const { return (this->body);}
+	// Method 		getMethod() const { return (this->method);}
+	// Header 		getHeader() const { return (this->header);}
+	// Body 			getBody() 	const { return (this->body);}
 
 	Request();
 	Request(Request const& src);

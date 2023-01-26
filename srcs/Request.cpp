@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/26 15:14:49 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/26 21:36:14 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,13 @@ HTTP pour que la requête soit considérée comme valide.
 	Vérifiez que la requête contient les informations de contrôle de la version nécessaire (If-Match, If-None-Match, If-Modified-Since, If-Unmodified-Since) pour les méthodes PUT et DELETE qui nécessitent une condition d'écriture.
 	*/
 
+
+
+
+
+
+
+
 /* *************************************************** */
 /*                                                     */
 /*                        METHOD                       */
@@ -71,7 +78,7 @@ HTTP pour que la requête soit considérée comme valide.
 
 /* *************   CONSTRCUTOR   ************* */
 
-Request::Method::Method()
+Method::Method()
 :
 	brut_method(""),
 	isGet(false),
@@ -87,18 +94,18 @@ Request::Method::Method()
 {
 }
 
-Request::Method::Method(Method const &src)
+Method::Method(Method const &src)
 {
 	*this = src;
 	return ;
 }
 
-Request::Method::~Method()
+Method::~Method()
 {
 	return ;
 }
 
-Request::Method &Request::Method::operator=(Method const &rhs)
+Method &Method::operator=(Method const &rhs)
 {
 	if (this != &rhs)
 	{
@@ -119,61 +126,89 @@ Request::Method &Request::Method::operator=(Method const &rhs)
 
 /* *************   FUNCTION   ************* */
 
-bool Request::Method::parseMethod( void ) {
-	cout << "method : " << this->brut_method << endl;
+bool Method::parseMethod( void ) {
 
 	size_t pos = 0;
-	if ((pos = this->brut_method.find(" ")) != std::string::npos
-	|| (pos = this->brut_method.find("	")) != std::string::npos) {
-		this->type = this->brut_method.substr(0, pos);
-		this->brut_method.erase(0, pos + 1);
+	string str(this->brut_method);
+	// cout << "method : " << str << endl;
+	
+	if ((pos = str.find(" ")) != std::string::npos
+	|| (pos = str.find("	")) != std::string::npos) {
+		this->type = str.substr(0, pos);
+		str.erase(0, pos + 1);
 	}
 
-	if ((pos = this->brut_method.find(" ")) != std::string::npos
-	|| (pos = this->brut_method.find("	")) != std::string::npos) {
-		this->url = this->brut_method.substr(0, pos);
-		this->brut_method.erase(0, pos + 1);
+	if ((pos = str.find(" ")) != std::string::npos
+	|| (pos = str.find("	")) != std::string::npos) {
+		this->url = str.substr(0, pos);
+		str.erase(0, pos + 1);
 	}
 
-	this->protocole = this->brut_method.substr(0);
+	this->protocole = str.substr(0);
 
 	cout << "type : '" << this->type << "'" << endl;
 	cout << "url : '" << this->url << "'" << endl;
 	cout << "protocole : '" << this->protocole << "'" << endl;
 
-
-
-
-	if (Request::Method::checkMethod()
-	||	Request::Method::checkUri()
-	||	Request::Method::checkProtocole())
+	if (this->checkType()
+	||	this->checkUri()
+	||	this->checkProtocole())
 	{
-		cerr << "Error : method syntaxe is not valid" << endl;
 		return 1;
 	}
 	return 0;
 }
 
-bool Request::Method::checkMethod( void ) {
-	return 0;
-}
-
-bool Request::Method::checkUri( void ) {
-	return 0;
-}
-
-bool Request::Method::checkProtocole( void ) {
-
-	if (this->brut_method.find("HTTP/1.1\r\n") != string::npos) {
-		cerr << "Error : HTTP version is not valid" << endl;
+bool Method::checkType( void ) {
+	if (this->type == "GET") {
+		this->isGet = true;
+	}
+	else if (this->type == "POST") {
+		this->isPost = true;
+	}
+	else if (this->type == "DELETE") {
+		this->isDelete = true;
+	}
+	else {
+		cerr << "Error : request method is not valid" << endl;
 		return 1;
 	}
-
-	/* check 1.12 ?! */
 	return 0;
 }
 
+bool Method::checkUri( void ) {
+	size_t pos;
+	string str(this->url);
 
+	if ((pos = str.find("?")) != std::string::npos) {
+		this->path = str.substr(0, pos);
+		str.erase(0, pos + 1);
+
+		if ((pos = str.find("#")) != std::string::npos) {
+			this->parameters = str.substr(0, pos);
+			this->anchor = str.substr(pos + 1);
+		}
+		else {
+			this->parameters = str.substr(0);
+		}
+	}
+	else if ((pos = str.find("#")) != std::string::npos) {
+		this->path = str.substr(0, pos);
+		this->anchor = str.substr(pos + 1);
+	}
+	else {
+		this->path = str.substr(0);
+	}
+	return 0;
+}
+
+bool Method::checkProtocole( void ) {
+	if (this->protocole != "HTTP/1.1") {
+		cerr << "Error : HTTP version " << this->protocole << " is not valid" << endl;
+		return 1;
+	}
+	return 0;
+}
 
 
 
@@ -191,7 +226,7 @@ bool Request::Method::checkProtocole( void ) {
 
 /* *************   CONSTRCUTOR   ************* */
 
-Request::Header::Header()
+Header::Header()
 :
 	brut_header(""),
 	host("")
@@ -210,18 +245,18 @@ Request::Header::Header()
 	t_encodings accept_encoding;
 }
 
-Request::Header::Header(Header const &src)
+Header::Header(Header const &src)
 {
 	*this = src;
 	return ;
 }
 
-Request::Header::~Header()
+Header::~Header()
 {
 	return ;
 }
 
-Request::Header &Request::Header::operator=(Header const &rhs)
+Header &Header::operator=(Header const &rhs)
 {
 	/* a revoir apres */
 	if (this != &rhs)
@@ -236,26 +271,54 @@ Request::Header &Request::Header::operator=(Header const &rhs)
 }
 
 /* *************   FUNCTION   ************* */
-void Request::Header::parseHeader( void ) {
+bool Header::parseHeader( void ) {
+	size_t pos = 0;
+	string str(this->brut_header);
+	string line;
+	string key;
+	string value;
 
+	while ((pos = str.find("\r\n")) != std::string::npos) {
+		line = str.substr(0, pos);
+		cout << "line : " << line << endl;
+		str.erase(0, pos + 2);
+
+		if ((pos = line.find(": ")) != std::string::npos) {
+			key = line.substr(0, pos);
+			value = line.substr(pos + 2);
+
+			if (key == "Host")
+				this->host = value;
+			else if (key == "User-Agent")
+				this->str_user_agent = value;
+			else if (key == "Accept")
+				this->str_accept = value;
+			else if (key == "Accept-Language")
+				this->str_accept_language = value;
+			else if (key == "Accept-Encoding")
+				this->str_accept_encoding = value;
+			else if (key == "Content-Type")
+				this->content_type = value;
+			else if (key == "Content-Length")
+				this->content_length = value; 
+			else if (key == "Content-Encoding")
+				this->content_encoding = value;
+			else if (key == "Content-Language")
+				this->content_language = value;
+			else if (key == "Content-Location")
+				this->content_location = value;
+		}
+		else {
+			cerr << "Error : header line '" << line << "' is not valid" << endl;
+			return 1;
+		}
+	}
+	return 0;
 }
 
-bool Request::Header::checkSyntaxe( void ) {
+bool Header::checkSyntaxe( void ) {
 	return (false);
 }
-
-bool Request::Header::checkMethod( void ) {
-	return (false);
-}
-
-bool Request::Header::checkUri( void ) {
-	return (false);
-}
-
-bool Request::Header::checkProtocole( void ) {
-	return (false);
-}
-
 
 
 
@@ -273,23 +336,23 @@ bool Request::Header::checkProtocole( void ) {
 
 /* *************   CONSTRCUTOR   ************* */
 
-Request::Body::Body() :
+Body::Body() :
 	brut_body("")
 {
 	t_body body;
 	return ;
 }
 
-Request::Body::Body(Body const &src) {
+Body::Body(Body const &src) {
 	*this = src;
 	return ;
 }
 
-Request::Body::~Body() {
+Body::~Body() {
 	return ;
 }
 
-Request::Body &Request::Body::operator=(Body const &rhs) {
+Body &Body::operator=(Body const &rhs) {
 	if (this != &rhs) {
 		this->body = rhs.body;
 	}
@@ -298,8 +361,40 @@ Request::Body &Request::Body::operator=(Body const &rhs) {
 
 /* *************   FUNCTION   ************* */
 
-void Request::Body::parseBody( void ) {
+bool Body::parseBody( void ) {
 
+	// size_t pos = 0;
+	// string str(this->brut_body);
+	// string line;
+	// string key;
+	// string value;
+
+	// while ((pos = str.find("\r\n")) != std::string::npos) {
+	// 	line = str.substr(0, pos);
+	// 	str.erase(0, pos + 2);
+
+	// 	if ((pos = line.find("=")) != std::string::npos) {
+	// 		key = line.substr(0, pos);
+	// 		value = line.substr(pos + 1);
+
+	// 		this->body[key] = value;
+	// 	}
+	// 	else {
+	// 		cerr << "Error : body line is not valid" << endl;
+	// 		return 1;
+	// 	}
+	// }
+
+
+
+
+
+
+
+
+
+
+	return 0;
 }
 
 
@@ -315,11 +410,17 @@ void Request::Body::parseBody( void ) {
 /* *************************************************** */
 
 /* *************   CONSTRCUTOR   ************* */
-Request::Request() : Method(), Header(), Body() {
+Request::Request(){
+	method = Method();
+	header = Header();
+	body = Body();
 	return ; 
 }
 
-Request::Request(Request const &src) : Method(src.method), Header(src.header), Body(src.body) {
+Request::Request(Request const &src){
+	this->method = src.method;
+	this->header = src.header;
+	this->body = src.body;
 	return ;
 }
 
@@ -340,7 +441,6 @@ Request &Request::operator=(Request const &rhs) {
 /* *************   FUNCTION   ************* */
 bool Request::splitRequest(string req) {
 
-	string::size_type m_pos;
 	string::size_type ml_pos;
 	string::size_type h_pos;
 	string::size_type hl_pos;
@@ -360,28 +460,9 @@ bool Request::splitRequest(string req) {
 		return 1;
 	}
 
-	if ((m_pos = req.find("GET")) != string::npos) {
-		this->isGet = true;
-	}
-	else if ((m_pos = req.find("POST")) != string::npos) {
-		this->isPost = true;
-	}
-	else if ((m_pos = req.find("DELETE")) != string::npos) {
-		this->isDelete = true;
-	}
-	else {
-		cerr << "Error : request method is not valid" << endl;
-		return 1;
-	}
-
-	if (m_pos != 0) {
-		cerr << "Error : request method is not at the beginning of the request" << endl;
-		return 1;
-	}
-
 	/* split request method */
 	ml_pos = req.find("\r\n");
-	this->brut_method = req.substr(0, ml_pos);
+	method.brut_method = req.substr(0, ml_pos);
 
 	/* split header */
 	h_pos = ml_pos + 2;
@@ -391,21 +472,21 @@ bool Request::splitRequest(string req) {
 			cerr << "Error : header is not valid, miss empty new line beetween headers and body" << endl;
 			return 1;
 		}
-		this->brut_body = "";
-		this->brut_header = req.substr(h_pos);
+		this->body.brut_body = "";
+		this->header.brut_header = req.substr(h_pos);
 	}
 	else {
-		hl_pos -= ml_pos + 2;
-		this->brut_header = req.substr(h_pos, hl_pos);
+		hl_pos -= ml_pos;
+		this->header.brut_header = req.substr(h_pos, hl_pos);
 
 		/* split body */
 		b_pos = ml_pos + 2 + hl_pos + 4;
 		bl_pos = req.size() - ml_pos - 2 - hl_pos - 4;
-		this->brut_body = req.substr(b_pos, bl_pos);
+		this->body.brut_body = req.substr(b_pos, bl_pos);
 	}
-	// cerr << "Method : '" << this->brut_method << "'" << endl;
-	// cerr << "Header : '" << this->brut_header << "'"<< endl;
-	// cerr << "Body : '" << this->brut_body << "'" << endl;
+	// cerr << "Method : '" << this->method.brut_method << "'" << endl;
+	// cerr << "Header : '" << this->header.brut_header << "'"<< endl;
+	// cerr << "Body : '" << this->body.brut_body << "'" << endl;
 
 	return 0;
 }
@@ -423,12 +504,10 @@ bool Request::parseRequest(string req) {
 	// cout << "Request Brut size : " << req.size() << endl;
 
 	if ( splitRequest(req)
-	|| parseMethod() ) {
+	|| method.parseMethod() 
+	|| header.parseHeader()
+	|| body.parseBody() ) {
 		return 1;
 	}
-
-	this->header.parseHeader();
-	this->body.parseBody();
-
 	return 0;
 }

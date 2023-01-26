@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/26 15:07:08 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/26 21:34:07 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 int main() {
 	Request req;
 
-const char*requestGet = "GET / HTTP/1.12\r\n\
+const char*requestGet = "GET /home?page=12&book=123#456 HTTP/1.1\r\n\
 Host: www.google.fr\r\n\
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\r\n\
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
@@ -62,7 +62,7 @@ Content-Length: 45\r\n\
 	\"email\": \"johndoe@example.com\"\r\n\
 }\r\n";
 
-const char*requestDelete = "DELETE /url_to_delete HTTP/1.1\r\n\
+const char *requestDelete = "DELETE /url_to_delete HTTP/1.1\r\n\
 Host: www.google.fr\r\n\
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\r\n\
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
@@ -84,20 +84,35 @@ Content-Location: www.google.fr\r\n\
 
 
 
-	if (req.parseRequest(requestGet)) {
+	if (req.parseRequest(requestPost)) {
 		return 1;
 	}
 
-	cout << req.getMethod().isGet << endl;
-	cout << req.getMethod().isPost << endl;
-	cout << req.getMethod().isDelete << endl;
+	cout << req.method.isGet << endl;
+	cout << req.method.isPost << endl;
+	cout << req.method.isDelete << endl;
 
-	cout << req.getMethod().path << endl;
-	cout << req.getMethod().parameters << endl;
-	cout << req.getMethod().anchor << endl;
-	cout << req.getMethod().protocole << endl;
-	cout << req.getHeader().host << endl;
-	cout << req.getHeader().user_agent.compatibleMozilla << endl;
+	cout << "url '" << req.method.url << "'" << endl;
+	cout << "path '" << req.method.path << "'" << endl;
+	cout << "params '" << req.method.parameters << "'" << endl;
+	cout << "anchor '" << req.method.anchor <<  "'" << endl;
+	cout << "protocle '" << req.method.protocole << "'" << endl;
+	cout << "host '" << req.header.host << "'" << endl;
+	cout << "useragent '" << req.header.str_user_agent << "'" << endl;
+	cout << "accept '" << req.header.str_accept << "'" << endl;
+	cout << "accept_language '" << req.header.str_accept_language << "'" << endl;
+	cout << "accept_encoding '" << req.header.str_accept_encoding << "'" << endl;
+
+	cout << "content_length '" << req.header.content_length << "'" << endl;
+	cout << "content_type '" << req.header.content_type << "'" << endl;
+	cout << "content_encoding '" << req.header.content_encoding << "'" << endl;
+	cout << "content_language '" << req.header.content_language << "'" << endl;
+	cout << "content_location '" << req.header.content_location << "'" << endl;
+	// cout << "content '" << req.header.content << "'" << endl;
+
+	// cout << "body '" << req.body << "'" << endl;
+
+	
 	return 0;
 }
 
