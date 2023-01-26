@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/26 00:58:28 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/26 15:14:49 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 #include <iostream>
 #include <string>
+
+using namespace std;
 
 // #include <iostream>
 
@@ -46,6 +48,21 @@ HTTP pour que la requête soit considérée comme valide.
 	//check body size max 8Mo
 */
 
+	/*
+			Vérifiez que la première ligne contient la méthode HTTP correcte (GET, POST, PUT, DELETE, etc.), l'URI de la ressource cible et la version HTTP utilisée (HTTP/1.1).
+	Vérifiez que l'en-tête Host est présent et contient le nom d'hôte du serveur cible.
+	Vérifiez que les autres en-têtes de la requête sont présents et valides (par exemple, Content-Type pour les requêtes avec un corps, Content-Length pour les requêtes avec un corps, Authorization pour les requêtes nécessitant une authentification, etc.).
+	Vérifiez que le corps de la requête est valide et contient les informations appropriées pour la requête (si présent).
+		Vérifiez que les retours à la ligne (\r\n) sont utilisés pour séparer les en-têtes
+			et pour indiquer la fin de la requête (\r\n à la fin de la requête).
+			Vérifiez que la longueur de la requête est conforme aux limites spécifiées par le protocole HTTP (généralement 8190 octets ou moins).
+	Vérifiez que les valeurs des en-têtes ne dépassent pas les limites spécifiées par le protocole HTTP (généralement 8190 octets ou moins).
+	Vérifiez que les URI de la requête sont encodés de manière appropriée, en utilisant les codes d'échappement pour les caractères spéciaux tels que les espaces et les caractères non ASCII.
+	Vérifiez que les valeurs des en-têtes sont encodées de manière appropriée, en utilisant les codes d'échappement pour les caractères spéciaux tels que les espaces et les caractères non ASCII.
+	Vérifiez que la requête est conforme aux règles de sécurité établies pour l'application ou le service utilisé, par exemple en vérifiant que l'authentification est valide et que les autorisations appropriées ont été accordées pour l'accès à la ressource demandée.
+	Vérifiez que la requête contient les informations de contrôle de la version nécessaire (If-Match, If-None-Match, If-Modified-Since, If-Unmodified-Since) pour les méthodes PUT et DELETE qui nécessitent une condition d'écriture.
+	*/
+
 /* *************************************************** */
 /*                                                     */
 /*                        METHOD                       */
@@ -56,11 +73,13 @@ HTTP pour que la requête soit considérée comme valide.
 
 Request::Method::Method()
 :
+	brut_method(""),
 	isGet(false),
 	isPost(false),
 	isDelete(false),
 	isValid(false),
-	method(""),
+	type(""),
+	url(""),
 	path(""),
 	parameters(""),
 	anchor(""),
@@ -83,9 +102,13 @@ Request::Method &Request::Method::operator=(Method const &rhs)
 {
 	if (this != &rhs)
 	{
+		this->brut_method = rhs.brut_method;
 		this->isGet = rhs.isGet;
 		this->isPost = rhs.isPost;
 		this->isDelete = rhs.isDelete;
+		this->isValid = rhs.isValid;
+		this->type = rhs.type;
+		this->url = rhs.url;
 		this->path = rhs.path;
 		this->parameters = rhs.parameters;
 		this->anchor = rhs.anchor;
@@ -96,10 +119,34 @@ Request::Method &Request::Method::operator=(Method const &rhs)
 
 /* *************   FUNCTION   ************* */
 
-bool Request::Method::parseMethod(string method) {
-	if (Request::Method::checkMethod(method)
-	||	Request::Method::checkUri(method)
-	||	Request::Method::checkProtocole(method))
+bool Request::Method::parseMethod( void ) {
+	cout << "method : " << this->brut_method << endl;
+
+	size_t pos = 0;
+	if ((pos = this->brut_method.find(" ")) != std::string::npos
+	|| (pos = this->brut_method.find("	")) != std::string::npos) {
+		this->type = this->brut_method.substr(0, pos);
+		this->brut_method.erase(0, pos + 1);
+	}
+
+	if ((pos = this->brut_method.find(" ")) != std::string::npos
+	|| (pos = this->brut_method.find("	")) != std::string::npos) {
+		this->url = this->brut_method.substr(0, pos);
+		this->brut_method.erase(0, pos + 1);
+	}
+
+	this->protocole = this->brut_method.substr(0);
+
+	cout << "type : '" << this->type << "'" << endl;
+	cout << "url : '" << this->url << "'" << endl;
+	cout << "protocole : '" << this->protocole << "'" << endl;
+
+
+
+
+	if (Request::Method::checkMethod()
+	||	Request::Method::checkUri()
+	||	Request::Method::checkProtocole())
 	{
 		cerr << "Error : method syntaxe is not valid" << endl;
 		return 1;
@@ -107,16 +154,17 @@ bool Request::Method::parseMethod(string method) {
 	return 0;
 }
 
-bool Request::Method::checkMethod(string method) {
+bool Request::Method::checkMethod( void ) {
 	return 0;
 }
 
-bool Request::Method::checkUri(string method) {
+bool Request::Method::checkUri( void ) {
 	return 0;
 }
 
-bool Request::Method::checkProtocole(string method) {
-	if (method.find("HTTP/1.1") == string::npos) {
+bool Request::Method::checkProtocole( void ) {
+
+	if (this->brut_method.find("HTTP/1.1\r\n") != string::npos) {
 		cerr << "Error : HTTP version is not valid" << endl;
 		return 1;
 	}
@@ -143,12 +191,10 @@ bool Request::Method::checkProtocole(string method) {
 
 /* *************   CONSTRCUTOR   ************* */
 
-Request::Header::Header() 
+Request::Header::Header()
 :
-	host(""),
-	checkedMethod(false),
-	checkedUri(false),
-	checkedProtocole(false)
+	brut_header(""),
+	host("")
 {
 	user_agent.compatibleMozilla = "";
 	user_agent.version = "";
@@ -177,6 +223,7 @@ Request::Header::~Header()
 
 Request::Header &Request::Header::operator=(Header const &rhs)
 {
+	/* a revoir apres */
 	if (this != &rhs)
 	{
 		this->host = rhs.host;
@@ -189,33 +236,23 @@ Request::Header &Request::Header::operator=(Header const &rhs)
 }
 
 /* *************   FUNCTION   ************* */
-void Request::Header::parseHeader(string brut_method ,string brut_header) {
-	string line;
-	string pos1;
-	string pos2;
+void Request::Header::parseHeader( void ) {
 
-	// if (!checkSyntaxe(line) || !checkMethod(pos1) || !checkUri(pos2) || !checkProtocole(pos3)) {
-	//   cerr << "Header is not valid" << endl;
-	// }
 }
 
-bool Request::Header::checkSyntaxe(string str) {
-	(void)str;
+bool Request::Header::checkSyntaxe( void ) {
 	return (false);
 }
 
-bool Request::Header::checkMethod(string str) {
-	(void)str;
+bool Request::Header::checkMethod( void ) {
 	return (false);
 }
 
-bool Request::Header::checkUri(string str) {
-	(void)str;
+bool Request::Header::checkUri( void ) {
 	return (false);
 }
 
-bool Request::Header::checkProtocole(string str) {
-	(void)str;
+bool Request::Header::checkProtocole( void ) {
 	return (false);
 }
 
@@ -236,7 +273,10 @@ bool Request::Header::checkProtocole(string str) {
 
 /* *************   CONSTRCUTOR   ************* */
 
-Request::Body::Body() {
+Request::Body::Body() :
+	brut_body("")
+{
+	t_body body;
 	return ;
 }
 
@@ -258,7 +298,7 @@ Request::Body &Request::Body::operator=(Body const &rhs) {
 
 /* *************   FUNCTION   ************* */
 
-void Request::Body::parseBody(string brut_body) {
+void Request::Body::parseBody( void ) {
 
 }
 
@@ -298,7 +338,7 @@ Request &Request::operator=(Request const &rhs) {
 
 
 /* *************   FUNCTION   ************* */
-bool Request::splitRequest(string req, string &method_line, string &header, string &body) {
+bool Request::splitRequest(string req) {
 
 	string::size_type m_pos;
 	string::size_type ml_pos;
@@ -306,9 +346,6 @@ bool Request::splitRequest(string req, string &method_line, string &header, stri
 	string::size_type hl_pos;
 	string::size_type b_pos;
 	string::size_type bl_pos;
-	bool isGet = false;
-	bool isPost = false;
-	bool isDelete = false;
 
 	if (req.size() > 8192) {
 		cerr << "Error : request size is too big" << endl;
@@ -324,13 +361,13 @@ bool Request::splitRequest(string req, string &method_line, string &header, stri
 	}
 
 	if ((m_pos = req.find("GET")) != string::npos) {
-		isGet = true;
+		this->isGet = true;
 	}
 	else if ((m_pos = req.find("POST")) != string::npos) {
-		isPost = true;
+		this->isPost = true;
 	}
 	else if ((m_pos = req.find("DELETE")) != string::npos) {
-		isDelete = true;
+		this->isDelete = true;
 	}
 	else {
 		cerr << "Error : request method is not valid" << endl;
@@ -342,86 +379,56 @@ bool Request::splitRequest(string req, string &method_line, string &header, stri
 		return 1;
 	}
 
-	if (isGet) {
-		/* split request method */
-		ml_pos = req.find("\r\n");
-		method_line = req.substr(0, ml_pos);
-		cout << "method line : " << method_line << endl;
+	/* split request method */
+	ml_pos = req.find("\r\n");
+	this->brut_method = req.substr(0, ml_pos);
 
-		/* split header */
-		h_pos = ml_pos + 2;
-		hl_pos = req.size() - 2 - ml_pos - 2;
-		header = req.substr(h_pos, hl_pos);
-		cout << "header : '" << header << "'" << endl;
-	}
-	if (isPost || isDelete) {
-		/* split request method */
-		ml_pos = req.find("\r\n");
-		method_line = req.substr(0, ml_pos);
-		cout << "method line : " << method_line << endl;
-
-		/* split header */
-		h_pos = ml_pos + 2;
-		hl_pos = req.find("\r\n\r\n");
-		if(hl_pos == string::npos) {
+	/* split header */
+	h_pos = ml_pos + 2;
+	hl_pos = req.find("\r\n\r\n");
+	if (hl_pos == string::npos) {
+		if(req.find("POST") == 0) {
 			cerr << "Error : header is not valid, miss empty new line beetween headers and body" << endl;
 			return 1;
 		}
+		this->brut_body = "";
+		this->brut_header = req.substr(h_pos);
+	}
+	else {
 		hl_pos -= ml_pos + 2;
-		header = req.substr(h_pos, hl_pos);
-		cout << "header : '" << header << "'" << endl;
+		this->brut_header = req.substr(h_pos, hl_pos);
 
 		/* split body */
 		b_pos = ml_pos + 2 + hl_pos + 4;
-		bl_pos = req.size() - ml_pos - 2 - hl_pos - 4 - 2;
-		body = req.substr(b_pos, bl_pos);
-		cout << "body : '" << body << "'" << endl;
+		bl_pos = req.size() - ml_pos - 2 - hl_pos - 4;
+		this->brut_body = req.substr(b_pos, bl_pos);
 	}
-	return 0;
-}
-
-bool Request::checkRequest(string method, string header, string body) {
-	/*
-			Vérifiez que la première ligne contient la méthode HTTP correcte (GET, POST, PUT, DELETE, etc.), l'URI de la ressource cible et la version HTTP utilisée (HTTP/1.1).
-	Vérifiez que l'en-tête Host est présent et contient le nom d'hôte du serveur cible.
-	Vérifiez que les autres en-têtes de la requête sont présents et valides (par exemple, Content-Type pour les requêtes avec un corps, Content-Length pour les requêtes avec un corps, Authorization pour les requêtes nécessitant une authentification, etc.).
-	Vérifiez que le corps de la requête est valide et contient les informations appropriées pour la requête (si présent).
-		Vérifiez que les retours à la ligne (\r\n) sont utilisés pour séparer les en-têtes
-			et pour indiquer la fin de la requête (\r\n à la fin de la requête).
-			Vérifiez que la longueur de la requête est conforme aux limites spécifiées par le protocole HTTP (généralement 8190 octets ou moins).
-	Vérifiez que les valeurs des en-têtes ne dépassent pas les limites spécifiées par le protocole HTTP (généralement 8190 octets ou moins).
-	Vérifiez que les URI de la requête sont encodés de manière appropriée, en utilisant les codes d'échappement pour les caractères spéciaux tels que les espaces et les caractères non ASCII.
-	Vérifiez que les valeurs des en-têtes sont encodées de manière appropriée, en utilisant les codes d'échappement pour les caractères spéciaux tels que les espaces et les caractères non ASCII.
-	Vérifiez que la requête est conforme aux règles de sécurité établies pour l'application ou le service utilisé, par exemple en vérifiant que l'authentification est valide et que les autorisations appropriées ont été accordées pour l'accès à la ressource demandée.
-	Vérifiez que la requête contient les informations de contrôle de la version nécessaire (If-Match, If-None-Match, If-Modified-Since, If-Unmodified-Since) pour les méthodes PUT et DELETE qui nécessitent une condition d'écriture.
-	*/
-
-	/* check order */
-
-	// void parseMethod(string brut_method);
+	// cerr << "Method : '" << this->brut_method << "'" << endl;
+	// cerr << "Header : '" << this->brut_header << "'"<< endl;
+	// cerr << "Body : '" << this->brut_body << "'" << endl;
 
 	return 0;
 }
+
+// bool Request::checkRequest(string method, string header, string body) {
+// 	/* check order */
+
+// 	void parseMethod(string brut_method);
+
+// 	return 0;
+// }
 
 bool Request::parseRequest(string req) {
 	cout << "********************* \n" << req << "\n*********************" << endl;
 	// cout << "Request Brut size : " << req.size() << endl;
 
-	string method;
-	string header;
-	string body;
-
-	if ( splitRequest(req, method, header, body)
-	|| parseMethod(method) ) {
+	if ( splitRequest(req)
+	|| parseMethod() ) {
 		return 1;
 	}
 
-
-
-	this->header.parseHeader(method, header);
-	this->body.parseBody(body);
-
-
+	this->header.parseHeader();
+	this->body.parseBody();
 
 	return 0;
 }

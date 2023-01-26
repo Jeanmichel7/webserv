@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/26 00:58:14 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/26 15:07:08 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 int main() {
 	Request req;
 
-	const char*requestGet = "GET / HTTP/1.1\r\
+const char*requestGet = "GET / HTTP/1.12\r\n\
 Host: www.google.fr\r\n\
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\r\n\
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
@@ -84,20 +84,20 @@ Content-Location: www.google.fr\r\n\
 
 
 
-	if (req.parseRequest(requestPost2)) {
+	if (req.parseRequest(requestGet)) {
 		return 1;
 	}
 
-	std::cout << req.getMethod().isGet << std::endl;
-	std::cout << req.getMethod().isPost << std::endl;
-	std::cout << req.getMethod().isDelete << std::endl;
+	cout << req.getMethod().isGet << endl;
+	cout << req.getMethod().isPost << endl;
+	cout << req.getMethod().isDelete << endl;
 
-	std::cout << req.getMethod().path << std::endl;
-	std::cout << req.getMethod().parameters << std::endl;
-	std::cout << req.getMethod().anchor << std::endl;
-	std::cout << req.getMethod().protocole << std::endl;
-	std::cout << req.getHeader().host << std::endl;
-	std::cout << req.getHeader().user_agent.compatibleMozilla << std::endl;
+	cout << req.getMethod().path << endl;
+	cout << req.getMethod().parameters << endl;
+	cout << req.getMethod().anchor << endl;
+	cout << req.getMethod().protocole << endl;
+	cout << req.getHeader().host << endl;
+	cout << req.getHeader().user_agent.compatibleMozilla << endl;
 	return 0;
 }
 
@@ -135,12 +135,12 @@ Content-Location: www.google.fr\r\n\
 // 				/* get request */
 // 				char *brut_request = new char[5000];
 // 				recv(socket_client, brut_request, 5000, 0);
-// 				std::cout << "brut request : " << brut_request << std::endl;
+// 				cout << "brut request : " << brut_request << endl;
 
 // 				/* parse request */
 // 				Request req;
 // 				req.parse(brut_request);
-// 				std::cout << "is get : " << req.method.isGet << std::endl;
+// 				cout << "is get : " << req.method.isGet << endl;
 
 // 				/* send response */
 // 				FILE *file = fopen("/Users/jrasser/cursus/webservtmp/http/index.html", "r");
@@ -178,11 +178,11 @@ Content-Location: www.google.fr\r\n\
 // 			}
 // 		}
 // 	}
-// 	catch(const std::exception& e)
+// 	catch(const exception& e)
 // 	{
 // 		close(fd);
 // 		close(ke);
-// 		std::cerr << e.what() << '\n';
+// 		cerr << e.what() << '\n';
 // 	}
 // }
 
