@@ -6,12 +6,14 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/24 19:42:46 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/25 21:01:57 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 # define SERVER_HPP
+
+using namespace std;
 
 # include <sys/socket.h>
 # include <sys/types.h>

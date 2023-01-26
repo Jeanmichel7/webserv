@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/25 18:07:08 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/26 00:58:14 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,50 +18,84 @@
 int main() {
 	Request req;
 
-	const char*requestGet = "GET / HTTP/1.1\n\
-Host: www.google.fr\n\
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\n\
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\n\
-Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\n\
-Accept-Encoding: gzip, deflate, br\n\
-Alt-Used: www.google.fr\n\
-Connection: keep-alive\n\
-Cookie: AEC=ARSKqsKvUfG5zsMM3KX6G_Ic4lpx6N47qUQpVZ4pqtqxPabwToyvxumfDLc; __Secure-ENID=10.SE=oq2mQ0ieZeRlL4O7a6glMPKWDHvt2QIH-WXX1GLZGJ05wg6z3uBg0buLnS4tOcFtUQN1CUKKkUx-adOUuEip1Eh57YeLn8XVaoal_vD5iS-jCchRZzUygFOaDnpUc4d4i6oeIu9YBJc0hMM2MtnpbI0eQqxRS2aSvYb7fWy2iqI; CONSENT=PENDING+844; SOCS=CAESHAgBEhJnd3NfMjAyMzAxMTgtMF9SQzEaAmZyIAEaBgiAnLeeBg\n\
-Upgrade-Insecure-Requests: 1\n\
-Sec-Fetch-Dest: document\n\
-Sec-Fetch-Mode: navigate\n\
-Sec-Fetch-Site: none\n\
-Sec-Fetch-User: ?1\n\
-TE: trailers\n";
+	const char*requestGet = "GET / HTTP/1.1\r\
+Host: www.google.fr\r\n\
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\r\n\
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
+Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\r\n\
+Accept-Encoding: gzip, deflate, br\r\n\
+Alt-Used: www.google.fr\r\n\
+Connection: keep-alive\r\n\
+Cookie: AEC=ARSKqsKvUfG5zsMM3KX6G_Ic4lpx6N47qUQpVZ4pqtqxPabwToyvxumfDLc; __Secure-ENID=10.SE=oq2mQ0ieZeRlL4O7a6glMPKWDHvt2QIH-WXX1GLZGJ05wg6z3uBg0buLnS4tOcFtUQN1CUKKkUx-adOUuEip1Eh57YeLn8XVaoal_vD5iS-jCchRZzUygFOaDnpUc4d4i6oeIu9YBJc0hMM2MtnpbI0eQqxRS2aSvYb7fWy2iqI; CONSENT=PENDING+844; SOCS=CAESHAgBEhJnd3NfMjAyMzAxMTgtMF9SQzEaAmZyIAEaBgiAnLeeBg\r\n\
+Upgrade-Insecure-Requests: 1\r\n\
+Sec-Fetch-Dest: document\r\n\
+Sec-Fetch-Mode: navigate\r\n\
+Sec-Fetch-Site: none\r\n\
+Sec-Fetch-User: ?1\r\n\
+TE: trailers\r\n";
 
 
-const char*requestPost = "POST /url_to_post HTTP/1.1\n\
-Host: www.google.fr\n\
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\n\
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\n\
-Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\n\
-Accept-Encoding: gzip, deflate, br\n\
-Alt-Used: www.google.fr\n\
-Connection: keep-alive\n\
-Content-Length: 11\n\
-Content-Type: application/x-www-form-urlencoded\n\
-Content-Type: text/plain\n\
-Content-Encoding: gzip\n\
-Content-Language: fr\n\
-Content-Location: www.google.fr\n\
-\n\
-Hello World\n";
+const char*requestPost = "POST /url_to_post HTTP/1.1\r\n\
+Host: www.google.fr\r\n\
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\r\n\
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
+Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\r\n\
+Accept-Encoding: gzip, deflate, br\r\n\
+Alt-Used: www.google.fr\r\n\
+Connection: keep-alive\r\n\
+Content-Length: 11\r\n\
+Content-Type: application/x-www-form-urlencoded\r\n\
+Content-Type: text/plain\r\n\
+Content-Encoding: gzip\r\n\
+Content-Language: fr\r\n\
+Content-Location: www.google.fr\r\n\
+\r\n\
+\"Simple string\"\r\n";
+
+const char *requestPost2 = "POST /users HTTP/1.1\r\n\
+Host: www.example.com\r\n\
+Content-Type: application/json\r\n\
+Content-Length: 45\r\n\
+\r\n\
+{\r\n\
+  \"name\": \"John Doe\",\r\n\
+	\"email\": \"johndoe@example.com\"\r\n\
+}\r\n";
+
+const char*requestDelete = "DELETE /url_to_delete HTTP/1.1\r\n\
+Host: www.google.fr\r\n\
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\r\n\
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
+Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\r\n\
+Accept-Encoding: gzip, deflate, br\r\n\
+Alt-Used: www.google.fr\r\n\
+Connection: keep-alive\r\n\
+Content-Length: 11\r\n\
+Content-Type: application/x-www-form-urlencoded\r\n\
+Content-Type: text/plain\r\n\
+Content-Encoding: gzip\r\n\
+Content-Language: fr\r\n\
+Content-Location: www.google.fr\r\n\
+\r\n\
+{\r\n\
+  \"name\": \"John Doe\",\r\n\
+	\"email\": \"johndoe@example.com\"\r\n\
+}\r\n";
 
 
-	req.parseRequest(requestPost);
-	std::cout << req.getHeader().method.isGet << std::endl;
-	std::cout << req.getHeader().method.isPost << std::endl;
-	std::cout << req.getHeader().method.isDelete << std::endl;
 
-	std::cout << req.getHeader().method.path << std::endl;
-	std::cout << req.getHeader().method.parameters << std::endl;
-	std::cout << req.getHeader().method.anchor << std::endl;
-	std::cout << req.getHeader().method.protocole << std::endl;
+	if (req.parseRequest(requestPost2)) {
+		return 1;
+	}
+
+	std::cout << req.getMethod().isGet << std::endl;
+	std::cout << req.getMethod().isPost << std::endl;
+	std::cout << req.getMethod().isDelete << std::endl;
+
+	std::cout << req.getMethod().path << std::endl;
+	std::cout << req.getMethod().parameters << std::endl;
+	std::cout << req.getMethod().anchor << std::endl;
+	std::cout << req.getMethod().protocole << std::endl;
 	std::cout << req.getHeader().host << std::endl;
 	std::cout << req.getHeader().user_agent.compatibleMozilla << std::endl;
 	return 0;
