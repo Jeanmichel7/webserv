@@ -23,7 +23,7 @@ struct	Methods
 namespace yd{
 	bool isValidPathDir(std::string const &s);
 	bool isValidPathFile(std::string const &s);
-	int commonPathLenght(const std::string &path1, const std::string &path2);
+	int comparePath(const std::string &path1, const std::string &path2);
 }
 
 class Tokenizer;
@@ -108,7 +108,7 @@ class Config
 		friend class Tokenizer;
 		Config(const std::string &path);
 		bool	selectServ(const unsigned int ip = 2130706433, const unsigned int port = 80);
-		const std::string *getFile(const std::string &path) const;
+		const std::string *getFile(const std::string &path);
 		const Methods getMethod(const std::string &path) const;
 		const std::string *getError(const unsigned int error) const;
 		const std::string *getCgi(const std::string &path, const std::string &cgi) const;
@@ -122,6 +122,7 @@ class Config
 		const Location &getLocation(std::string const &path) const;
 		std::vector<Server> _server;
 		Server *_server_selected;
+		std::string _buffer;
 };
 
 class Tokenizer
