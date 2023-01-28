@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/26 21:36:14 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/28 19:42:57 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,14 +132,14 @@ bool Method::parseMethod( void ) {
 	string str(this->brut_method);
 	// cout << "method : " << str << endl;
 	
-	if ((pos = str.find(" ")) != std::string::npos
-	|| (pos = str.find("	")) != std::string::npos) {
+	if ((pos = str.find(" ")) != string::npos
+	|| (pos = str.find("	")) != string::npos) {
 		this->type = str.substr(0, pos);
 		str.erase(0, pos + 1);
 	}
 
-	if ((pos = str.find(" ")) != std::string::npos
-	|| (pos = str.find("	")) != std::string::npos) {
+	if ((pos = str.find(" ")) != string::npos
+	|| (pos = str.find("	")) != string::npos) {
 		this->url = str.substr(0, pos);
 		str.erase(0, pos + 1);
 	}
@@ -180,11 +180,11 @@ bool Method::checkUri( void ) {
 	size_t pos;
 	string str(this->url);
 
-	if ((pos = str.find("?")) != std::string::npos) {
+	if ((pos = str.find("?")) != string::npos) {
 		this->path = str.substr(0, pos);
 		str.erase(0, pos + 1);
 
-		if ((pos = str.find("#")) != std::string::npos) {
+		if ((pos = str.find("#")) != string::npos) {
 			this->parameters = str.substr(0, pos);
 			this->anchor = str.substr(pos + 1);
 		}
@@ -192,7 +192,7 @@ bool Method::checkUri( void ) {
 			this->parameters = str.substr(0);
 		}
 	}
-	else if ((pos = str.find("#")) != std::string::npos) {
+	else if ((pos = str.find("#")) != string::npos) {
 		this->path = str.substr(0, pos);
 		this->anchor = str.substr(pos + 1);
 	}
@@ -229,9 +229,15 @@ bool Method::checkProtocole( void ) {
 Header::Header()
 :
 	brut_header(""),
-	host("")
+	is_valid(false),
+	host(""),
+	str_user_agent(""),
+	str_accept(""),
+	str_accept_language(""),
+	str_accept_encoding(""),
+	keep_alive(false)
 {
-	user_agent.compatibleMozilla = "";
+	user_agent.compatibleMozilla = false;
 	user_agent.version = "";
 	user_agent.platform = "";
 	user_agent.os = "";
@@ -258,39 +264,224 @@ Header::~Header()
 
 Header &Header::operator=(Header const &rhs)
 {
-	/* a revoir apres */
 	if (this != &rhs)
 	{
+		this->brut_header = rhs.brut_header;
+		this->is_valid = rhs.is_valid;
 		this->host = rhs.host;
 		this->user_agent = rhs.user_agent;
+		this->str_user_agent = rhs.str_user_agent;
 		this->accept = rhs.accept;
+		this->str_accept = rhs.str_accept;
 		this->accept_language = rhs.accept_language;
+		this->str_accept_language = rhs.str_accept_language;
 		this->accept_encoding = rhs.accept_encoding;
+		this->str_accept_encoding = rhs.str_accept_encoding;
+		this->keep_alive = rhs.keep_alive;
+
+		this->content_type = rhs.content_type;
+		this->content_length = rhs.content_length;
+		this->content_language = rhs.content_language;
+		this->content_encoding = rhs.content_encoding;
+		this->content_location = rhs.content_location;
 	}
 	return (*this);
 }
 
+
+
+
+
 /* *************   FUNCTION   ************* */
+
+bool Header::checkHeaderKey(string key) {
+	string 	str(key);
+
+	if (key.empty()) {
+		cerr << "Error : key is empty" << endl;
+		return 1;
+	}
+	if (!isalpha(key[0])) {
+		cerr << "Error : key '" << key << "' is not valid: Header's key must start with a letter" << endl;
+		return 1;
+	}
+	for(string::iterator it = key.begin(); it != key.end(); it++) {
+		if (!isalnum(*it) && *it != '-'){
+			cerr << "Error : key '" << key << "' is not valid: Header's key can't have '"<< *it << "'" << endl;
+			return (true);
+		}
+	}
+
+	return 0;
+}
+
+bool Header::checkHeaderValue(string value) {
+	string 	str(value);
+
+	if (value.empty()) {
+		cerr << "Error : value is empty" << endl;
+		return 1;
+	}
+  for (string::const_iterator it = value.begin(); it != value.end(); ++it) {
+    if (!isprint(*it) && *it != '\t' && *it != ' ') {
+			cerr << "Error : value '" << value << "' is not valid: value can't have '"<< *it << "'" << endl;
+      return 1;
+		}
+  }
+  for (string::const_iterator it = value.begin(); it != value.end(); ++it) {
+    if (iscntrl(*it)){
+			cerr << "Error : value '" << value << "' is not valid: value can't have '"<< *it << "'" << endl;
+			return 1;
+		}
+  }
+  if (value[0] == ' ' || value[0] == '\t' || value[value.size() - 1] == ' ' || value[value.size() - 1] == '\t') {
+		cerr << "Error : value '" << value << "' is not valid: value can't start or end with ' ' or '\t'" << endl;
+		return 1;
+	}
+	return 0;
+}
+
+bool Header::checkSyntaxeTag(string host, string tag) {
+	if (tag.size() > 63) {
+		cerr << "Error : host '" << host << "' is not valid: > 63 char per tag" << endl;
+		return 1;
+	}
+	if (tag.empty()) {
+		cerr << "Error : host '" << host << "' is not valid: tag is empty" << endl;
+		return 1;
+	}
+	if (tag[0] == '-' || tag[tag.size() - 1] == '-') {
+		cerr << "Error : host '" << host << "' is not valid: tag can start or end with '-'" << endl;
+		return 1;
+	}
+	if (tag.find("--") != string::npos) {
+		cerr << "Error : host '" << host << "' is not valid: tag can't have '--'" << endl;
+		return 1;
+	}
+	for(string::iterator it = tag.begin(); it != tag.end(); ++it) {
+		if (!isalnum(*it) && *it != '-'){
+			cerr << "Error : host '" << host << "' is not valid: tag can't have '"<< *it << "'" << endl;
+			return (true);
+		}
+	}
+	return 0;
+}
+
+bool Header::checkHostValue( string host ) {
+	string::size_type pos = 0;
+	int 							nbTag = 1;
+	string 						tag = "";
+	string 						str(host);
+
+	if (str.empty()) {
+		cerr << "Error : host is empty" << endl;
+		return 1;
+	}
+	while ((pos = str.find(".")) != string::npos) {
+		str.erase(0, pos + 1);
+		nbTag++;
+		if (nbTag > 127) {
+			cerr << "Error : host '" << host << "' is not valid: > 127 Tags" << endl;
+			return 1;
+		}
+	}
+
+	/* check tags */
+	str = host;
+	while ((pos = str.find(".")) != string::npos) {
+		tag = str.substr(0, pos);
+		if (checkSyntaxeTag(host, tag))
+			return 1;
+		str.erase(0, pos + 1);
+	}
+	if (checkSyntaxeTag(host, str))
+		return 1;
+	this->host = host;
+	this->is_valid = true;
+	return 0;
+}
+
+
+bool Header::parseUserAgentValue( string user_agent ) {
+	string::size_type pos = 0;
+	string::size_type subpos = 0;
+	string str(user_agent);
+	string line = "";
+	string subline = "";
+	string tmp_line  = "";
+
+	if (str.size() > 512) {
+		cerr << "Error : user_agent '" << user_agent << "' is not valid: > 512 char, don't want to be DDoS" << endl;
+		return 1;
+	}
+	int i = 0;
+	while(((pos = str.find(" ")) != string::npos || (pos = str.find("	")) != string::npos)) {
+		
+		tmp_line = str.substr(pos + 1);
+		// cerr << "tmp line : " << tmp_line << endl;
+
+		line = str.substr(0, pos);
+		cerr << "line : " << line << endl;
+		// parse compatile mozilla
+		str.erase(0, pos + 1);
+
+		if ((pos = (tmp_line.find("("))) != string::npos) {
+			if ((subpos = tmp_line.find(")")) == string::npos) {
+				cerr << "Error: bracket no close" << endl;
+			}
+			line = tmp_line.substr(pos + 1, subpos - 1);
+			// cerr << "line : " << line << endl;
+
+			while((pos = line.find("; ")) != string::npos) {
+				subline = line.substr(0, pos);
+				cerr << "subline : " << subline << endl;
+				line.erase(0, pos + 1);
+			}
+			cerr << "subline fin : " << line << endl;
+			str.erase(0, subpos + 2);
+		}
+
+
+
+		line = str.substr(0, pos);
+		str.erase(0, pos + 1);
+
+		// cerr << "LINE : " << line << endl;
+		i++;
+	}
+	cerr << "line fin : " << str << endl;
+	this->str_user_agent = user_agent;
+	return 0;
+}
+
 bool Header::parseHeader( void ) {
-	size_t pos = 0;
+	string::size_type pos = 0;
 	string str(this->brut_header);
 	string line;
 	string key;
 	string value;
 
-	while ((pos = str.find("\r\n")) != std::string::npos) {
+	while ((pos = str.find("\r\n")) != string::npos) {
 		line = str.substr(0, pos);
-		cout << "line : " << line << endl;
+		// cout << "line : " << line << endl;
 		str.erase(0, pos + 2);
 
-		if ((pos = line.find(": ")) != std::string::npos) {
+		if ((pos = line.find(": ")) != string::npos) {
 			key = line.substr(0, pos);
 			value = line.substr(pos + 2);
 
-			if (key == "Host")
-				this->host = value;
-			else if (key == "User-Agent")
-				this->str_user_agent = value;
+			// check non doublon
+			if (checkHeaderKey(key) || checkHeaderValue(value))
+				return 1;
+
+			if (key == "Host") {
+				if (checkHostValue(value))
+					return 1;
+			}
+			else if (key == "User-Agent") {
+				if (parseUserAgentValue(value))
+					return 1;
+			}
 			else if (key == "Accept")
 				this->str_accept = value;
 			else if (key == "Accept-Language")
@@ -300,26 +491,26 @@ bool Header::parseHeader( void ) {
 			else if (key == "Content-Type")
 				this->content_type = value;
 			else if (key == "Content-Length")
-				this->content_length = value; 
+				this->content_length = value;
 			else if (key == "Content-Encoding")
 				this->content_encoding = value;
 			else if (key == "Content-Language")
 				this->content_language = value;
 			else if (key == "Content-Location")
 				this->content_location = value;
+			// else {
+			// 	cerr << "Header '" << key << "' non implemente, is a problem ?" << endl;
+			// 	// cerr << "Error : Header's key '" << key << "' is not valid" << endl;
+			// 	// return 1;
+			// }
 		}
 		else {
-			cerr << "Error : header line '" << line << "' is not valid" << endl;
+			cerr << "Error : Error syntaxe separator \": \" in '" << line << "'" << endl;
 			return 1;
 		}
 	}
 	return 0;
 }
-
-bool Header::checkSyntaxe( void ) {
-	return (false);
-}
-
 
 
 
@@ -369,11 +560,11 @@ bool Body::parseBody( void ) {
 	// string key;
 	// string value;
 
-	// while ((pos = str.find("\r\n")) != std::string::npos) {
+	// while ((pos = str.find("\r\n")) != string::npos) {
 	// 	line = str.substr(0, pos);
 	// 	str.erase(0, pos + 2);
 
-	// 	if ((pos = line.find("=")) != std::string::npos) {
+	// 	if ((pos = line.find("=")) != string::npos) {
 	// 		key = line.substr(0, pos);
 	// 		value = line.substr(pos + 1);
 

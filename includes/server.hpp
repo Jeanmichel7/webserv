@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/26 14:30:59 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/27 16:54:11 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 // # include <sys/event.h>
 # include <netdb.h>
 
+# include <algorithm>
 # include <iostream>
 # include <string>
 # include <cstring>

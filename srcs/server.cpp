@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/26 21:34:07 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/28 19:42:02 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 int main() {
 	Request req;
 
-const char*requestGet = "GET /home?page=12&book=123#456 HTTP/1.1\r\n\
+const char *requestGet = "GET /home?page=12&book=123#456 HTTP/1.1\r\n\
 Host: www.google.fr\r\n\
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\r\n\
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
@@ -35,7 +35,7 @@ Sec-Fetch-User: ?1\r\n\
 TE: trailers\r\n";
 
 
-const char*requestPost = "POST /url_to_post HTTP/1.1\r\n\
+const char *requestPost = "POST /url_to_post HTTP/1.1\r\n\
 Host: www.google.fr\r\n\
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\r\n\
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
@@ -53,7 +53,7 @@ Content-Location: www.google.fr\r\n\
 \"Simple string\"\r\n";
 
 const char *requestPost2 = "POST /users HTTP/1.1\r\n\
-Host: www.example.com\r\n\
+Host: www.example.com-123\r\n\
 Content-Type: application/json\r\n\
 Content-Length: 45\r\n\
 \r\n\
@@ -110,6 +110,8 @@ Content-Location: www.google.fr\r\n\
 	cout << "content_location '" << req.header.content_location << "'" << endl;
 	// cout << "content '" << req.header.content << "'" << endl;
 
+
+	req.header.is_valid ? cout << "valid" << endl : cout << "invalid miss Host" << endl;
 	// cout << "body '" << req.body << "'" << endl;
 
 	
