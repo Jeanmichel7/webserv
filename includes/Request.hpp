@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/28 15:46:57 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/28 22:45:49 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,11 +46,11 @@ struct Header {
 	typedef struct s_user_agent
 	{
 		bool		compatibleMozilla;
-		string	version;
 		string	platform;
 		string	os;
 		string	rv;
-		string	geckoVersion;
+		string	gecko;
+		// string	gecko_version;
 		string	browserName;
 		string	browserVersion;
 	} t_user_agent;

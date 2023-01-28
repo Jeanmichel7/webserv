@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/28 19:42:02 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/28 22:54:17 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ TE: trailers\r\n";
 
 const char *requestPost = "POST /url_to_post HTTP/1.1\r\n\
 Host: www.google.fr\r\n\
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\r\n\
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1\r\n\
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
 Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\r\n\
 Accept-Encoding: gzip, deflate, br\r\n\
@@ -101,14 +101,23 @@ Content-Location: www.google.fr\r\n\
 	cout << "useragent '" << req.header.str_user_agent << "'" << endl;
 	cout << "accept '" << req.header.str_accept << "'" << endl;
 	cout << "accept_language '" << req.header.str_accept_language << "'" << endl;
-	cout << "accept_encoding '" << req.header.str_accept_encoding << "'" << endl;
+	cout << "accept_encoding '" << req.header.str_accept_encoding << "'" << endl << endl;
 
 	cout << "content_length '" << req.header.content_length << "'" << endl;
 	cout << "content_type '" << req.header.content_type << "'" << endl;
 	cout << "content_encoding '" << req.header.content_encoding << "'" << endl;
 	cout << "content_language '" << req.header.content_language << "'" << endl;
-	cout << "content_location '" << req.header.content_location << "'" << endl;
+	cout << "content_location '" << req.header.content_location << "'" << endl  << endl;
 	// cout << "content '" << req.header.content << "'" << endl;
+
+
+	cout << "compatibleMozilla '" << req.header.user_agent.compatibleMozilla << "'" << endl;
+	cout << "platform '" << req.header.user_agent.platform << "'" << endl;
+	cout << "os '" << req.header.user_agent.os << "'" << endl;
+	cout << "rv '" << req.header.user_agent.rv << "'" << endl;
+	cout << "gecko '" << req.header.user_agent.gecko << "'" << endl;
+	cout << "browserName '" << req.header.user_agent.browserName << "'" << endl;
+	cout << "browserVersion '" << req.header.user_agent.browserVersion << "'" << endl  << endl;
 
 
 	req.header.is_valid ? cout << "valid" << endl : cout << "invalid miss Host" << endl;
