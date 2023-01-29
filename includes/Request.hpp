@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/28 22:45:49 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/29 00:00:44 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,24 +43,15 @@ struct Method {
 
 
 struct Header {
-	typedef struct s_user_agent
-	{
-		bool		compatibleMozilla;
-		string	platform;
-		string	os;
-		string	rv;
-		string	gecko;
-		// string	gecko_version;
-		string	browserName;
-		string	browserVersion;
-	} t_user_agent;
-
 	typedef struct s_language
 	{
 		string language;
 		string specificity;
 		string q;
 	} t_language;
+
+	typedef map< string, string > 						t_user_agent;
+	typedef map< string, string >::iterator 	t_user_agent_it;
 
 	typedef vector< pair< string, string > > 						t_accept;
 	typedef vector< pair< string, string > >::iterator 	t_accept_it;
@@ -72,6 +63,7 @@ struct Header {
 	string 				brut_header;
 	bool 					is_valid;
 	string 				host;
+
 	t_user_agent 	user_agent;
 	string				str_user_agent;
 	t_accept 			accept;
@@ -104,6 +96,7 @@ struct Header {
 	bool checkHostValue( string host );
 	bool checkSyntaxeTag(string host, string tag);
 	bool parseUserAgentValue( string user_agent );
+	void setUserAgent(string::size_type index, string value);
 };
 
 

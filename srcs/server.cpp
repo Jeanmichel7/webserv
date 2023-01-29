@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/28 22:54:17 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/29 16:19:36 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,9 +35,16 @@ Sec-Fetch-User: ?1\r\n\
 TE: trailers\r\n";
 
 
+/*
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0\r\n\
+User-Agent: libwww-perl/6.38\r\n\
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36\r\n\
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1\r\n\
+User-Agent: AppleCoreMedia/1.0.0.16E227 (iPhone; U; CPU OS 14_3 like Mac OS X; en_us)\r\n\
+*/
 const char *requestPost = "POST /url_to_post HTTP/1.1\r\n\
 Host: www.google.fr\r\n\
-User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1\r\n\
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36\r\n\
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
 Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\r\n\
 Accept-Encoding: gzip, deflate, br\r\n\
@@ -111,13 +118,23 @@ Content-Location: www.google.fr\r\n\
 	// cout << "content '" << req.header.content << "'" << endl;
 
 
-	cout << "compatibleMozilla '" << req.header.user_agent.compatibleMozilla << "'" << endl;
-	cout << "platform '" << req.header.user_agent.platform << "'" << endl;
-	cout << "os '" << req.header.user_agent.os << "'" << endl;
-	cout << "rv '" << req.header.user_agent.rv << "'" << endl;
-	cout << "gecko '" << req.header.user_agent.gecko << "'" << endl;
-	cout << "browserName '" << req.header.user_agent.browserName << "'" << endl;
-	cout << "browserVersion '" << req.header.user_agent.browserVersion << "'" << endl  << endl;
+	Header::t_user_agent_it it = req.header.user_agent.begin();
+	for(; it != req.header.user_agent.end(); ++it) {
+		cout << "User-Agent "<< it->first << " : " << it->second << endl;
+	}
+	// cout << "product '" << req.header.user_agent["product"] << "'" << endl;
+	// cout << "productVersion '" << req.header.user_agent["productVersion"] << "'" << endl;
+	// cout << "platform '" << req.header.user_agent["platform"] << "'" << endl;
+	// cout << "os '" << req.header.user_agent["os"] << "'" << endl;
+	// cout << "osVersion '" << req.header.user_agent["osVersion"] << "'" << endl;
+	// cout << "browser '" << req.header.user_agent["browser"] << "'" << endl;
+	// cout << "browserVersion '" << req.header.user_agent["browserVersion"] << "'" << endl;
+	// cout << "device '" << req.header.user_agent["device"] << "'" << endl;
+	// cout << "deviceVersion '" << req.header.user_agent["deviceVersion"] << "'" << endl;
+	// cout << "engine '" << req.header.user_agent["engine"] << "'" << endl;
+	// cout << "engineVersion '" << req.header.user_agent["engineVersion"] << "'" << endl;
+	// cout << "engineMode '" << req.header.user_agent["engineMode"] << "'" << endl;
+	// cout << "engineModeVersion '" << req.header.user_agent["engineModeVersion"] << "'" << endl;
 
 
 	req.header.is_valid ? cout << "valid" << endl : cout << "invalid miss Host" << endl;

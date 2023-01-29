@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/28 23:10:52 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/29 16:21:14 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -237,13 +237,27 @@ Header::Header()
 	str_accept_encoding(""),
 	keep_alive(false)
 {
-	user_agent.compatibleMozilla = false;
-	user_agent.platform = "";
-	user_agent.os = "";
-	user_agent.rv = "";
-	user_agent.gecko = "";
-	user_agent.browserName = "";
-	user_agent.browserVersion = "";
+	// user_agent.compatibleMozilla = false;
+	// user_agent.platform = "";
+	// user_agent.os = "";
+	// user_agent.rv = "";
+	// user_agent.gecko = "";
+	// user_agent.browserName = "";
+	// user_agent.browserVersion = "";
+
+	t_user_agent user_agent;
+	user_agent["product"] = "";
+	user_agent["productVersion"] = "";
+	user_agent["platform"] = "";
+	user_agent["os"] = "";
+	user_agent["osVersion"] = "";
+	user_agent["browser"] = "";
+	user_agent["browserVersion"] = "";
+	// user_agent["device"] = "";
+	// user_agent["deviceVersion"] = "";
+	user_agent["engine"] = "";
+	user_agent["engineVersion"] = "";
+	this->user_agent = user_agent;
 
 	t_accept    accept;
 	t_languages accept_language;
@@ -400,6 +414,14 @@ bool Header::checkHostValue( string host ) {
 	return 0;
 }
 
+void Header::setUserAgent(string::size_type index, string value) {
+		t_user_agent_it it = this->user_agent.begin();
+
+		cerr << "Index : " << index << "	" ;
+		for(string::size_type i = 0; i < index; i++) { it++; }
+		it->second = value;
+		cerr << it->first << " " << it->second << endl;
+}
 
 bool Header::parseUserAgentValue( string user_agent ) {
 	// retour a la ligne ?
@@ -410,9 +432,10 @@ bool Header::parseUserAgentValue( string user_agent ) {
 	string line = "";
 	string subline = "";
 	string tmp_line  = "";
-	string tab[] = {"compatibleMozilla", "platform", "os", "osVersion", "browser", "browserVersion",
-	 "device", "deviceVersion", "engine", "engineVersion", "engineMode", "engineModeVersion", "compatibleMozillaVersion"};
-	int i = 0;
+	std::stringstream engine_info_nb;
+
+	int index = 0;
+	int index_info = 0;
 
 	if (str.size() > 512) {
 		cerr << "Error : user_agent '" << user_agent << "' is not valid: > 512 char, don't want to be DDoS" << endl;
@@ -422,12 +445,14 @@ bool Header::parseUserAgentValue( string user_agent ) {
 		line = str.substr(0, pos);
 		cerr << "line : " << line << endl;
 
-
-
-		if (line == "Mozilla/5.0")
-			this->user_agent.compatibleMozilla = true;
-
-
+		if (index == 0) {
+			this->user_agent["product"] = line.substr(0, line.find("/"));
+			this->user_agent["productVersion"] = line.substr(line.find("/") + 1);
+		}
+		else if (index == 1) {
+			this->user_agent["engine"] = line.substr(0, line.find("/"));
+			this->user_agent["engineVersion"] = line.substr(line.find("/") + 1);
+		}
 
 		tmp_line = str.substr(pos + 1);
 		str.erase(0, pos + 1);
@@ -436,52 +461,40 @@ bool Header::parseUserAgentValue( string user_agent ) {
 			if ((subpos = tmp_line.find(")")) == string::npos) {
 				cerr << "Error: bracket no close" << endl;
 			}
+			index_info = 0;
 			line = tmp_line.substr(pos + 1, subpos - 1);
 			while((pos = line.find("; ")) != string::npos) {
 				subline = line.substr(0, pos);
 				cerr << "subline : '" << subline << "'" << endl;
 
-
-				switch (i) {
-					case 0:
-						this->user_agent.platform = subline;
-						break;
-					case 1:
-						this->user_agent.os = subline;
-						break;
-					case 2:
-						this->user_agent.rv = subline;
-						break;
-					case 3:
-						this->user_agent.gecko = subline;
-						break;
-					default:
-						break;
+				if (index == 0) {
+					if (index_info == 0) 
+						this->user_agent["platform"] = subline;
+					else if (index_info == 1)
+						this->user_agent["os"] = subline;
+				} 
+				else {
+					this->user_agent["engineInfo"] = line;
 				}
-
-
-
-
-
 				line.erase(0, pos + 2);
-				i++;
+				index_info++;
 			}
 			cerr << "subline fin : '" << line << "'" << endl;
-			// this->user_agent.browserName = line.substr(0, line.find("/"));
-			// this->user_agent.browserVersion = line.substr(line.find("/") + 1);
-
-
+			if (index == 0)
+				this->user_agent["osVersion"] = line;
+			else {
+					engine_info_nb << " " << line;
+					this->user_agent["engineInfo"] = engine_info_nb.str();
+			}
 			str.erase(0, subpos + 2);
 		}
 		line = str.substr(0, pos);
 		str.erase(0, pos + 1);
-
-		// cerr << "LINE : " << line << endl;
-		i++;
+		index++;
 	}
 	cerr << "line fin : " << str << endl << endl << endl << endl;
-	this->user_agent.browserName = str.substr(0, line.find("/"));
-	this->user_agent.browserVersion = str.substr(line.find("/") + 1);
+	this->user_agent["browser"] = str.substr(0, str.find("/"));
+	this->user_agent["browserVersion"] = str.substr(str.find("/") + 1);
 
 	this->str_user_agent = user_agent;
 	return 0;
