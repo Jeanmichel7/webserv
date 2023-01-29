@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/29 00:00:44 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/29 22:45:18 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,42 +43,59 @@ struct Method {
 
 
 struct Header {
-	typedef struct s_language
+
+	typedef struct s_accept
 	{
-		string language;
-		string specificity;
+		string 	type;
+		string 	subtype;
+		string 	q;
+	} t_accept;
+
+	typedef struct s_accept_language
+	{
+		string lang;
+		string spec;
 		string q;
-	} t_language;
+	} t_accept_language;
+
+	typedef struct s_accept_encoding
+	{
+		string 	type;
+		string	q;
+	} t_accept_encoding;
 
 	typedef map< string, string > 						t_user_agent;
 	typedef map< string, string >::iterator 	t_user_agent_it;
 
-	typedef vector< pair< string, string > > 						t_accept;
-	typedef vector< pair< string, string > >::iterator 	t_accept_it;
-	typedef vector< t_language > 												t_languages;
-	typedef vector< t_language >::iterator 							t_languages_it;
-	typedef vector< pair< string, int > > 							t_encodings;
-	typedef vector< pair< string, int > >::iterator 		t_encodings_it;
+	typedef vector< t_accept > 								t_accepts;
+	typedef vector< t_accept >::iterator 			t_accepts_it;
+
+	typedef vector< t_accept_language > 						t_languages;
+	typedef vector< t_accept_language >::iterator 	t_languages_it;
+
+	typedef vector< t_accept_encoding > 						t_encodings;
+	typedef vector< t_accept_encoding >::iterator 	t_encodings_it;
 
 	string 				brut_header;
 	bool 					is_valid;
 	string 				host;
-
 	t_user_agent 	user_agent;
 	string				str_user_agent;
-	t_accept 			accept;
-	string				str_accept;
-	t_languages 	accept_language;
-	string				str_accept_language;
-	t_encodings 	accept_encoding;
-	string				str_accept_encoding;
-	bool 					keep_alive;
+	t_accepts 		accepts;
+	string				str_accepts;
+	t_languages 	accept_languages;
+	string				str_accept_languages;
+
+	t_encodings 	accept_encodings;
+	string				str_accept_encodings;
+
+	bool 					connection;
 	
-	string 	content_type;
-	string 	content_length;
-	string 	content_encoding;
-	string 	content_language;
-	string 	content_location;
+	string							content_type;
+	string							content_length;
+	string							content_encoding;
+	string							content_language;
+	string							content_location;
 	
 	// string 	connection;
 	// string 	authorization;
@@ -88,15 +105,23 @@ struct Header {
 	Header();
 	Header(Header const& src);
 	~Header();
-	Header &operator= (Header const& src);
+	Header &operator= (const Header &src);
 	
 	bool parseHeader( void );
-	bool checkHeaderKey(string key);
-	bool checkHeaderValue(string value);
-	bool checkHostValue( string host );
-	bool checkSyntaxeTag(string host, string tag);
-	bool parseUserAgentValue( string user_agent );
-	void setUserAgent(string::size_type index, string value);
+	bool checkHeaderKey(const string &key);
+	bool checkHeaderValue(const string &value);
+	bool checkHostValue(const string &host );
+	bool checkSyntaxeTag(const string &host, const string &tag);
+	bool parseUserAgent(const string &user_agent );
+	bool parseAccept(const string &accept);
+	bool checkSyntaxeAccept(const string &accept);
+	void setAccepts(string &accept);
+	bool parseAcceptLanguage(const string &accept_language);
+	void setAcceptLanguages(const string &);
+	bool checkSyntaxeAcceptLanguage(const string &);
+	bool parseAcceptEncodings(const string &);
+	bool checkSyntaxeAcceptEncoding(const string &line);
+	void setAcceptEncodings(const string &);
 };
 
 

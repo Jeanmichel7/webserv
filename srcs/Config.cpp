@@ -192,7 +192,7 @@ bool yd::isPath(std::string const &s)
 		unsigned int num = 0;
 		for (unsigned int i = 0; i < tok.getToken().length(); i++) {
 				if (tok.getToken()[i] == '.') {
-						if (num < 0 || num > 255) {
+						if (num > 255) {
 							throw (FormatError(tok.getToken(), "numbers between 0 and 255"));
 						}
 						num = 0;
@@ -200,7 +200,7 @@ bool yd::isPath(std::string const &s)
 						num = num * 10 + (tok.getToken()[i] - '0');
 				}
 		}
-		if (num < 0 || num > 255) {
+		if (num > 255) {
 				throw (FormatError(tok.getToken(), "numbers between 0 and 255"));
 		}
 		for (unsigned int i = 0; i < tok.getToken().length(); i++) {

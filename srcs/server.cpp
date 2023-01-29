@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/29 16:19:36 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/29 22:46:47 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ User-Agent: AppleCoreMedia/1.0.0.16E227 (iPhone; U; CPU OS 14_3 like Mac OS X; e
 const char *requestPost = "POST /url_to_post HTTP/1.1\r\n\
 Host: www.google.fr\r\n\
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36\r\n\
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n\
+Accept: text/html, application/xhtml+xml, application/xml;q=0.9, image/avif,image/webp,*/*;q=0.8\r\n\
 Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\r\n\
 Accept-Encoding: gzip, deflate, br\r\n\
 Alt-Used: www.google.fr\r\n\
@@ -95,9 +95,9 @@ Content-Location: www.google.fr\r\n\
 		return 1;
 	}
 
-	cout << req.method.isGet << endl;
-	cout << req.method.isPost << endl;
-	cout << req.method.isDelete << endl;
+	// cout << req.method.isGet << endl;
+	// cout << req.method.isPost << endl;
+	// cout << req.method.isDelete << endl;
 
 	cout << "url '" << req.method.url << "'" << endl;
 	cout << "path '" << req.method.path << "'" << endl;
@@ -105,42 +105,52 @@ Content-Location: www.google.fr\r\n\
 	cout << "anchor '" << req.method.anchor <<  "'" << endl;
 	cout << "protocle '" << req.method.protocole << "'" << endl;
 	cout << "host '" << req.header.host << "'" << endl;
+
 	cout << "useragent '" << req.header.str_user_agent << "'" << endl;
-	cout << "accept '" << req.header.str_accept << "'" << endl;
-	cout << "accept_language '" << req.header.str_accept_language << "'" << endl;
-	cout << "accept_encoding '" << req.header.str_accept_encoding << "'" << endl << endl;
-
-	cout << "content_length '" << req.header.content_length << "'" << endl;
-	cout << "content_type '" << req.header.content_type << "'" << endl;
-	cout << "content_encoding '" << req.header.content_encoding << "'" << endl;
-	cout << "content_language '" << req.header.content_language << "'" << endl;
-	cout << "content_location '" << req.header.content_location << "'" << endl  << endl;
-	// cout << "content '" << req.header.content << "'" << endl;
-
-
 	Header::t_user_agent_it it = req.header.user_agent.begin();
 	for(; it != req.header.user_agent.end(); ++it) {
 		cout << "User-Agent "<< it->first << " : " << it->second << endl;
 	}
-	// cout << "product '" << req.header.user_agent["product"] << "'" << endl;
-	// cout << "productVersion '" << req.header.user_agent["productVersion"] << "'" << endl;
-	// cout << "platform '" << req.header.user_agent["platform"] << "'" << endl;
-	// cout << "os '" << req.header.user_agent["os"] << "'" << endl;
-	// cout << "osVersion '" << req.header.user_agent["osVersion"] << "'" << endl;
-	// cout << "browser '" << req.header.user_agent["browser"] << "'" << endl;
-	// cout << "browserVersion '" << req.header.user_agent["browserVersion"] << "'" << endl;
-	// cout << "device '" << req.header.user_agent["device"] << "'" << endl;
-	// cout << "deviceVersion '" << req.header.user_agent["deviceVersion"] << "'" << endl;
-	// cout << "engine '" << req.header.user_agent["engine"] << "'" << endl;
-	// cout << "engineVersion '" << req.header.user_agent["engineVersion"] << "'" << endl;
-	// cout << "engineMode '" << req.header.user_agent["engineMode"] << "'" << endl;
-	// cout << "engineModeVersion '" << req.header.user_agent["engineModeVersion"] << "'" << endl;
+
+	cout << "str_accept '" << req.header.str_accepts << "'" << endl;
+	Header::t_accepts_it it_accept = req.header.accepts.begin();
+	while (it_accept != req.header.accepts.end()) {
+		cout << "accept '" << it_accept->type << "/" 
+		<< it_accept->subtype << "' " 
+		<< "q="<< it_accept->q << endl;
+		it_accept++;
+	}
+
+	cout << "str_accept_language '" << req.header.str_accept_languages << "'" << endl;
+	Header::t_languages_it it_lang = req.header.accept_languages.begin();
+	for(; it_lang != req.header.accept_languages.end(); ++it_lang) {
+		cout << "accept_language "<< it_lang->lang 
+		<< (it_lang->spec != "" ? "-" : "") << it_lang->spec 
+		<< " q=" << it_lang->q << endl;
+	}
 
 
-	req.header.is_valid ? cout << "valid" << endl : cout << "invalid miss Host" << endl;
+	cout << "str_accept_encoding '" << req.header.str_accept_encodings << "'" << endl << endl;
+	Header::t_encodings_it it_encod = req.header.accept_encodings.begin();
+	for(; it_encod != req.header.accept_encodings.end(); ++it_encod) {
+		cout << "accept_encoding '"<< it_encod->type << "' q=" << it_encod->q << endl;
+	}
+
+	cout << "Connection : " << req.header.connection << endl;
+
+
+	// cout << "content_length '" << req.header.content_length << "'" << endl;
+	// cout << "content_type '" << req.header.content_type << "'" << endl;
+	// cout << "content_encoding '" << req.header.content_encoding << "'" << endl;
+	// cout << "content_language '" << req.header.content_language << "'" << endl;
+	// cout << "content_location '" << req.header.content_location << "'" << endl  << endl;
+	// cout << "content '" << req.header.content << "'" << endl;
+
+
+	cout << "requete " << (req.header.is_valid ? "valid" : "invalid miss Host") << endl;
 	// cout << "body '" << req.body << "'" << endl;
 
-	
+
 	return 0;
 }
 
