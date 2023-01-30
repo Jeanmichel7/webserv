@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/30 12:11:54 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/30 15:16:34 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ int main( void )
 	int				socket_server;
 	int				timeout = 0;
 	struct kevent	srv;
+	Request req;
 
 	config.selectServ();
 	std::cout << "file:" <<*config.getFile("/bg") << std::endl;
@@ -69,7 +70,15 @@ int main( void )
 				int socket_client = accept(socket_server, (struct sockaddr *)&server.interface, (socklen_t *)&server.interface);
 				read(socket_client, buffer, 1024);
 				std::string get = server.get(config);
-				printf("%s\n", buffer);
+
+
+				printf("buffer : %s\n", buffer);
+				if (req.parseRequest(buffer)) {
+  				return 1;
+  			}
+				req.printRequest(req);
+
+
 				send(socket_client, get.c_str(), strlen(get.c_str()),0);
 				printf("------------------Hello message sent-------------------\n");
 				close(socket_client);

@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/29 22:33:07 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/30 18:40:34 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,7 +235,8 @@ Header::Header()
 	str_accepts(""),
 	str_accept_languages(""),
 	str_accept_encodings(""),
-	connection(false)
+	connection(false),
+	is_chunked(false)
 {
 	t_user_agent user_agent;
 	user_agent["product"] = "";
@@ -251,8 +252,7 @@ Header::Header()
 	user_agent["engineVersion"] = "";
 	this->user_agent = user_agent;
 
-	t_accept    accept;
-
+	t_accept		accept;
 	t_languages accept_language;
 	t_encodings accept_encoding;
 }
@@ -702,6 +702,37 @@ bool Header::parseAcceptEncodings(const string &value) {
 }
 
 bool Header::parseHeader( void ) {
+
+
+/*
+POST /upload HTTP/1.1
+Host: www.example.com
+Transfer-Encoding: chunked
+
+5
+Hello
+5
+World
+0
+*/
+
+
+/*
+POST /upload HTTP/1.1
+Host: www.example.com
+Content-Type: multipart/byteranges; boundary=this_is_a_boundary
+
+--this_is_a_boundary
+Content-Range: bytes 0-499/1234
+
+...binary data...
+--this_is_a_boundary
+Content-Range: bytes 500-999/1234
+
+...binary data...
+--this_is_a_boundary--
+*/
+
 	string::size_type pos = 0;
 	string 						str(this->brut_header);
 	string 						line;
@@ -789,9 +820,8 @@ bool Header::parseHeader( void ) {
 
 /* *************   CONSTRCUTOR   ************* */
 
-Body::Body() : brut_body("")
+Body::Body() : content("")
 {
-	t_body body;
 	return ;
 }
 
@@ -806,7 +836,7 @@ Body::~Body() {
 
 Body &Body::operator=(Body const &rhs) {
 	if (this != &rhs) {
-		this->body = rhs.body;
+		this->content = rhs.content;
 	}
 	return (*this);
 }
@@ -814,38 +844,6 @@ Body &Body::operator=(Body const &rhs) {
 /* *************   FUNCTION   ************* */
 
 bool Body::parseBody( void ) {
-
-	// size_t pos = 0;
-	// string str(this->brut_body);
-	// string line;
-	// string key;
-	// string value;
-
-	// while ((pos = str.find("\r\n")) != string::npos) {
-	// 	line = str.substr(0, pos);
-	// 	str.erase(0, pos + 2);
-
-	// 	if ((pos = line.find("=")) != string::npos) {
-	// 		key = line.substr(0, pos);
-	// 		value = line.substr(pos + 1);
-
-	// 		this->body[key] = value;
-	// 	}
-	// 	else {
-	// 		cerr << "Error : body line is not valid" << endl;
-	// 		return 1;
-	// 	}
-	// }
-
-
-
-
-
-
-
-
-
-
 	return 0;
 }
 
@@ -924,7 +922,7 @@ bool Request::splitRequest(string req) {
 			cerr << "Error : header is not valid, miss empty new line beetween headers and body" << endl;
 			return 1;
 		}
-		this->body.brut_body = "";
+		this->body.content = "";
 		this->header.brut_header = req.substr(h_pos);
 	}
 	else {
@@ -932,9 +930,9 @@ bool Request::splitRequest(string req) {
 		this->header.brut_header = req.substr(h_pos, hl_pos);
 
 		/* split body */
-		b_pos = ml_pos + 2 + hl_pos + 4;
+		b_pos = ml_pos + 2 + hl_pos + 2;
 		bl_pos = req.size() - ml_pos - 2 - hl_pos - 4;
-		this->body.brut_body = req.substr(b_pos, bl_pos);
+		this->body.content = req.substr(b_pos, bl_pos);
 	}
 	// cerr << "Method : '" << this->method.brut_method << "'" << endl;
 	// cerr << "Header : '" << this->header.brut_header << "'"<< endl;
@@ -962,4 +960,62 @@ bool Request::parseRequest(string req) {
 		return 1;
 	}
 	return 0;
+}
+
+void Request::printRequest(const Request &req) {
+
+  // cout << req.method.isGet << endl;
+  // cout << req.method.isPost << endl;
+  // cout << req.method.isDelete << endl;
+
+  cout << "url '" << req.method.url << "'" << endl;
+  cout << "path '" << req.method.path << "'" << endl;
+  cout << "params '" << req.method.parameters << "'" << endl;
+  cout << "anchor '" << req.method.anchor <<  "'" << endl;
+  cout << "protocle '" << req.method.protocole << "'" << endl;
+  cout << "host '" << req.header.host << "'" << endl;
+
+  cout << "useragent '" << req.header.str_user_agent << "'" << endl;
+  Header::t_user_agent_it it = req.header.user_agent.begin();
+  for(; it != req.header.user_agent.end(); ++it) {
+    cout << "User-Agent "<< it->first << " : " << it->second << endl;
+  }
+
+  cout << "str_accept '" << req.header.str_accepts << "'" << endl;
+  Header::t_accepts_it it_accept = req.header.accepts.begin();
+  while (it_accept != req.header.accepts.end()) {
+    cout << "accept '" << it_accept->type << "/" 
+    << it_accept->subtype << "' " 
+    << "q="<< it_accept->q << endl;
+    it_accept++;
+  }
+
+  cout << "str_accept_language '" << req.header.str_accept_languages << "'" << endl;
+  Header::t_languages_it it_lang = req.header.accept_languages.begin();
+  for(; it_lang != req.header.accept_languages.end(); ++it_lang) {
+    cout << "accept_language "<< it_lang->lang 
+    << (it_lang->spec != "" ? "-" : "") << it_lang->spec 
+    << " q=" << it_lang->q << endl;
+  }
+
+  cout << "str_accept_encoding '" << req.header.str_accept_encodings << "'" << endl << endl;
+  Header::t_encodings_it it_encod = req.header.accept_encodings.begin();
+  for(; it_encod != req.header.accept_encodings.end(); ++it_encod) {
+    cout << "accept_encoding '"<< it_encod->type << "' q=" << it_encod->q << endl;
+  }
+
+  cout << "Connection : " << req.header.connection << endl;
+
+
+  cout << "content_length '" << req.header.content_length << "'" << endl;
+  cout << "content_type '" << req.header.content_type << "'" << endl;
+  cout << "content_encoding '" << req.header.content_encoding << "'" << endl;
+  cout << "content_language '" << req.header.content_language << "'" << endl;
+  cout << "content_location '" << req.header.content_location << "'" << endl  << endl;
+
+
+  cout << "body '" << req.body.content << "'" << endl;
+
+  cout << "requete " << (req.header.is_valid ? "valid" : "invalid miss Host") << endl;
+	return ;
 }
