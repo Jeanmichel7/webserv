@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+         #
+#    By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/01/25 12:01:43 by lomasson         ###   ########.fr        #
+#    Updated: 2023/01/30 12:09:07 by jrasser          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,7 +22,6 @@ SRCS_SERVER 	= srcs/server.cpp \
 								srcs/Settings.cpp \
 								srcs/Config.cpp \
 								srcs/Request.cpp \
-								
 								
 
 NAME_CLIENT 	= client
@@ -40,6 +39,8 @@ CPPFLAGS			= -I./includes
 DEBEUG 				= -g3 #-fsanitize=address
 
 all: $(NAME_SERVER) $(NAME_CLIENT)
+
+parsing: $(NAME_CLIENT)
 
 objs/%.o: srcs/*%.cpp
 		@mkdir -p $(OBJS_DIR)

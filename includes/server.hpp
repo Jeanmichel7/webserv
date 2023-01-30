@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/24 15:33:45 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/30 12:09:52 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 # include <sys/event.h>
 # include <netdb.h>
 
+# include <algorithm>
 # include <iostream>
 # include <string>
 # include <cstring>
@@ -35,6 +36,7 @@
 # include <cerrno>
 # include <map>
 # include <fstream>
+# include <cstdlib>
 
 # include "Settings.hpp"
 # include "Request.hpp"
