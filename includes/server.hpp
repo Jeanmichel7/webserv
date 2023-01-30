@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/24 15:33:45 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/30 11:34:27 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@
 # include <cerrno>
 # include <map>
 # include <fstream>
+# include <cstdio>
 
 # include "Settings.hpp"
 # include "Request.hpp"

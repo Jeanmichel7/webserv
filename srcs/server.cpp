@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/25 12:42:50 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/30 11:49:26 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,25 +41,27 @@ int main( void )
 	Settings		server;
 	int				socket_server;
 	int				timeout = 0;
-	struct kevent	srv;
+	struct kevent	change;
+	struct kevent	event;
+	char buffer[8000] = {0};
 
+	memset(&server, 0, sizeof(server));
 	config.selectServ();
 	std::cout << "file:" <<*config.getFile("/bg") << std::endl;
-	int ke = kqueue();
 	int fd = open("http/index.html", O_RDWR);
+	int ke = kqueue();
 	try
 	{
 		socket_server = server.build();
-		EV_SET(&srv, socket_server, EVFILT_READ | EVFILT_WRITE , EV_ADD | EV_ENABLE, 0, 0, NULL);
-		if (socket_server == -1 || ke == -1 || listen(socket_server, 10) == -1 || kevent(ke, &srv, 1, NULL, 0, NULL) == -1)
+		EV_SET(&change, socket_server, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, 0);
+		if (socket_server == -1 || ke == -1 || listen(socket_server, 2) == -1 || kevent(ke, &change, 1, &event, 1, NULL) == -1)
 			throw Settings::badCreation();
 		char test[550] = {0};
 		read(fd, &test, 550);
 		while(1)
 		{
-			char buffer[1024] = {0};
-			struct kevent event;
 			
+			std::string reponse_request;
 			int nevents = kevent(ke, NULL, 0, &event, 1, NULL);
 			printf("\n+++++++ Waiting for new connection ++++++++\n\n");
 			if (nevents == -1)
@@ -67,14 +69,19 @@ int main( void )
 			else if (nevents > 0)
 			{
 				int socket_client = accept(socket_server, (struct sockaddr *)&server.interface, (socklen_t *)&server.interface);
-				read(socket_client, buffer, 1024);
-				std::string get = server.get(config);
-				printf("%s\n", buffer);
-				send(socket_client, get.c_str(), strlen(get.c_str()),0);
+				read(socket_client, buffer, 8000);
+				if (strncmp(buffer, "GET", 3) == 0)
+					reponse_request = server.get(config);
+				else if (strncmp(buffer, "POST", 4) == 0)
+					reponse_request = server.post(config);
+				// else if (strncmp(buffer, "DELETE", 6) == 0)
+				// 	reponse_request = server.del(config);
+				send(socket_client, reponse_request.c_str(), strlen(reponse_request.c_str()),0);
+				std::cout << reponse_request << std::endl;
 				printf("------------------Hello message sent-------------------\n");
-				close(socket_client);
-				EV_SET(&event, socket_client, EVFILT_WRITE , EV_ADD | EV_ENABLE, 0, 0, &timeout);
+				EV_SET(&event, socket_client, EVFILT_READ | EVFILT_WRITE , EV_ADD | EV_ENABLE, 0, 0, &timeout);
 				if (kevent(ke, &event, 1, NULL, 0, NULL) == -1){}
+				close(socket_client);
 			}
 		}
 	}

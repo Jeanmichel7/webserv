@@ -24,7 +24,7 @@ class Settings
 		int	build();
 		std::string	get(Config const& config);
 		std::string post(Config const& config);
-		int	execute_cgi(std::string path);
+		std::string del( Config const& config );
 		std::string	date( void );
 		Settings();
 		~Settings();
