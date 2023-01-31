@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/24 15:25:30 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/31 08:37:33 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,9 +67,6 @@ Request Request::parse(char *req_brut) {
 
   std::cout << "Request Brut : \n" << req_brut << std::endl;
   std::cout << "Request Brut size : " << strlen(req_brut) << std::endl;
-
-
-
 
 
 

@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+         #
+#    By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/01/24 15:52:58 by jrasser          ###   ########.fr        #
+#    Updated: 2023/01/30 10:27:53 by ydumaine         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,6 +22,7 @@ SRCS_SERVER 	= srcs/server.cpp \
 								srcs/Settings.cpp \
 								srcs/Config.cpp \
 								srcs/Request.cpp \
+								srcs/Cgi.cpp 
 								
 								
 

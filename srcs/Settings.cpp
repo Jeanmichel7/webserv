@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/26 12:23:40 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/01/28 09:53:31 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,10 +42,8 @@ std::string	Settings::date( void )
 	return (rdate);
 }
 
-// int	Settings::execute_cgi(std::string path)
-// {
-	
-// }
+
+
 
 // std::string	Settings::get(Config const& config) {
 

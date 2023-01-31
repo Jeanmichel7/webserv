@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/26 12:19:29 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/01/31 13:44:37 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,12 @@ int main( void )
 	int				timeout = 0;
 	struct kevent	srv;
 
+	memset(&server, 0, sizeof(server));
 	config.selectServ();
-	std::cout << *config.getFile("/nolife") << std::endl;
+	std::cout << *config.getFile("/nolif") << std::endl;
+	std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/nolife/", "test.sh",config) << std::endl;
+	std::cout << *config.getCgi("/nolife", ".sh") << std::endl; 
+	std::cout << "valeur de max_size : " << config.getName() << std::endl;
 	int ke = kqueue();
 	int fd = open("http/index.html", O_RDWR);
 	try
@@ -53,10 +57,8 @@ int main( void )
 		read(fd, &test, 550);
 		while(1)
 		{
-			
 			char buffer[1024] = {0};
 			struct kevent event;
-			
 			int nevents = kevent(ke, NULL, 0, &event, 1, NULL);
 			printf("\n+++++++ Waiting for new connection ++++++++\n\n");
 			if (nevents == -1)
@@ -65,11 +67,6 @@ int main( void )
 			{
 				int socket_client = accept(socket_server, (struct sockaddr *)&server.interface, (socklen_t *)&server.interface);
 				read(socket_client, buffer, 1024);
-
-
-
-
-
 				printf("%s\n", buffer);
 				close(socket_client);
 				write(socket_client, test, 550);
