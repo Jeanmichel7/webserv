@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/30 15:16:34 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/31 14:48:19 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,11 @@ int main( void )
 	struct kevent	srv;
 	Request req;
 
+	memset(&server, 0, sizeof(server));
 	config.selectServ();
-	std::cout << "file:" <<*config.getFile("/bg") << std::endl;
+	std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/nolife/", "test.sh",config) << std::endl;
+	std::cout << *config.getCgi("/nolife", ".sh") << std::endl; 
+	std::cout << "valeur de max_size : " << config.getName() << std::endl;
 	int ke = kqueue();
 	int fd = open("http/index.html", O_RDWR);
 	try
@@ -60,7 +63,6 @@ int main( void )
 		{
 			char buffer[1024] = {0};
 			struct kevent event;
-			
 			int nevents = kevent(ke, NULL, 0, &event, 1, NULL);
 			printf("\n+++++++ Waiting for new connection ++++++++\n\n");
 			if (nevents == -1)
@@ -70,7 +72,6 @@ int main( void )
 				int socket_client = accept(socket_server, (struct sockaddr *)&server.interface, (socklen_t *)&server.interface);
 				read(socket_client, buffer, 1024);
 				std::string get = server.get(config);
-
 
 				printf("buffer : %s\n", buffer);
 				if (req.parseRequest(buffer)) {

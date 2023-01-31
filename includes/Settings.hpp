@@ -22,9 +22,8 @@ class Settings
 	public:
 		struct	sockaddr_in interface;
 		int	build();
-		std::string	get(Config const& config);
-		std::string post(Config const& config);
-		int	execute_cgi(std::string path);
+		std::string	get(Config & config);
+		std::string post(Config & config);
 		std::string	date( void );
 		Settings();
 		~Settings();

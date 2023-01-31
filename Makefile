@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+         #
+#    By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/01/30 12:09:07 by jrasser          ###   ########.fr        #
+#    Updated: 2023/01/31 14:26:35 by ydumaine         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,6 +22,7 @@ SRCS_SERVER 	= srcs/server.cpp \
 								srcs/Settings.cpp \
 								srcs/Config.cpp \
 								srcs/Request.cpp \
+								srcs/Cgi.cpp 
 								
 
 NAME_CLIENT 	= client
@@ -36,7 +37,7 @@ CC 						= g++
 
 CFLAGS 				= -Wall -Wextra -std=c++98
 CPPFLAGS			= -I./includes
-DEBEUG 				= -g3 #-fsanitize=address
+DEBEUG 				= -g3 -fsanitize=address
 
 all: $(NAME_SERVER) $(NAME_CLIENT)
 

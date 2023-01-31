@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/30 15:40:28 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/31 14:35:16 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,32 +42,20 @@ std::string	Settings::date( void )
 	return (rdate);
 }
 
-int	Settings::execute_cgi(std::string path)
-{
-	(void)path;
-	// int pip[2];
-	// char **env;
-	// pid_t pid = fork();
-	// if (pid == 0)
-	// {
-	// 	int	fd = open("tmp/resultcgi.txt", O_RDWR | O_TRUNC);
-	// 	dup2(STDOUT_FILENO, fd);
-		
-	// }
-	// else
-	// {
-	// 	waitpid(pid, 0, NULL);
-	// 	// execve();
-	// }
-	return (1);
-}
 
-std::string	Settings::get( Config const& config )
+
+
+// std::string	Settings::get(Config const& config) {
+
+std::string	Settings::get(Config& config )
 {
 	char buffer[8000] = {0};
 	std::string	reponse = "HTTP/1.1";
 	std::stringstream n;
-	int fd = open(config.getFile("/bg")->c_str(), O_RDONLY);
+	std::string const *path = config.getFile("/bg");
+	if (path == NULL)
+		return (0);
+	int fd = open((path->c_str()), O_RDONLY);
 	if (fd < 0)
 	{
 		fd = open("http/404.html", O_RDONLY);
@@ -84,7 +72,7 @@ std::string	Settings::get( Config const& config )
 	return (reponse);
 }
 
-std::string Settings::post( Config const& config )
+std::string Settings::post( Config& config )
 {
 	std::string reponse;
 	(void)config;
