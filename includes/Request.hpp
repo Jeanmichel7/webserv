@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/30 18:26:00 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/31 16:23:17 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,17 +18,17 @@ using namespace std;
 # include "server.hpp"
 
 struct Method {
-	string brut_method;
-	bool isGet;
-	bool isPost;
-	bool isDelete;
-	bool isValid;
-	string type;
-	string url;
-	string path;
-	string parameters;
-	string anchor;
-	string protocole;
+	string 	brut_method;
+	bool		isGet;
+	bool		isPost;
+	bool		isDelete;
+	bool		isValid;
+	string	type;
+	string	url;
+	string	path;
+	string	parameters;
+	string	anchor;
+	string	protocole;
 
 	Method();
 	Method(Method const& src);
@@ -78,6 +78,7 @@ struct Header {
 	typedef vector< t_accept_encoding >::const_iterator 	t_encodings_it;
 
 	string 				brut_header;
+	bool 					contain_body;
 	bool 					is_valid;
 	string 				host;
 	t_user_agent 	user_agent;
@@ -96,7 +97,7 @@ struct Header {
 	string				content_encoding;
 	string				content_language;
 	string				content_location;
-	bool 					is_chunked;
+	bool 					is_chuncked;
 	
 	// string 	connection;
 	// string 	authorization;
@@ -113,16 +114,23 @@ struct Header {
 	bool checkHeaderValue(const string &value);
 	bool checkHostValue(const string &host );
 	bool checkSyntaxeTag(const string &host, const string &tag);
-	bool parseUserAgent(const string &user_agent );
+	bool parseUserAgent(const string &user_agent);
+
 	bool parseAccept(const string &accept);
 	bool checkSyntaxeAccept(const string &accept);
 	void setAccepts(string &accept);
+
 	bool parseAcceptLanguage(const string &accept_language);
-	void setAcceptLanguages(const string &);
 	bool checkSyntaxeAcceptLanguage(const string &);
+	void setAcceptLanguages(const string &);
+
 	bool parseAcceptEncodings(const string &);
 	bool checkSyntaxeAcceptEncoding(const string &line);
 	void setAcceptEncodings(const string &);
+
+	bool parseContentLength(const string &);
+	// bool setContentLength(const string &);
+
 };
 
 
@@ -134,9 +142,16 @@ struct Body {
 	~Body();
 	Body &operator= (Body const& src);
 
-	string 		content;
+	string 	brut_body;
+	string	content;
+	string  concat_body;
+	bool 		is_chuncked;
 
-	bool parseBody( void );
+	bool 	parseBody( void );
+
+	bool 	parseTransferEncoding( void );
+	
+
 };
 
 
@@ -146,6 +161,7 @@ struct Request {
 	Method 		method;
 	Header 		header;
 	Body 			body;
+	bool 			contain_body;
 	
 	bool splitRequest(string req);
 
@@ -154,7 +170,6 @@ struct Request {
 	~Request();
 	Request &operator= (Request const& src);
 
-	// bool checkRequest(string method, string header, string body);
 	bool parseRequest(string brut_request);
 	void printRequest(const Request &req);
 };
