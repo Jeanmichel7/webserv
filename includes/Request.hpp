@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/29 22:45:18 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/01/30 18:26:00 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ struct Method {
 };
 
 
+
 struct Header {
 
 	typedef struct s_accept
@@ -64,17 +65,17 @@ struct Header {
 		string	q;
 	} t_accept_encoding;
 
-	typedef map< string, string > 						t_user_agent;
-	typedef map< string, string >::iterator 	t_user_agent_it;
+	typedef map< string, string > 									t_user_agent;
+	typedef map< string, string >::const_iterator 	t_user_agent_it;
 
-	typedef vector< t_accept > 								t_accepts;
-	typedef vector< t_accept >::iterator 			t_accepts_it;
+	typedef vector< t_accept > 											t_accepts;
+	typedef vector< t_accept >::const_iterator 			t_accepts_it;
 
-	typedef vector< t_accept_language > 						t_languages;
-	typedef vector< t_accept_language >::iterator 	t_languages_it;
+	typedef vector< t_accept_language > 									t_languages;
+	typedef vector< t_accept_language >::const_iterator 	t_languages_it;
 
-	typedef vector< t_accept_encoding > 						t_encodings;
-	typedef vector< t_accept_encoding >::iterator 	t_encodings_it;
+	typedef vector< t_accept_encoding > 									t_encodings;
+	typedef vector< t_accept_encoding >::const_iterator 	t_encodings_it;
 
 	string 				brut_header;
 	bool 					is_valid;
@@ -88,14 +89,14 @@ struct Header {
 
 	t_encodings 	accept_encodings;
 	string				str_accept_encodings;
-
 	bool 					connection;
 	
-	string							content_type;
-	string							content_length;
-	string							content_encoding;
-	string							content_language;
-	string							content_location;
+	string				content_type;
+	string				content_length;
+	string				content_encoding;
+	string				content_language;
+	string				content_location;
+	bool 					is_chunked;
 	
 	// string 	connection;
 	// string 	authorization;
@@ -125,35 +126,28 @@ struct Header {
 };
 
 
+
 struct Body {
-	typedef map< string, string > 							t_body;
-	typedef map< string, string >::iterator 		t_body_it;
 
 	Body();
 	Body(Body const& src);
 	~Body();
 	Body &operator= (Body const& src);
 
-	string 		brut_body;
-	t_body 		body;
+	string 		content;
 
 	bool parseBody( void );
 };
 
 
-struct Request
-{
+
+struct Request {
 
 	Method 		method;
 	Header 		header;
 	Body 			body;
 	
 	bool splitRequest(string req);
-
-
-	// Method 		getMethod() const { return (this->method);}
-	// Header 		getHeader() const { return (this->header);}
-	// Body 			getBody() 	const { return (this->body);}
 
 	Request();
 	Request(Request const& src);
@@ -162,6 +156,7 @@ struct Request
 
 	// bool checkRequest(string method, string header, string body);
 	bool parseRequest(string brut_request);
+	void printRequest(const Request &req);
 };
 
 #endif

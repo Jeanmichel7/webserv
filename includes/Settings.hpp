@@ -13,19 +13,21 @@
 #ifndef SETTINGS_HPP
 # define SETTINGS_HPP
 
-#include "server.hpp"
-#include "Config.hpp"
+# include "server.hpp"
+# include "Request.hpp"
 class Config;
+struct Request;
 
 class Settings
 {
 	public:
-		struct	sockaddr_in interface;
-		int	build();
-		std::string	get(Config const& config);
-		std::string post(Config const& config);
+		struct		sockaddr_in interface;
+		int			build( Config const &config, struct kevent *change );
+		std::string	get( Config const& config, Request const& req );
+		std::string post( Config const& config, Request const& req );
 		std::string del( Config const& config );
 		std::string	date( void );
+		std::string	badRequest( Config const & config );
 		Settings();
 		~Settings();
 		class badCreation : public std::exception

@@ -6,13 +6,11 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/31 10:25:00 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/31 14:49:42 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
-#include "Settings.hpp"
-#include "Config.hpp"
 
 int	ft_strlen(char *str)
 {
@@ -42,52 +40,54 @@ int main( void )
 	int				socket_server;
 	int				timeout = 0;
 	struct kevent	change;
+	int				myport;
 	struct kevent	event;
 	char buffer[8000] = {0};
-
+	Request req;
+	
 	memset(&server, 0, sizeof(server));
 	config.selectServ();
-	std::cout << "file:" <<*config.getFile("/bg") << std::endl;
-	int fd = open("http/index.html", O_RDWR);
 	int ke = kqueue();
 	try
 	{
-		socket_server = server.build();
+		socket_server = server.build(config);
 		EV_SET(&change, socket_server, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, 0);
 		if (socket_server == -1 || ke == -1 || listen(socket_server, 100) == -1 || kevent(ke, &change, 1, &event, 1, NULL) == -1)
 			throw Settings::badCreation();
 		char test[550] = {0};
-		read(fd, &test, 550);
+		// read(fd, &test, 550);
 		while(1)
 		{
-			
 			std::string reponse_request;
 			int nevents = kevent(ke, NULL, 0, &event, 1, NULL);
 			printf("\n+++++++ Waiting for new connection ++++++++\n\n");
-			if (nevents == -1)
-				printf("KO\n");
-			else if (nevents > 0)
+			if (nevents > 0)
 			{
 				int socket_client = accept(socket_server, (struct sockaddr *)&server.interface, (socklen_t *)&server.interface);
 				read(socket_client, buffer, 8000);
 				printf("%s\n", buffer);
-				if (strncmp(buffer, "GET", 3) == 0)
-					reponse_request = server.get(config);
-				else if (strncmp(buffer, "POST", 4) == 0)
-					reponse_request = server.post(config);
-				// else if (strncmp(buffer, "DELETE", 6) == 0)
-				// 	reponse_request = server.del(config);
+				if (req.parseRequest(buffer))
+  					reponse_request = server.badRequest(config);
+				else if (strncmp(buffer, "GET", 3) == 0)
+				{
+					reponse_request = server.get(config, req);
+				}
+				else if (strncmp(buffer, "POST", 4) == 0 || strncmp(buffer, "DELETE", 6) == 0)
+					reponse_request = server.post(config, req);
+				else
+					reponse_request = server.badRequest(config);
 				send(socket_client, reponse_request.c_str(), strlen(reponse_request.c_str()),0);
 				std::cout << reponse_request << std::endl;
+
 				printf("------------------Hello message sent-------------------\n");
 				EV_SET(&event, socket_client, EVFILT_READ | EVFILT_WRITE , EV_ADD | EV_ENABLE, 0, 0, &timeout);
-				if (kevent(ke, &event, 1, NULL, 0, NULL) == -1){}
+				kevent(ke, &event, 1, NULL, 0, NULL);
 				close(socket_client);
 			}
 		}
 	}
 	catch (const std::exception &e) {
-		
+		std::cerr << e.what() << std::endl;
 	}
 }
 
@@ -175,25 +175,3 @@ int main( void )
 // 		cerr << e.what() << '\n';
 // 	}
 // }
-
-
-/* PLAN
-Si GET:
-	recuperer le lien vers la ressource voulu
-	verifier son existence
-	recuperer son contenu
-	Si Cgi:
-		execve et dup vert fichier tmp
-	generer les headers
-	assembler headers et contenu
-	si la taille du contenu > 2 083 caractères split
-	envoyer le ou les paquets
-Si POST:
-	recuperer la cible
-	verifier l'existence du dossier
-	upload avec le nom donne
-Si DELETE:
-	recuperer la cible
-	verifier l'existence du fichier
-	supprimer la cible
-*/

@@ -6,16 +6,16 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/31 11:20:47 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/01/31 12:43:54 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
 
-int	Settings::build()
+int	Settings::build( Config const& config )
 {
 	int	socket_fd;
-	
+
 	this->interface.sin_addr.s_addr = htonl(INADDR_ANY);
 	this->interface.sin_port = htons(80);
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -42,7 +42,7 @@ std::string	Settings::date( void )
 	return (rdate);
 }
 
-std::string	Settings::get( Config const& config )
+std::string	Settings::get( Config const& config, Request const& req )
 {
 	std::string buffer;
 	std::string	reponse = "HTTP/1.1";
@@ -50,7 +50,9 @@ std::string	Settings::get( Config const& config )
 	std::fstream fd;
 	std::string tmp;
 	
-	fd.open(config.getFile("/bg")->c_str(), std::fstream::in);
+	std::cout << req.method.path << "\n";
+	std::cout << config.getFile(req.method.path.c_str())->c_str() << "\n";
+	fd.open(config.getFile(req.method.path)->c_str(), std::fstream::in);
 	if (!fd.is_open())
 	{
 		fd.open(config.getError(404)->c_str(), O_RDONLY);
@@ -67,14 +69,14 @@ std::string	Settings::get( Config const& config )
 		buffer += tmp + "\n";
 	n << strlen(buffer.c_str());
 	reponse += "Content-Length: " + n.str() + "\n";
-	reponse += "Content-Type: text/html\n";
+	reponse += "Content-Type: " + req.header.content_type + "\n";
 	reponse += "Connection: keep-alive\n";
 	reponse += "\n" + buffer;
 	fd.close();
 	return (reponse);
 }
 
-std::string Settings::post( Config const& config )
+std::string Settings::post( Config const& config, Request const& req )
 {
 	std::string			bodytest = "mybody";
 	std::string			reponse = "HTTP/1.1";
@@ -107,7 +109,7 @@ std::string Settings::post( Config const& config )
 	return (reponse);
 }
 
-std::string Settings::del( Config const& config )
+std::string	Settings::del( Config const& config)
 {
 	(void)config;
 	// std::string reponse;
@@ -135,6 +137,15 @@ std::string Settings::del( Config const& config )
 	// reponse += "Content-Type: text/html\n";
 	// reponse += "Connection: keep-alive\n\n";
 	// reponse += buffer;
+	return (reponse);
+}
+std::string	Settings::badRequest( Config const& config )
+{
+	std::string	reponse = "HTTP/1.1 400 Bad Request\n";
+	reponse += Settings::date() + "\n";
+	reponse += "server: " + *config.getName() + "\n";
+	reponse += "Content-Length: 0\n";
+	reponse += "Connection: closed\n\n";
 	return (reponse);
 }
 
