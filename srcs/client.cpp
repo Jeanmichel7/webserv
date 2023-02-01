@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 13:43:13 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/31 16:20:42 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/01 12:23:07 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,32 +45,18 @@ e\r\n\
 ";
 
 	const char *requestChuncked2 = "\
-POST /api/create_order HTTP/1.1\r\n\
-Host: www.example.com\r\n\
-Content-Type: application/json\r\n\
-Transfer-Encoding: chunked\r\n\
-\r\n\
 14\r\n\
 \"quantity\": 2,\r\n\
 ";
 
 	const char *requestChuncked3 = "\
-POST /api/create_order HTTP/1.1\r\n\
-Host: www.example.com\r\n\
-Content-Type: application/json\r\n\
-Transfer-Encoding: chunked\r\n\
-\r\n\
 14\r\n\
 \"customer_id\": 789}\r\n\
 ";
 
 	const char *requestChuncked4 = "\
-POST /api/create_order HTTP/1.1\r\n\
-Host: www.example.com\r\n\
-Content-Type: application/json\r\n\
-Transfer-Encoding: chunked\r\n\
-\r\n\
-0\r\n";
+0\r\n\
+\r\n";
 	
 	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
 	

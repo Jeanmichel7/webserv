@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/31 16:23:17 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/01 11:41:24 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,7 +171,7 @@ struct Request {
 	Request &operator= (Request const& src);
 
 	bool parseRequest(string brut_request);
-	void printRequest(const Request &req);
+	void printRequest( void );
 };
 
 #endif

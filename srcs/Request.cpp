@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/01/31 16:24:14 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/01 12:06:22 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -848,6 +848,7 @@ bool Body::parseTransferEncoding( void ) {
 	string 						line;
 	string 						line_concat;
 
+	cout << "TESTEEEE : '" << str << "'" << endl;
 
 	if ((pos = str.find("\r\n")) != string::npos) {
 		nb_hexa = str.substr(0, pos);
@@ -857,11 +858,17 @@ bool Body::parseTransferEncoding( void ) {
     std::stringstream ss;
     ss << std::hex << nb_hexa;
     ss >> x;
-    // output it as a signed type
 		size = static_cast<string::size_type>(x);
+
+		std::stringstream ret;
+		ret << str.substr(0, size);
+
+		cout << "TEST : " << ret.str() << endl;
+
+    // output it as a signed type
 		// cout << "str: " << str	<< endl;
     // std::cout << "TESTE : "<< size << std::endl;
-		this->concat_body = str.substr(0, size);
+		this->concat_body = ret.str();
 	}
 	else {
 		cerr << "Error : Error syntaxe separator \": \" in '" << nb_hexa << "'" << endl;
@@ -964,9 +971,6 @@ bool Request::splitRequest(string req) {
 		this->contain_body = true;
 		this->header.contain_body = true;
 	}
-	// cerr << "Method : '" << this->method.brut_method << "'" << endl;
-	// cerr << "Header : '" << this->header.brut_header << "'"<< endl;
-	// cerr << "Body : '" << this->body.brut_body << "'" << endl;
 	return 0;
 }
 
@@ -984,62 +988,62 @@ bool Request::parseRequest(string req) {
 	return 0;
 }
 
-void Request::printRequest(const Request &req) {
+void Request::printRequest() {
 
   // cout << req.method.isGet << endl;
   // cout << req.method.isPost << endl;
   // cout << req.method.isDelete << endl;
 
-  cout << "url '" << req.method.url << "'" << endl;
-  cout << "path '" << req.method.path << "'" << endl;
-  cout << "params '" << req.method.parameters << "'" << endl;
-  cout << "anchor '" << req.method.anchor <<  "'" << endl;
-  cout << "protocle '" << req.method.protocole << "'" << endl;
-  cout << "host '" << req.header.host << "'" << endl;
+  cout << "url '" << this->method.url << "'" << endl;
+  cout << "path '" << this->method.path << "'" << endl;
+  cout << "params '" << this->method.parameters << "'" << endl;
+  cout << "anchor '" << this->method.anchor <<  "'" << endl;
+  cout << "protocle '" << this->method.protocole << "'" << endl;
+  cout << "host '" << this->header.host << "'" << endl;
 
-  cout << "useragent '" << req.header.str_user_agent << "'" << endl;
-  Header::t_user_agent_it it = req.header.user_agent.begin();
-  for(; it != req.header.user_agent.end(); ++it) {
+  cout << "useragent '" << this->header.str_user_agent << "'" << endl;
+  Header::t_user_agent_it it = this->header.user_agent.begin();
+  for(; it != this->header.user_agent.end(); ++it) {
     cout << "User-Agent "<< it->first << " : " << it->second << endl;
   }
 
-  cout << "str_accept '" << req.header.str_accepts << "'" << endl;
-  Header::t_accepts_it it_accept = req.header.accepts.begin();
-  while (it_accept != req.header.accepts.end()) {
+  cout << "str_accept '" << this->header.str_accepts << "'" << endl;
+  Header::t_accepts_it it_accept = this->header.accepts.begin();
+  while (it_accept != this->header.accepts.end()) {
     cout << "accept '" << it_accept->type << "/" 
     << it_accept->subtype << "' " 
     << "q="<< it_accept->q << endl;
     it_accept++;
   }
 
-  cout << "str_accept_language '" << req.header.str_accept_languages << "'" << endl;
-  Header::t_languages_it it_lang = req.header.accept_languages.begin();
-  for(; it_lang != req.header.accept_languages.end(); ++it_lang) {
+  cout << "str_accept_language '" << this->header.str_accept_languages << "'" << endl;
+  Header::t_languages_it it_lang = this->header.accept_languages.begin();
+  for(; it_lang != this->header.accept_languages.end(); ++it_lang) {
     cout << "accept_language "<< it_lang->lang 
     << (it_lang->spec != "" ? "-" : "") << it_lang->spec 
     << " q=" << it_lang->q << endl;
   }
 
-  cout << "str_accept_encoding '" << req.header.str_accept_encodings << "'" << endl << endl;
-  Header::t_encodings_it it_encod = req.header.accept_encodings.begin();
-  for(; it_encod != req.header.accept_encodings.end(); ++it_encod) {
+  cout << "str_accept_encoding '" << this->header.str_accept_encodings << "'" << endl << endl;
+  Header::t_encodings_it it_encod = this->header.accept_encodings.begin();
+  for(; it_encod != this->header.accept_encodings.end(); ++it_encod) {
     cout << "accept_encoding '"<< it_encod->type << "' q=" << it_encod->q << endl;
   }
 
-  cout << "Connection : " << req.header.connection << endl;
+  cout << "Connection : " << this->header.connection << endl;
 
 
-  cout << "content_length '" << req.header.content_length << "'" << endl;
-  cout << "content_type '" << req.header.content_type << "'" << endl;
-  cout << "content_encoding '" << req.header.content_encoding << "'" << endl;
-  cout << "content_language '" << req.header.content_language << "'" << endl;
-  cout << "content_location '" << req.header.content_location << "'" << endl  << endl;
+  cout << "content_length '" << this->header.content_length << "'" << endl;
+  cout << "content_type '" << this->header.content_type << "'" << endl;
+  cout << "content_encoding '" << this->header.content_encoding << "'" << endl;
+  cout << "content_language '" << this->header.content_language << "'" << endl;
+  cout << "content_location '" << this->header.content_location << "'" << endl  << endl;
 
 
-  cout << "brut body '" << req.body.brut_body << "'" << endl;
-	cout << "body '" << req.body.content << "'" << endl;
-	cout << "body concatene '" << req.body.concat_body << "'" << endl;
+  cout << "brut body '" << this->body.brut_body << "'" << endl;
+	cout << "body '" << this->body.content << "'" << endl;
+	cout << "body concatene '" << this->body.concat_body << "'" << endl;
 
-  cout << "requete " << (req.header.is_valid ? "valid" : "invalid miss Host") << endl;
+  cout << "requete " << (this->header.is_valid ? "valid" : "invalid miss Host") << endl;
 	return ;
 }
