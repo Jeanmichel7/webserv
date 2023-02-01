@@ -14,7 +14,7 @@
 		return (*this);
 	}
 
-	Config::Config(): _server(), _server_selected()
+	Config::Config(): _server(), _server_selected(), _buffer()
 	{
 	}
 	bool	Config::selectServ(const unsigned int ip, const unsigned int port) 
@@ -29,27 +29,39 @@
 		}
 		return (0);
 	}
-	const Location &Config::getLocation(const std::string &path) const 
+	const Location *Config::getLocation(const std::string &path) const 
 	{
 		return(_server_selected->getLocation(path));
 	}
-	const std::string *Config::getFile(const std::string &path) const
+	const std::string *Config::getFile(const std::string &path)
 	{
-		const Location &loc = getLocation(path);
-		if (loc._default_file.size() == 0)
+		const Location *loc = getLocation(path);
+		if (loc == NULL)
+			return (NULL);
+		if (loc->_default_file.size() == 0)
 			return (NULL);
 		else 
-			return(&loc._default_file);
+		{
+			unsigned int pos;
+			_buffer = (loc->_root + path);
+			if (_buffer.back() == '/')
+				_buffer.pop_back();
+			pos = _buffer.rfind('/');
+			if (yd::compare_strings_ignoring_trailing_slash(path,loc->_path))
+				return(&loc->_default_file);
+			else 
+				return (&_buffer);
+		}
 	}
 	const Methods	Config::getMethod(const std::string &path) const
 	{
-		const Location &loc = getLocation(path);
+		const Location *loc = getLocation(path);
 		Methods rt;
-		if (loc._is_get == 1)
+		if (loc->_is_get == 1)
 			rt.isget = true;
-		if (loc._is_post == 1)
+		if (loc->_is_post == 1)
 			rt.ispost = true;
-		if (loc._is_delete == 1)
+		if (loc->_is_delete == 1)
 			rt.isdelete = true;
 		return(rt);
 	}
@@ -60,8 +72,10 @@
 	}
 	const std::string *Config::getCgi(const std::string &path, const std::string &cgi) const
 	{
-		const Location &loc = getLocation(path);
-		return (loc.getCgi(cgi));
+		const Location *loc = getLocation(path);
+		if (loc == NULL)
+			return (NULL);
+		return (loc->getCgi(cgi));
 	}
 	
 	unsigned int Config::getMaxSize() const
@@ -71,14 +85,18 @@
 	
 	const std::string *Config::getUpload(const std::string &path) const
 	{
-		const Location &loc = getLocation(path);
-		return(&loc._upload_file);
+		const Location *loc = getLocation(path);
+		if (loc == NULL)
+			return (NULL);
+		return(&loc->_upload_file);
 	}
 	
 	bool Config::getDirectoryListing(const std::string &path) const
 	{
-		const Location &loc = getLocation(path);
-		return (loc._directory_listing);
+		const Location *loc = getLocation(path);
+			if (loc == NULL)
+			return (NULL);
+		return (loc->_directory_listing);
 	}
 	const std::string *Config::getName() const
 	{
@@ -92,6 +110,8 @@
 bool yd::isValidPathDir(std::string const &s)
 {
 	bool hasAlphaNum = false;
+	if (s == "/")
+		return true;
 	for (unsigned int i = 0; i < s.size(); i++) {
 			if (isalnum(s[i])) {
 					hasAlphaNum = true;
@@ -107,6 +127,15 @@ bool yd::isValidPathDir(std::string const &s)
 			return false;
 	}
 	return true;
+}
+
+bool yd::compare_strings_ignoring_trailing_slash(const std::string &str1, const std::string &str2) 
+{
+    size_t str1_size = str1.size(), str2_size = str2.size();
+    if(str1_size - (str1.back() == '/') != str2_size - (str2.back() == '/')) return false;
+    for (size_t i = 0; i < str1_size - (str1.back() == '/'); i++)
+        if (str1[i] != str2[i]) return false;
+    return true;
 }
 
 bool yd::isValidPathFile(std::string const &s)
@@ -128,18 +157,134 @@ bool yd::isValidPathFile(std::string const &s)
     return true;
 }
 
-	int yd::commonPathLenght(const std::string &path1, const std::string &path2)
+// path1 must be location path
+
+	int yd::comparePath(const std::string &path1, const std::string &path2)
 	{
-    int length = 0;
-    for (unsigned int i = 0; i < path1.length() && i < path2.length(); i++) {
-        if (path1[i] == path2[i]) {
-            length++;
-        } else {
-            break;
-        }
-    }
-    return length;
+  	int count = 0;
+		unsigned int i = 1;
+		for (; i < path1.size(); i++)
+		{
+			if (path1[i] != path2[i])
+			{
+				if (path1[i] != '/' || (path2[i] != '/' && path2[i] != '\0'))
+					return (0);
+				else
+					break;
+			}
+			if ((path1[i] == '/' && path2[i] == '/'))
+			{
+				count++;
+			}
+		}
+		if (path1.size() == 1 && path1[0] == '/')
+		{
+			count++;
+			return (count);
+		}
+		if (path1[i] == '/' && path2[i] == '/')
+		{
+			count++;
+			count++;
+			if (path1[i + 1] != '\0')
+				count = 0;
+			return (count);
+		}
+		if ((path1[i - 1] == '/' && path2[i - 1] == '/'))
+		{
+			count++;
+			return(count);
+		}
+		if (path1[i] == '/' && path2[i] == '\0')
+		{
+			count++;
+			count++;
+			if (path1[i + 1] != '\0')
+				count = 0;
+			return (count);
+		}
+		if (path1[i] == '\0' && path2[i] == '/')
+		{
+			count++;
+			count++;
+			return (count);
+		}
+		//std::cout << static_cast<int>(path1[i]) << std::endl;
+		if ((path1[i - 1] != '/' && path1[i] == '\0') && (path2[i - 1] != '/' && path2[i] == '\0'))
+		{
+			count++;
+			count++;
+			return (count);
+		}
+		if (path1.size() >= path2.size() + 1)
+			count = 0;
+		if (path2.size() >= path1.size() + 1)
+			count = 0;
+			return (count);
 	}
+
+/*
+		int yd::comparePath(const std::string &path1, const std::string &path2)
+	{
+  	int count = 0;
+		unsigned int i = 1;
+		for (; i < path1.size(); i++)
+		{
+			if (path1[i] != path2[i])
+			{
+					break;
+			}
+			if ((path1[i] == '/' && path2[i] == '/'))
+			{
+				count++;
+			}
+		}
+		if (path1.size() == 1 && path1[0] == '/')
+		{
+			count++;
+			return (count);
+		}
+		if (path1[i] == '/' && path2[i] == '/')
+		{
+			count++;
+			count++;
+			if (path1[i + 1] != '\0')
+				count = 0;
+			return (count);
+		}
+		if ((path1[i - 1] == '/' && path2[i - 1] == '/'))
+		{
+			count++;
+			return(count);
+		}
+		if (path1[i] == '/' && path2[i] == '\0')
+		{
+			count++;
+			count++;
+			if (path1[i + 1] != '\0')
+				count = 0;
+			return (count);
+		}
+		if (path1[i] == '\0' && path2[i] == '/')
+		{
+			count++;
+			count++;
+			return (count);
+		}
+		//std::cout << static_cast<int>(path1[i]) << std::endl;
+		if ((path1[i - 1] != '/' && path1[i] == '\0') && (path2[i - 1] != '/' && path2[i] == '\0'))
+		{
+			count++;
+			count++;
+			return (count);
+		}
+		if (path1.size() >= path2.size() + 1)
+			count = 0;
+		if (path2.size() >= path1.size() + 1)
+			count = 0;
+			return (count);
+	}
+*/
 //--------------------------------------------------------------------------------------//
 //                                       Location                                       //
 //--------------------------------------------------------------------------------------//
@@ -169,7 +314,7 @@ bool yd::isValidPathFile(std::string const &s)
 		}
 		if (tok.nextToken()[0] == ';')
 			throw (ConfigurationError("cgi need two arguments"));
-		if (!yd::isValidPathDir(tok.getToken()))
+		if (!yd::isValidPathDir(tok.getToken()) && !yd::isValidPathFile(tok.getToken()))
 			throw (FormatError(tok.getToken(), "path /x/x/x"));
 		_cgi[tok.getTokenBefore()] = tok.getToken();
 	}
@@ -208,6 +353,8 @@ bool yd::isValidPathFile(std::string const &s)
 	{
 		if (!yd::isValidPathDir(tok.getToken()))
 			throw (FormatError(tok.getToken(), "path /x/x/x"));
+		if (tok.getToken().back() == '/')
+			throw (FormatError(tok.getToken(), "/x/x/x"));
 		else 
 			_root =  tok.getToken();
 	}
@@ -223,13 +370,13 @@ bool yd::isValidPathFile(std::string const &s)
 		void Location::setPath(Tokenizer &tok)
 	{
 		if (!yd::isValidPathDir(tok.getToken()))
-			throw (FormatError(tok.getToken(), "path /x/x/x"));
+			throw (FormatError(tok.getToken(), "path /x/x/x or /x/x/x/"));
 		else 
 			_path =  tok.getToken();
 	}
 
 
-	Location::Location(): _upload_file(), _default_file(), _root(), _cgi(), _is_get(), 
+	Location::Location(): _upload_file(), _default_file(), _root(),  _path(), _cgi(), _is_get(), 
 	_is_post(), _is_delete(), _directory_listing()
 	{
 		_tokens["root"] = &Location::setRoot; 
@@ -271,24 +418,24 @@ bool yd::isValidPathFile(std::string const &s)
 			}
 			return (0);
 		}
-		const Location &Server::getLocation(std::string const &path) const
+		const Location *Server::getLocation(std::string const &path) const
 		{
 			std::string path_select;
 			Location const *location_select;
-			Location const *location_choose;
+			Location const *location_choose = NULL;
 			int length = 0;
 			int prev_length = 0;
 			for (unsigned int i = 0; i < _locations.size(); i++)
 			{
 				location_select = &_locations[i];
 				prev_length = length;
-				length = yd::commonPathLenght(location_select->_path, path);
+				length = yd::comparePath(location_select->_path, path);
 				if (length > prev_length)
 				{	
 					location_choose = location_select;
 				}
 			}
-			return (*location_choose);
+			return (location_choose);
 		}
 
 		unsigned int Server::getPort() const
@@ -436,17 +583,17 @@ bool yd::isValidPathFile(std::string const &s)
 // Exception gestion for token
 	Tokenizer::Unexpected::Unexpected(std::string token)  
 	{
-	std::cout << "\e[0;31mSyntax error near unexpected token `" + token + "\"\e[0m " << std::endl; 
+	std::cout << "\e[0;31mWebServ$> Syntax error : near unexpected token `" + token + "\".\e[0m " << std::endl; 
 	}
 
 	FormatError::FormatError(std::string token, std::string expected_format)  
 	{
-	std::cout << "Format error \"" << token << "\" " << "Format expected : \"" << expected_format << "\"." << std::endl ; 
+	std::cout << "\e[0;31mWebServ$> Format error : \"" << token << "\" " << "Format expected : \"" << expected_format << "\".\e[0m" << std::endl ; 
 	}
 
 	ConfigurationError::ConfigurationError(std::string message)
 	{
-		std::cout << "Configuration error : " <<  message << std::endl;
+		std::cout << "\e[0;31mWebServ$> Configuration error : " <<  message << ".\e[0m " <<  std::endl;
 	}
 
 
@@ -458,6 +605,7 @@ bool yd::isValidPathFile(std::string const &s)
 	Config::Config(std::string const &path)
 	{
 		Tokenizer tokenizer(*this, path);
+		std::cout << "\e[0;32m\e[1mWebServ$> Configuration OK. \e[0m" << std::endl;
 	}
 	
 
@@ -536,9 +684,9 @@ bool yd::isValidPathFile(std::string const &s)
 			}
 		}
 		else
-				throw std::runtime_error("File error, couldn't open config file");
-			if (atLeastOneServer == 0)
-					throw (ConfigurationError("Webserv need at least one server configure to working"));
+				throw std::runtime_error("\e[0;31mWebServ$> File error : couldn't open config file. \".\e[0m");
+		if (atLeastOneServer == 0)
+				throw (ConfigurationError("Webserv need at least one server configure to working"));
 		}
 
 	Server	Tokenizer::parsServer()
@@ -560,7 +708,7 @@ bool yd::isValidPathFile(std::string const &s)
 					throw Tokenizer::Unexpected(_token);
 				nextToken();
 				if (getToken() == ";")
-					throw (ConfigurationError(getTokenBefore() + "need at least one argument"));
+					throw (ConfigurationError( "`"  + getTokenBefore() + "\" need at least one argument"));
 				(server.*pf)(*this);
 				nextToken();
 			if (getToken() != ";")

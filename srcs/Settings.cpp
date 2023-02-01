@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/31 12:43:54 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/01 09:40:36 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 int	Settings::build( Config const& config )
 {
 	int	socket_fd;
-
+	(void)config;
 	this->interface.sin_addr.s_addr = htonl(INADDR_ANY);
 	this->interface.sin_port = htons(80);
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -42,7 +42,7 @@ std::string	Settings::date( void )
 	return (rdate);
 }
 
-std::string	Settings::get( Config const& config, Request const& req )
+std::string	Settings::get( Config& config, Request const& req )
 {
 	std::string buffer;
 	std::string	reponse = "HTTP/1.1";
@@ -51,9 +51,9 @@ std::string	Settings::get( Config const& config, Request const& req )
 	std::string tmp;
 	
 	std::cout << req.method.path << "\n";
-	std::cout << config.getFile(req.method.path.c_str())->c_str() << "\n";
-	fd.open(config.getFile(req.method.path)->c_str(), std::fstream::in);
-	if (!fd.is_open())
+	std::cout << config.getFile(req.method.path.c_str()) << "\n";
+	
+	if (!config.getFile(req.method.path.c_str()))
 	{
 		fd.open(config.getError(404)->c_str(), O_RDONLY);
 		if (!fd.is_open())
@@ -61,7 +61,10 @@ std::string	Settings::get( Config const& config, Request const& req )
 		reponse.append(" 404 Not Found\n");
 	}
 	else
+	{
+		fd.open(config.getFile(req.method.path)->c_str(), std::fstream::in);
 		reponse.append(" 200 OK\n");
+	}
 	reponse += Settings::date();
 	reponse += "server: " + *config.getName() + "\n";
 	reponse += "Last-Modified: \n";
@@ -76,7 +79,7 @@ std::string	Settings::get( Config const& config, Request const& req )
 	return (reponse);
 }
 
-std::string Settings::post( Config const& config, Request const& req )
+std::string Settings::post( Config& config, Request const& req )
 {
 	std::string			bodytest = "mybody";
 	std::string			reponse = "HTTP/1.1";
@@ -109,36 +112,6 @@ std::string Settings::post( Config const& config, Request const& req )
 	return (reponse);
 }
 
-std::string	Settings::del( Config const& config)
-{
-	(void)config;
-	// std::string reponse;
-	// char buffer[8000] = {0};
-	std::string	reponse = "HTTP/1.1";
-	// if ()
-	// std::stringstream n;
-	// if (fd < 0)
-	// {
-	// 	fd = open("http/404.html", O_RDONLY);
-	// 	if (fd < 0)
-	// 		fd = open("http/404.html", O_RDONLY);
-	// 	reponse.append(" 404 Not Found\n");
-	// }
-	// else
-	// {
-	// 	reponse.append(" 200 OK\n");
-	// }
-	// close(fd);
-	// n << strlen(buffer);
-	// reponse += Settings::date();
-	// reponse += "server: " + *config.getName() + "\n";
-	// reponse += "Last-Modified: \n";
-	// reponse += "Content-Length: " + n.str() + "\n";
-	// reponse += "Content-Type: text/html\n";
-	// reponse += "Connection: keep-alive\n\n";
-	// reponse += buffer;
-	return (reponse);
-}
 std::string	Settings::badRequest( Config const& config )
 {
 	std::string	reponse = "HTTP/1.1 400 Bad Request\n";

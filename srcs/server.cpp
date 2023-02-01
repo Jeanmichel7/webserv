@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/31 14:49:42 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/01 09:44:00 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,21 +40,25 @@ int main( void )
 	int				socket_server;
 	int				timeout = 0;
 	struct kevent	change;
-	int				myport;
+	// int				myport;
 	struct kevent	event;
 	char buffer[8000] = {0};
 	Request req;
-	
+
 	memset(&server, 0, sizeof(server));
 	config.selectServ();
+	std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/nolife/", "test.sh",config) << std::endl;
+	std::cout << *config.getCgi("/nolife", ".sh") << std::endl; 
+	std::cout << "valeur de max_size : " << config.getName() << std::endl;
 	int ke = kqueue();
+	std::cout << "\n\nje passe ici\n\n";
 	try
 	{
 		socket_server = server.build(config);
 		EV_SET(&change, socket_server, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, 0);
 		if (socket_server == -1 || ke == -1 || listen(socket_server, 100) == -1 || kevent(ke, &change, 1, &event, 1, NULL) == -1)
 			throw Settings::badCreation();
-		char test[550] = {0};
+		// char test[550] = {0};
 		// read(fd, &test, 550);
 		while(1)
 		{
