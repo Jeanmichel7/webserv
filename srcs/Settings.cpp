@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/01 09:40:36 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/01 11:40:13 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,19 +50,20 @@ std::string	Settings::get( Config& config, Request const& req )
 	std::fstream fd;
 	std::string tmp;
 	
-	std::cout << req.method.path << "\n";
-	std::cout << config.getFile(req.method.path.c_str()) << "\n";
-	
-	if (!config.getFile(req.method.path.c_str()))
+	if (!config.getFile(req.method.path))
 	{
-		fd.open(config.getError(404)->c_str(), O_RDONLY);
-		if (!fd.is_open())
-			fd.open("http/404.html", O_RDONLY);
+		fd.open(config.getError(404)->c_str());
 		reponse.append(" 404 Not Found\n");
 	}
 	else
 	{
 		fd.open(config.getFile(req.method.path)->c_str(), std::fstream::in);
+		if (!fd.is_open())
+		{
+			fd.open(config.getError(404)->c_str());
+			reponse.append(" 404 Not Found\n");
+		}
+		else
 		reponse.append(" 200 OK\n");
 	}
 	reponse += Settings::date();
