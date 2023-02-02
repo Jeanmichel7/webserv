@@ -38,15 +38,25 @@
 		const Location *loc = getLocation(path);
 		if (loc == NULL)
 			return (NULL);
-		if (loc->_default_file.size() == 0)
-			return (NULL);
 		else 
 		{
+			_buffer = path;
 			unsigned int pos;
-			_buffer = (loc->_root + path);
+			for (int i = 1 ; path[i];i++)
+			{
+				if (path[i] != loc->_path[i])
+				{
+					_buffer.erase(0, i);
+					break;
+				}
+			}
+			_buffer = (loc->_root + _buffer);
+			_buffer.erase(0, 1);
 			if (_buffer.back() == '/')
 				_buffer.pop_back();
 			pos = _buffer.rfind('/');
+			// std::cout << "VALEUR DE PATH : " << path << std::endl;
+			// std::cout << "VALEUR DE LOC PATH : " << loc->_path << std::endl;
 			if (yd::compare_strings_ignoring_trailing_slash(path,loc->_path))
 				return(&loc->_default_file);
 			else 

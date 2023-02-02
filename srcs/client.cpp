@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 13:43:13 by lomasson          #+#    #+#             */
-/*   Updated: 2023/01/31 11:46:55 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/02 16:40:49 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,29 @@ Content-Location: www.google.fr\r\n\
 \r\n\
 \"Simple string\"\r\n";
 
+	const char *requestChuncked1 = "\
+POST /api/create_order HTTP/1.1\r\n\
+Host: www.example.com\r\n\
+Content-Type: application/json\r\n\
+Transfer-Encoding: chunked\r\n\
+\r\n\
+e\r\n\
+{\"item_id\": 123,\r\n\
+";
+
+	const char *requestChuncked2 = "\
+14\r\n\
+\"quantity\": 2,\r\n\
+";
+
+	const char *requestChuncked3 = "\
+14\r\n\
+\"customer_id\": 789}\r\n\
+";
+
+	const char *requestChuncked4 = "\
+0\r\n\
+\r\n";
 	
 	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
 	
@@ -49,8 +72,13 @@ Content-Location: www.google.fr\r\n\
 		printf("\nConnection Failed \n");
 		return -1;
 	}
-	if (argc == 1)
-		send(socket_fd , requestPost , strlen(requestPost) , 0);
+	if (argc == 1){
+		send(socket_fd , requestChuncked1 , strlen(requestChuncked1) , 0);
+		send(socket_fd , requestChuncked2 , strlen(requestChuncked2) , 0);
+		send(socket_fd , requestChuncked3 , strlen(requestChuncked3) , 0);
+		send(socket_fd , requestChuncked4 , strlen(requestChuncked4) , 0);
+
+	}
 	else
 		send(socket_fd , argv[1] , strlen(argv[1]) , 0);
 	read( socket_fd , buffer, 1024);

@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/02 10:35:34 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/02 20:00:59 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,14 +55,18 @@ std::string	Settings::get( Config& config, Request const& req )
 	
 	if (!config.getFile(req.method.path.c_str()))
 	{
-		fd.open(config.getError(404)->c_str(), O_RDONLY);
-		if (!fd.is_open())
-			fd.open("http/404.html", O_RDONLY);
+		fd.open(config.getError(404)->c_str());
 		reponse.append(" 404 Not Found\n");
 	}
 	else
 	{
 		fd.open(config.getFile(req.method.path)->c_str(), std::fstream::in);
+		if (!fd.is_open())
+		{
+			fd.open(config.getError(404)->c_str());
+			reponse.append(" 404 Not Found\n");
+		}
+		else
 		reponse.append(" 200 OK\n");
 	}
 	reponse += Settings::date();

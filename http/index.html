@@ -1,27 +1,63 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<title> WebServ </title>
-<meta charset="UTF-8">
+	<title> WebServ </title>
+	<meta charset="UTF-8">
 </head>
 
 <body>
-<h1> Voici le titre principal </h1>
-<p> Et voilà le texte de la page</p>
-<h2> On crée les autres titres de la même manière </h2>
-<h3> On peut créer jusqu'à six niveaux de titres </h3>
-<h4> Titre de niveau 4 </h4>
-<h5> Titre de niveau 5 </h5>
-<h6> Titre de niveau 6 </h6>
-<p> Chaque titre peut contenir du texte, comme ici </p>
-<form method="post" action="404.html" >
-	<label for="file">Fichier: </label><br />
-	<input type="file" name="file" id="file" /><br />
-	<label for="name">Nom: </label><br />
-	<input type="text" name="name" value="Jean" id="name" /><br />
-	<label for="mail">Email: </label><br />
-	<input type="text" name="mail" value="Jean@hotmail.com" id="mail" /><br />
-	<input type="submit" value="Envoyer" />
-</form>
-</body> 
+	<h1> Voici le titre principal </h1>
+	<p> Et voilà le texte de la page</p>
+	<h2> On crée les autres titres de la même manière </h2>
+	<h3> On peut créer jusqu'à six niveaux de titres </h3>
+	<h4> Titre de niveau 4 </h4>
+	<h5> Titre de niveau 5 </h5>
+	<h6> Titre de niveau 6 </h6>
+	<p> Chaque titre peut contenir du texte, comme ici </p>
+	<!-- <form method="post" action="test.sh">
+		<label for="name">Nom: </label><br />
+		<input type="text" name="name" value="Jean" id="name" /><br />
+		<label for="mail">Email: </label><br />
+		<input type="text" name="mail" value="Jean@hotmail.com" id="mail" /><br />
+		<input type="submit" value="Envoyer" />
+	</form>
+	<br>
+	<br> -->
+	<form method="post" action="bg/index.html" enctype="multipart/form-data" id="form">
+		<label for="file">Fichier: </label><br />
+		<input type="file" name="file" id="file" /><br />
+		<label for="name2">Nom: </label><br />
+		<input type="text" name="name2" value="Jean" id="name2" /><br />
+		<input type="button" value="Envoyer" onclick="sendForm()" />
+	</form>
+</body>
+
+<script type="text/javascript">
+	function sendForm() {
+		var req = new XMLHttpRequest();
+		var form = document.getElementById("form");
+		var formdata = new FormData();
+		formdata.append("file", form.file.files[0]);
+		req.open("POST", "http://localhost:80/bg/index.html", true);
+		req.send(formdata);
+	}
+</script>
 </html>
+
+<!-- <script>
+	let form = document.querySelector('form');
+	form.addEventListener('submit', function(e) {
+		e.preventDefault();
+		let data = new FormData(form);
+		fetch('http://localhost:80', {
+			method: 'POST',
+			body: data
+		}).then(function(response) {
+			return response.text();
+		}).then(function(text) {
+			console.log(text);
+		});
+	});
+
+</script> -->

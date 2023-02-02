@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/02 10:35:44 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/02 20:00:46 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,11 +46,9 @@ int main( void )
 	
 	memset(&server.interface , 0, sizeof(sockaddr_in));
 	config.selectServ();
-	std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/nolife/", "test.sh",config) << std::endl;
-	std::cout << *config.getCgi("/nolife", ".sh") << std::endl; 
-	std::cout << "valeur de max_size : " << config.getName() << std::endl;
+	//std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/nolife/", "test.sh",config) << std::endl;
+	//std::cout << "valeur de max_size : " << config.getName() << std::endl;
 	int ke = kqueue();
-	std::cout << "\n\nje passe ici\n\n";
 	try
 	{
 		socket_server = server.build(config, &change, "127.0.0.1");
@@ -74,7 +72,7 @@ int main( void )
 				// else
 				// 	socket_client = accept( change.ident , (struct sockaddr *)&server.interfacee, (socklen_t *)&server.interfacee);
 				read(socket_client, buffer, 8000);
-				printf("%s\n", buffer);
+				// printf("%s\n", buffer);
 				if (req.parseRequest(buffer))
 					reponse_request = server.badRequest(config);
 				else if (strncmp(buffer, "GET", 3) == 0)
@@ -83,14 +81,18 @@ int main( void )
 					reponse_request = server.post(config, req);
 				else
 					reponse_request = server.badRequest(config);
+				req.printRequest();
 				send(socket_client, reponse_request.c_str(), strlen(reponse_request.c_str()),0);
-				std::cout << reponse_request << std::endl;
+				// std::cout << "Response : " <<reponse_request << std::endl;
 
 				printf("------------------Hello message sent-------------------\n");
 				EV_SET(event, socket_client, EVFILT_READ | EVFILT_WRITE , EV_ADD | EV_ENABLE, 0, 0, &timeout);
 				kevent(ke, event, 1, NULL, 0, NULL);
 				close(socket_client);
+				req.reset();
 			}
+
+			// req.printRequest(req);
 		}
 	}
 	catch (const std::exception &e) {
