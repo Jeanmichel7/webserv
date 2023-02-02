@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/02 17:08:28 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/02 18:10:36 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,7 +143,6 @@ bool Method::parseMethod( void ) {
 	}
 
 	this->protocole = str.substr(0);
-
 	// cout << "type : '" << this->type << "'" << endl;
 	// cout << "url : '" << this->url << "'" << endl;
 	// cout << "protocole : '" << this->protocole << "'" << endl;
@@ -514,7 +513,6 @@ bool Header::checkSyntaxeAccept(const string &line) {
 			return 1;
 		}
 	}
-
 	// 1 seul slash
 	if ((pos = line.find("/")) == string::npos) {
 		cerr << "Error : accept '" << line << "' is not valid: no slash" << endl;
@@ -909,16 +907,17 @@ bool 	Body::parseMultipartBody( void ){
 	std::stringstream body_parsed;
 
 	cout << "parseMultipartBody : " << this->brut_body << endl;
-	while ((pos = str.find("\r\n")) != string::npos) {
-		pos_in_line += pos + 2; 
-		line = str.substr(0, pos);
-		if (line != "--" + this->boundary && line != "--" + this->boundary + "--")
-			body_parsed << line << "\r\n";
-		else
-			body_parsed << "\r\n";
-		str.erase(0, pos + 2);
-	}
-	this->content = body_parsed.str();
+	// while ((pos = str.find("\r\n")) != string::npos) {
+	// 	pos_in_line += pos + 2; 
+	// 	line = str.substr(0, pos);
+	// 	if (line != "--" + this->boundary && line != "--" + this->boundary + "--")
+	// 		body_parsed << line << "\r\n";
+	// 	else
+	// 		body_parsed << "\r\n";
+	// 	str.erase(0, pos + 2);
+	// }
+	// this->content = body_parsed.str();
+	this->content = this->brut_body;
 	return 0;
 }
 
@@ -1134,7 +1133,7 @@ void Request::printRequest() {
 
 
   // cout << "brut body '" << this->body.brut_body << "'" << endl;
-	this->contain_body ? cout << "body\n" << this->body.content << endl : cout << "no body" << endl;
+	this->contain_body ? cout << "body\n" << "'" << this->body.content << "'" << endl : cout << "no body" << endl;
 	// cout << "body concatene '" << this->body.concat_body << "'" << endl;
 
   cout << "requete " << (this->header.is_valid ? "valid" : "invalid") << endl;

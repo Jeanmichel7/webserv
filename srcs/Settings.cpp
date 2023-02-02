@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/01 11:40:13 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/02 18:46:14 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,6 +109,7 @@ std::string Settings::post( Config& config, Request const& req )
 	reponse += "Content-Length: 0\n";
 	reponse += "Content-Type: text/html\n";
 	reponse += "Connection: keep-alive\n\n";
+	reponse += "Access-Control-Allow-Origin: *\n";
 	fd.close();
 	return (reponse);
 }

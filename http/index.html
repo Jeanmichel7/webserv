@@ -15,16 +15,14 @@
 	<h5> Titre de niveau 5 </h5>
 	<h6> Titre de niveau 6 </h6>
 	<p> Chaque titre peut contenir du texte, comme ici </p>
-	<!-- <form method="post" action="test.sh">
+	<!-- <form method="post" action="index.html">
 		<label for="name">Nom: </label><br />
 		<input type="text" name="name" value="Jean" id="name" /><br />
 		<label for="mail">Email: </label><br />
 		<input type="text" name="mail" value="Jean@hotmail.com" id="mail" /><br />
 		<input type="submit" value="Envoyer" />
-	</form>
-	<br>
-	<br> -->
-	<form method="post" action="bg/index.html" enctype="multipart/form-data" id="form">
+	</form> -->
+	<form method="post" enctype="multipart/form-data" id="form">
 		<label for="file">Fichier: </label><br />
 		<input type="file" name="file" id="file" /><br />
 		<label for="name2">Nom: </label><br />
@@ -35,12 +33,16 @@
 
 <script type="text/javascript">
 	function sendForm() {
-		var req = new XMLHttpRequest();
-		var form = document.getElementById("form");
-		var formdata = new FormData();
-		formdata.append("file", form.file.files[0]);
-		req.open("POST", "http://localhost:80/bg/index.html", true);
-		req.send(formdata);
+		let form = document.getElementById('form');
+		let data = new FormData(form);
+		fetch('http://localhost:80/bg/index.html ', {
+			method: 'POST',
+			body: data
+		}).then(function(response) {
+			return response.text();
+		}).then(function(text) {
+			console.log(text);
+		});
 	}
 </script>
 </html>
