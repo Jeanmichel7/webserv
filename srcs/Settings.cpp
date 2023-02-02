@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/02 14:06:24 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/02 19:56:58 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ int	Settings::build( Config const& config, struct kevent *change, char *i, struc
 		return (-1);
 	if (listen(socket_fd, 10) == -1)
 		return (-1);
-	EV_SET(change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, 0);
+	EV_SET(change, socket_fd, EVFILT_READ , EV_ADD, 0, 0, 0);
 	return (socket_fd);
 }
 
