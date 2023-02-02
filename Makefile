@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+         #
+#    By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/02/01 09:43:15 by lomasson         ###   ########.fr        #
+#    Updated: 2023/02/02 16:41:06 by jrasser          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
