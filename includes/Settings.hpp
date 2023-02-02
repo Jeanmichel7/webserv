@@ -14,7 +14,6 @@
 # define SETTINGS_HPP
 
 # include "server.hpp"
-# include "Request.hpp"
 class Config;
 struct Request;
 
@@ -22,7 +21,8 @@ class Settings
 {
 	public:
 		struct		sockaddr_in interface;
-		int			build( Config const &config, struct kevent *change, char *i);
+		struct		sockaddr_in interfacee;
+		int			build( Config const &config, struct kevent *change, char *i, struct sockaddr_in *inter);
 		std::string	get( Config& config, Request const& req );
 		std::string post( Config& config, Request const& req );
 		std::string del( Config const& config );
