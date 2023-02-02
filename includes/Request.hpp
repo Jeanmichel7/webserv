@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/01 11:41:24 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/02 14:01:42 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ struct Method {
 	bool checkType( void);
 	bool checkUri( void );
 	bool checkProtocole( void );
+	void reset( void );
 };
 
 
@@ -67,13 +68,10 @@ struct Header {
 
 	typedef map< string, string > 									t_user_agent;
 	typedef map< string, string >::const_iterator 	t_user_agent_it;
-
 	typedef vector< t_accept > 											t_accepts;
 	typedef vector< t_accept >::const_iterator 			t_accepts_it;
-
 	typedef vector< t_accept_language > 									t_languages;
 	typedef vector< t_accept_language >::const_iterator 	t_languages_it;
-
 	typedef vector< t_accept_encoding > 									t_encodings;
 	typedef vector< t_accept_encoding >::const_iterator 	t_encodings_it;
 
@@ -87,23 +85,18 @@ struct Header {
 	string				str_accepts;
 	t_languages 	accept_languages;
 	string				str_accept_languages;
-
 	t_encodings 	accept_encodings;
 	string				str_accept_encodings;
 	bool 					connection;
-	
+
 	string				content_type;
 	string				content_length;
 	string				content_encoding;
 	string				content_language;
 	string				content_location;
 	bool 					is_chuncked;
-	
-	// string 	connection;
-	// string 	authorization;
-	// string 	cookie;
-	// string 	origin;
-	
+	string				boundary;
+
 	Header();
 	Header(Header const& src);
 	~Header();
@@ -131,6 +124,9 @@ struct Header {
 	bool parseContentLength(const string &);
 	// bool setContentLength(const string &);
 
+	bool parseContentType(const string &);
+
+	void reset( void );
 };
 
 
@@ -144,14 +140,15 @@ struct Body {
 
 	string 	brut_body;
 	string	content;
-	string  concat_body;
+	// string  concat_body;
 	bool 		is_chuncked;
+	// string 	chuncked_size;
+	string 	boundary;
 
 	bool 	parseBody( void );
-
 	bool 	parseTransferEncoding( void );
-	
-
+	bool 	parseMultipartBody( void );
+	void	reset( void );
 };
 
 
@@ -172,6 +169,7 @@ struct Request {
 
 	bool parseRequest(string brut_request);
 	void printRequest( void );
+	void reset( void );
 };
 
 #endif

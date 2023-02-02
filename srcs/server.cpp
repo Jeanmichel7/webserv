@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/01 11:40:16 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/02 13:43:13 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ int main( void )
 	Request req;
 
 	config.selectServ();
-	std::cout << "file:" <<*config.getFile("/bg") << std::endl;
+	// std::cout << "file:" << *config.getFile("/bg") << std::endl;
 	int ke = kqueue();
 	int fd = open("http/index.html", O_RDWR);
 	try
@@ -71,23 +71,21 @@ int main( void )
 				read(socket_client, buffer, 1024);
 				std::string get = server.get(config);
 
-
 				// printf("buffer : %s\n", buffer);
 				if (req.parseRequest(buffer)) {
-  				return 1;
-  			}
+					return 1;
+				}
 				req.printRequest();
-
+				req.reset();
 
 				send(socket_client, get.c_str(), strlen(get.c_str()),0);
 				printf("------------------Hello message sent-------------------\n");
 				close(socket_client);
-				EV_SET(&event, socket_client, EVFILT_WRITE , EV_ADD | EV_ENABLE, 0, 0, &timeout);
+				EV_SET(&event, socket_client, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, &timeout);
 				if (kevent(ke, &event, 1, NULL, 0, NULL) == -1){}
 			}
 
 			// req.printRequest(req);
-
 		}
 	}
 	catch (const std::exception &e) {
