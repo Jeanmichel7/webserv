@@ -6,13 +6,13 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/01 09:40:36 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/02 10:35:34 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
 
-int	Settings::build( Config const& config )
+int	Settings::build( Config const& config, struct kevent *change, char *i)
 {
 	int	socket_fd;
 	(void)config;
@@ -51,7 +51,7 @@ std::string	Settings::get( Config& config, Request const& req )
 	std::string tmp;
 	
 	std::cout << req.method.path << "\n";
-	std::cout << config.getFile(req.method.path.c_str()) << "\n";
+	std::cout << config.getFile(req.method.path.c_str())<< "\n";
 	
 	if (!config.getFile(req.method.path.c_str()))
 	{

@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/01 09:44:00 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/02 10:35:44 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,11 @@ int main( void )
 	int				socket_server;
 	int				timeout = 0;
 	struct kevent	change;
-	// int				myport;
-	struct kevent	event;
+	struct kevent	event[1];
 	char buffer[8000] = {0};
 	Request req;
-
-	memset(&server, 0, sizeof(server));
+	
+	memset(&server.interface , 0, sizeof(sockaddr_in));
 	config.selectServ();
 	std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/nolife/", "test.sh",config) << std::endl;
 	std::cout << *config.getCgi("/nolife", ".sh") << std::endl; 
@@ -54,28 +53,32 @@ int main( void )
 	std::cout << "\n\nje passe ici\n\n";
 	try
 	{
-		socket_server = server.build(config);
+		socket_server = server.build(config, &change, "127.0.0.1");
 		EV_SET(&change, socket_server, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, 0);
-		if (socket_server == -1 || ke == -1 || listen(socket_server, 100) == -1 || kevent(ke, &change, 1, &event, 1, NULL) == -1)
+		if (socket_server == -1 || ke == -1 || listen(socket_server, 100) == -1 || kevent(ke, &change, 1, event, 1, NULL) == -1)
 			throw Settings::badCreation();
 		// char test[550] = {0};
 		// read(fd, &test, 550);
 		while(1)
 		{
 			std::string reponse_request;
-			int nevents = kevent(ke, NULL, 0, &event, 1, NULL);
-			printf("\n+++++++ Waiting for new connection ++++++++\n\n");
+			int nevents = kevent(ke, NULL, 0, event, 1, NULL);
+			std::cout << "la\n";
+			
 			if (nevents > 0)
 			{
-				int socket_client = accept(socket_server, (struct sockaddr *)&server.interface, (socklen_t *)&server.interface);
+				int socket_client;
+				// std::cout << *static_cast<int*>(event[0].udata) << std::endl;
+				// if (change.ident == 4)
+				socket_client = accept( change.ident , (struct sockaddr *)&server.interface, (socklen_t *)&server.interface);
+				// else
+				// 	socket_client = accept( change.ident , (struct sockaddr *)&server.interfacee, (socklen_t *)&server.interfacee);
 				read(socket_client, buffer, 8000);
 				printf("%s\n", buffer);
 				if (req.parseRequest(buffer))
-  					reponse_request = server.badRequest(config);
+					reponse_request = server.badRequest(config);
 				else if (strncmp(buffer, "GET", 3) == 0)
-				{
 					reponse_request = server.get(config, req);
-				}
 				else if (strncmp(buffer, "POST", 4) == 0 || strncmp(buffer, "DELETE", 6) == 0)
 					reponse_request = server.post(config, req);
 				else
@@ -84,8 +87,8 @@ int main( void )
 				std::cout << reponse_request << std::endl;
 
 				printf("------------------Hello message sent-------------------\n");
-				EV_SET(&event, socket_client, EVFILT_READ | EVFILT_WRITE , EV_ADD | EV_ENABLE, 0, 0, &timeout);
-				kevent(ke, &event, 1, NULL, 0, NULL);
+				EV_SET(event, socket_client, EVFILT_READ | EVFILT_WRITE , EV_ADD | EV_ENABLE, 0, 0, &timeout);
+				kevent(ke, event, 1, NULL, 0, NULL);
 				close(socket_client);
 			}
 		}

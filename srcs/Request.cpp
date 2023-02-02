@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/01 09:27:08 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/02 10:37:04 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -363,12 +363,12 @@ bool Header::checkSyntaxeTag(const string &host, const string &tag) {
 		cerr << "Error : host '" << host << "' is not valid: tag can't have '--'" << endl;
 		return 1;
 	}
-	for(string::const_iterator it = tag.begin(); it != tag.end(); ++it) {
-		if (!isalnum(*it) && *it != '-'){
-			cerr << "Error : host '" << host << "' is not valid: tag can't have '"<< *it << "'" << endl;
-			return (true);
-		}
-	}
+	// for(string::const_iterator it = tag.begin(); it != tag.end(); ++it) {
+	// 	if (!isalnum(*it) && *it != '-'){
+			// cerr << "Error : host '" << host << "' is not valid: tag can't have '"<< *it << "'" << endl;
+			// return (true);
+		// }
+	// }
 	return 0;
 }
 
