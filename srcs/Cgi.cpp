@@ -83,8 +83,7 @@ void CGI::build(char *const scriptName)
 	}
 
 std::string CGI::execute_cgi(std::string const &request_content, std::string const &path, char *const scriptName, Config const &config)
-{
-	//declarer variable
+{	//declarer variable
 	std::string body;
 	CGI data;
 	try 
@@ -101,11 +100,12 @@ std::string CGI::execute_cgi(std::string const &request_content, std::string con
 	// on cherche l'extension adequate
 	char * pos;
 	pos = std::strchr(scriptName, '.');
-	char const *cgi_path = config.getCgi(path, pos)->c_str();
+	std::string const *cgi_path_str = config.getCgi(path, pos);
 	// si pas de cgi_path, on retourne NULL
-	if (cgi_path == NULL)
-		return ("Status: 500\n\r\n\r");
+	if (cgi_path_str == NULL)
+		return ("Status: 404\n\r\n\r");
 	// creer le fork 
+	const char *cgi_path = cgi_path_str->c_str();
 	pid_t pid = fork();
 	if (pid == -1)
 			return ("Status: 500\n\r\n\r");
