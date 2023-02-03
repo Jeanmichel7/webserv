@@ -108,7 +108,7 @@ class Config
 		Config();
 		friend class Tokenizer;
 		Config(const std::string &path);
-		bool	selectServ(const unsigned int ip = 2130706433, const unsigned int port = 80);
+		bool	selectServ(const unsigned int ip = 2130706433, const unsigned int port = 80, const std::string path = "");
 		const std::string *getFile(const std::string &path);
 		Methods getMethod(const std::string &path) const;
 		const std::string *getError(const unsigned int error) const;
@@ -118,6 +118,7 @@ class Config
 		unsigned int getMaxSize() const;
 		void addServer(Server server);
 		const std::string *getName() const;
+		uint32_t getIp() const;
 		Config &operator=(Config const &other);
 	private : 
 		const Location *getLocation(std::string const &path) const;

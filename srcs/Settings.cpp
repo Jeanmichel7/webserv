@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/03 14:54:08 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/03 15:57:01 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,13 @@ int	Settings::build( Config const& config, struct kevent *change, char *i, int k
 	struct sockaddr_in	serv_addr;
 	(void)config;
 
-	memset(&serv_addr , 0, sizeof(sockaddr_in));
+	std::memset((char *)&serv_addr , 0, sizeof(sockaddr_in));
  	// inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(atoi(i));
+	serv_addr.sin_family = AF_INET; // yann a rajoute 
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (bind(socket_fd, reinterpret_cast<const sockaddr *>(&serv_addr), (socklen_t)sizeof(serv_addr)) == -1)
+	if (bind(socket_fd, reinterpret_cast<const struct sockaddr *>(&serv_addr), (socklen_t)sizeof(serv_addr)) == -1)
 		throw Settings::badCreation();
 	if (listen(socket_fd, 10) == -1)
 		throw Settings::badCreation();
