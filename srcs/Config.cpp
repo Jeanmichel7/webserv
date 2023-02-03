@@ -63,7 +63,7 @@
 				return (&_buffer);
 		}
 	}
-	const Methods	Config::getMethod(const std::string &path) const
+	Methods	Config::getMethod(const std::string &path) const
 	{
 		const Location *loc = getLocation(path);
 		Methods rt;

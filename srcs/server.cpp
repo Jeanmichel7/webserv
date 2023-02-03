@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/01 11:44:35 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/02 10:03:10 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,8 +47,17 @@ int main( void )
 
 	memset(&server.interface, 0, sizeof(struct sockaddr_in));
 	config.selectServ();
-	//std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/nolife/", "test.sh",config) << std::endl;
-	//std::cout << "valeur de max_size : " << config.getName() << std::endl;
+	//std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/nolife/", "test.sh", config) << std::endl;
+	Methods test;
+	test = config.getMethod("/bg");
+	std::cout << test.isget << std::endl;
+
+
+
+
+
+
+
 	int ke = kqueue();
 	try
 	{
