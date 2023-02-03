@@ -6,26 +6,30 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/02 20:02:12 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/03 14:54:08 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
 
-int	Settings::build( Config const& config, struct kevent *change, char *i, struct sockaddr_in *inter)
+int	Settings::build( Config const& config, struct kevent *change, char *i, int ke)
 {
-	int	socket_fd;
+	int					socket_fd;
+	struct sockaddr_in	serv_addr;
 	(void)config;
-	(void)change;
-	
-	inter->sin_addr.s_addr = htonl(INADDR_ANY);
-	inter->sin_port = htons(atoi(i));
+
+	memset(&serv_addr , 0, sizeof(sockaddr_in));
+ 	// inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
+	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	serv_addr.sin_port = htons(atoi(i));
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (bind(socket_fd, reinterpret_cast<const sockaddr *>(inter), (socklen_t)sizeof(*inter)) == -1)
-		return (-1);
+	if (bind(socket_fd, reinterpret_cast<const sockaddr *>(&serv_addr), (socklen_t)sizeof(serv_addr)) == -1)
+		throw Settings::badCreation();
 	if (listen(socket_fd, 10) == -1)
-		return (-1);
-	EV_SET(change, socket_fd, EVFILT_READ , EV_ADD, 0, 0, 0);
+		throw Settings::badCreation();
+	EV_SET(change, socket_fd, EVFILT_READ , EV_ADD, 0, 0, &serv_addr);
+	if (kevent(ke, change, 1, NULL, 0, NULL) == -1)
+			throw Settings::badCreation();
 	return (socket_fd);
 }
 
@@ -53,8 +57,8 @@ std::string	Settings::get( Config& config, Request const& req )
 	std::fstream fd;
 	std::string tmp;
 	
-	std::cout << req.method.path << "\n";
-	std::cout << config.getFile(req.method.path.c_str())<< "\n";
+	// std::cout << req.method.path << "\n";
+	// std::cout << config.getFile(req.method.path.c_str())<< "\n";
 	
 	if (!config.getFile(req.method.path.c_str()))
 	{
