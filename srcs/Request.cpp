@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/02 18:10:36 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/03 20:42:35 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -238,21 +238,22 @@ void Method::reset( void ) {
 Header::Header()
 :
 	brut_header(""),
+	boundary(""),
 	contain_body(false),
 	is_valid(false),
-	host(""),
+	is_chuncked(false),
 	str_user_agent(""),
 	str_accepts(""),
 	str_accept_languages(""),
 	str_accept_encodings(""),
-	connection(false),
+	host(""),
+	connection("close"),
 	content_type(""),
 	content_length(""),
 	content_encoding(""),
 	content_language(""),
 	content_location(""),
-	is_chuncked(false),
-	boundary("")
+	list_headers()
 {
 	t_user_agent user_agent;
 	user_agent["product"] = "";
@@ -266,9 +267,11 @@ Header::Header()
 	user_agent["engineVersion"] = "";
 	this->user_agent = user_agent;
 
-	t_accept		accept;
-	t_languages accept_language;
-	t_encodings accept_encoding;
+	t_accept			accept;
+	t_languages 	accept_language;
+	t_encodings 	accept_encoding;
+	// t_list_header list_headers;
+
 }
 
 Header::Header(Header const &src)
@@ -307,6 +310,7 @@ Header &Header::operator=(Header const &rhs)
 		this->content_language = rhs.content_language;
 		this->content_encoding = rhs.content_encoding;
 		this->content_location = rhs.content_location;
+		this->list_headers = rhs.list_headers;
 	}
 	return (*this);
 }
@@ -796,15 +800,26 @@ bool Header::parseHeader( void ) {
 				this->content_language = value;
 			else if (key == "Content-Location")
 				this->content_location = value;
-			else {
+			else
 				cerr << "Header '" << key << "' non implemente" << endl;
-			}
+			if (setAllHeaders(key, value))
+				return 1;
+			
 		}
 		// else {
 		// 	cerr << "Error : Error syntaxe separator \": \" in '" << line << "'" << endl;
 		// 	return 1;
 		// }
 	}
+	return 0;
+}
+
+bool Header::setAllHeaders(const string &key, const string &value) {
+	if (this->list_headers.find(key) != this->list_headers.end()) {
+		cerr << "Error : Header '" << key << "' already exist" << endl;
+		return 1;
+	}
+	this->list_headers[key] = value;
 	return 0;
 }
 
@@ -841,7 +856,7 @@ void Header::reset( void ) {
 	this->str_accept_languages = "";
 	this->accept_encodings.clear();
 	this->str_accept_encodings = "";
-	this->connection = false;
+	this->connection = "close";
 	this->content_type = "";
 	this->content_length = "";
 	this->content_encoding = "";
@@ -900,11 +915,11 @@ bool Body::parseBody( void ) {
 }
 
 bool 	Body::parseMultipartBody( void ){
-	string::size_type pos = 0;
-	string::size_type pos_in_line = 0;
+	// string::size_type pos = 0;
+	// string::size_type pos_in_line = 0;
 	string 						str(this->brut_body);
-	string 						line;
-	std::stringstream body_parsed;
+	// string 						line;
+	// std::stringstream body_parsed;
 
 	cout << "parseMultipartBody : " << this->brut_body << endl;
 	// while ((pos = str.find("\r\n")) != string::npos) {
@@ -922,38 +937,22 @@ bool 	Body::parseMultipartBody( void ){
 }
 
 bool Body::parseTransferEncoding( void ) {
-	string::size_type pos = 0;
-	string 						str(this->brut_body);
-	string						nb_hexa;
-	string::size_type size = 0;
-	string 						line;
-	string 						line_concat;
+	std::istringstream request_stream(this->brut_body);
+	std::string body;
+	std::string chunk_size_str;
+	std::getline(request_stream, chunk_size_str);
+	int chunk_size = strtol(chunk_size_str.c_str(), NULL, 16);
 
-	cout << "TransferEncoding : " << str << endl;
-	if ((pos = str.find("\r\n")) != string::npos) {
-		nb_hexa = str.substr(0, pos);
-		str.erase(0, pos + 2);
-
-		string::size_type x;
-    std::stringstream ss;
-    ss << std::hex << nb_hexa;
-    ss >> x;
-		size = static_cast<string::size_type>(x);
-
-		std::stringstream ret;
-		ret << str.substr(0, size);
-
-		// cout << "TEST : " << ret.str() << endl;
-
-    // output it as a signed type
-		// cout << "str: " << str	<< endl;
-    // std::cout << "TESTE : "<< size << std::endl;
-		// this->concat_body = ret.str();
+	while (chunk_size > 0)
+	{
+		std::string chunk;
+		chunk.resize(chunk_size);
+		request_stream.read(&chunk[0], chunk_size);
+		body.append(chunk);
+		std::getline(request_stream, chunk_size_str);
+		chunk_size = strtol(chunk_size_str.c_str(), NULL, 16);
 	}
-	else {
-		cerr << "Error : Error syntaxe separator \": \" in '" << nb_hexa << "'" << endl;
-		return 1;
-	}
+	this->content = body;
 	return 0;
 }
 
@@ -1006,7 +1005,6 @@ Request &Request::operator=(Request const &rhs) {
 	return (*this);
 }
 
-
 /* *************   FUNCTION   ************* */
 bool Request::splitRequest(string req) {
 
@@ -1014,9 +1012,7 @@ bool Request::splitRequest(string req) {
 	string::size_type h_pos;
 	string::size_type hl_pos;
 	string::size_type b_pos;
-	string::size_type bl_pos;
-
-	// cout << "LHBFILBLDHFBDSLFHBDSLFHBDLFHB : '" << req << "'" << endl;
+	// string::size_type bl_pos;
 
 	if (req.size() > 8192) {
 		cerr << "Error : request size is too big" << endl;
@@ -1057,7 +1053,7 @@ bool Request::splitRequest(string req) {
 
 		/* split body */
 		b_pos = ml_pos + 2 + hl_pos + 2;
-		bl_pos = req.size() - ml_pos - 2 - hl_pos - 4;
+		// bl_pos = req.size() - ml_pos - 2 - hl_pos - 4;
 		this->body.brut_body = req.substr(b_pos);
 		this->contain_body = true;
 		this->header.contain_body = true;
@@ -1124,6 +1120,12 @@ void Request::printRequest() {
 
   // cout << "Connection : " << this->header.connection << endl;
 
+	cout << "Other headers : " << endl;
+	Header::t_list_header_it it_other = this->header.list_headers.begin();
+	for(; it_other != this->header.list_headers.end(); ++it_other) {
+		cout << it_other->first << " : " << it_other->second << endl;
+	}
+	// cout << "TEST : " << this->header.list_headers["Alt-Used"] << endl;
 
   // cout << "content_length '" << this->header.content_length << "'" << endl;
   // cout << "content_type '" << this->header.content_type << "'" << endl;

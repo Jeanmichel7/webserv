@@ -6,7 +6,7 @@
 #    By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/02/02 16:41:06 by jrasser          ###   ########.fr        #
+#    Updated: 2023/02/03 17:03:13 by jrasser          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ RST						= \033[2K\r
 END						= \033[0m
 CHECK 				= ✓
 
-SRCS_CLIENT 	= srcs/client.cpp
+SRCS_CLIENT 	= srcs/client.cpp srcs/Request.cpp
 SRCS_SERVER 	= srcs/server.cpp \
 								srcs/Settings.cpp \
 								srcs/Config.cpp \
@@ -67,5 +67,7 @@ fclean: clean
 		@echo "$(GRN) [Fclean]$(END)	$(CHECK)"
 
 re: fclean all
+
+rep: fclean parsing
 
 .PHONY: all clean fclean re

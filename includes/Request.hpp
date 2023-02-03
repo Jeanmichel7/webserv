@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/02 14:01:42 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/03 20:20:53 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,6 @@ struct Method {
 };
 
 
-
 struct Header {
 
 	typedef struct s_accept
@@ -74,28 +73,36 @@ struct Header {
 	typedef vector< t_accept_language >::const_iterator 	t_languages_it;
 	typedef vector< t_accept_encoding > 									t_encodings;
 	typedef vector< t_accept_encoding >::const_iterator 	t_encodings_it;
+	typedef map< const string, string > 														t_list_header;
+	typedef map< const string, string >::const_iterator 						t_list_header_it;
 
 	string 				brut_header;
+	string				boundary;
 	bool 					contain_body;
 	bool 					is_valid;
+	bool 					is_chuncked;
+	string				str_user_agent;
+	string				str_accepts;
+	string				str_accept_languages;
+	string				str_accept_encodings;
+
 	string 				host;
 	t_user_agent 	user_agent;
-	string				str_user_agent;
 	t_accepts 		accepts;
-	string				str_accepts;
 	t_languages 	accept_languages;
-	string				str_accept_languages;
 	t_encodings 	accept_encodings;
-	string				str_accept_encodings;
-	bool 					connection;
+	string				connection;
 
 	string				content_type;
 	string				content_length;
 	string				content_encoding;
 	string				content_language;
 	string				content_location;
-	bool 					is_chuncked;
-	string				boundary;
+
+	t_list_header 	list_headers;
+
+
+
 
 	Header();
 	Header(Header const& src);
@@ -125,6 +132,8 @@ struct Header {
 	// bool setContentLength(const string &);
 
 	bool parseContentType(const string &);
+
+	bool setAllHeaders(const string &, const string &);
 
 	void reset( void );
 };
