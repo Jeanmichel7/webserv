@@ -17,13 +17,30 @@
 	Config::Config(): _server(), _server_selected(), _buffer()
 	{
 	}
-	bool	Config::selectServ(const unsigned int ip, const unsigned int port) 
+	bool	Config::selectServ(const unsigned int ip, const unsigned int port, std::string path) 
 	{
+		bool first_serv = 0;
 		for (unsigned int i = 0; i < _server.size(); i++)
 		{
 			if (_server[i].getIp() == ip && _server[i].getPort() == port)
 			{
+				if (!first_serv)
+				// par defaut on prend le premier seveur
 				_server_selected = &_server[i];
+				const std::string *server_name = _server[i].getServerName();
+				// si le serveur possede un nom de serveur
+				if ((*server_name).size() > 0)
+				{
+					for (int j = 0; (*server_name)[j] == path[j + 1];  j++)
+					{
+						// si le serveur name et le path correspondent exactement on change le nom de serveur
+						if ((*server_name)[j] == '\0' && (path[j + 1] == '/' || path[j + 1] == '\0'))
+						{
+							_server_selected = &_server[i];
+							break;
+						}
+					}
+				}
 				return (1);
 			}
 		}
@@ -40,21 +57,24 @@
 			return (NULL);
 		else 
 		{
+			// le buffer commence toujours pas un /
 			_buffer = path;
-			unsigned int pos;
+			// suppression de la partie location 
 			for (int i = 1 ; path[i];i++)
 			{
 				if (path[i] != loc->_path[i])
 				{
-					_buffer.erase(0, i);
+					// si le chemin n'est pas /
+					if (i > 1)
+						_buffer.erase(0, i);
 					break;
 				}
 			}
+			// ajout de la partie root
 			_buffer = (loc->_root + _buffer);
 			_buffer.erase(0, 1);
 			if (_buffer.back() == '/')
 				_buffer.pop_back();
-			pos = _buffer.rfind('/');
 			// std::cout << "VALEUR DE PATH : " << path << std::endl;
 			// std::cout << "VALEUR DE LOC PATH : " << loc->_path << std::endl;
 			if (yd::compare_strings_ignoring_trailing_slash(path,loc->_path))
@@ -112,6 +132,12 @@
 	{
 		return (_server_selected->getServerName());
 	}
+
+	uint32_t Config::getIp() const
+	{
+		return (_server_selected->getIp());
+	}
+
 	
 //--------------------------------------------------------------------------------------//
 //                                      libft Yann                                      //
@@ -380,7 +406,9 @@ bool yd::isValidPathFile(std::string const &s)
 		void Location::setPath(Tokenizer &tok)
 	{
 		if (!yd::isValidPathDir(tok.getToken()))
-			throw (FormatError(tok.getToken(), "path /x/x/x or /x/x/x/"));
+			throw (FormatError(tok.getToken(), "path /x/x/x"));
+		if (tok.getToken().size() > 1 && tok.getToken().back() == '/')
+			throw (FormatError(tok.getToken(), "path /x/x/x not /x/x/x/"));
 		else 
 			_path =  tok.getToken();
 	}
@@ -496,11 +524,13 @@ bool yd::isValidPathFile(std::string const &s)
 
 		void Server::setServerName(Tokenizer &tok)
 		{
-			for (unsigned int i = 0; i < tok.getToken().length(); i++) 
-			{
-				//if (!isalpha(tok.getToken()[i]) && tok.getToken()[i] != '.') 
-					//throw (FormatError(tok.getToken(), "alphanumeric characters"));
-			}
+			// for (unsigned int i = 0; i < tok.getToken().length(); i++) 
+			// {
+			// 	if (!isalpha(tok.getToken()[i]) && tok.getToken()[i] != '.') 
+			// 		throw (FormatError(tok.getToken(), "alphanumeric characters"));
+			// }
+			if (tok.getToken().find('/',0) != -1)
+					throw (FormatError(tok.getToken(), "/ forbiden in server_name"));
 			_server_name = tok.getToken();
 		}
 

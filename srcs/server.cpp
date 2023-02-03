@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/03 14:55:45 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/03 17:48:43 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,8 +40,6 @@ int main( void )
 	config.selectServ();
 	//std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/nolife/", "test.sh", config) << std::endl;
 	Methods test;
-	test = config.getMethod("/bg");
-	std::cout << test.isget << std::endl;
 	int ke = kqueue();
 	try
 	{
