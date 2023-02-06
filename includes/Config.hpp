@@ -8,6 +8,9 @@
 #include <fstream>
 #include <stdlib.h>
 
+#define RED "\e[0;31m"
+#define DEF "\e[0m" 
+
 
 struct	Methods
 {
@@ -114,7 +117,7 @@ class Config
 		const std::string *getError(const unsigned int error) const;
 		const std::string *getCgi(const std::string &path, const std::string &cgi) const;
 		const std::string *getUpload(const std::string &path) const;
-		bool getDirectoryListing(const std::string &path) const;
+		std::string getDirectoryListing(const std::string &path) const;
 		unsigned int getMaxSize() const;
 		void addServer(Server server);
 		const std::string *getName() const;

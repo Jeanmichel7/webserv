@@ -6,18 +6,28 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/03 17:48:43 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/06 11:33:54 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
 
-int main( void )
+int main(int argc, char **argv)
 {
 	Config config;
+	if (argc < 2) 
+	{
+		std::cout << RED << "WebServ$> Bad argument: please enter the path of the configuration file." << DEF << std::endl;
+		return (1);
+	}
+	if (argc > 3) 
+	{
+		std::cout << RED << "WebServ$> Bad argument: please enter only the path of the configuration file." << DEF << std::endl;
+		return (1);
+	}
 	try 
 	{
-	config = Config("srcs/conf.conf");
+	config = Config(argv[1]);
 	}
 	catch (std::runtime_error &e)
 	{

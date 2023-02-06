@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Config.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
+/*   Updated: 2023/02/06 11:34:45 by ydumaine         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 //--------------------------------------------------------------------------------------//
 //                                        Config                                        //
 //--------------------------------------------------------------------------------------//
@@ -121,13 +133,6 @@
 		return(&loc->_upload_file);
 	}
 	
-	bool Config::getDirectoryListing(const std::string &path) const
-	{
-		const Location *loc = getLocation(path);
-			if (loc == NULL)
-			return (NULL);
-		return (loc->_directory_listing);
-	}
 	const std::string *Config::getName() const
 	{
 		return (_server_selected->getServerName());
@@ -136,6 +141,15 @@
 	uint32_t Config::getIp() const
 	{
 		return (_server_selected->getIp());
+	}
+
+	std::string Config::getDirectoryListing(const std::string &path) const
+	{
+		const Location *loc = getLocation(path);
+		if (loc == NULL)
+			return (0);
+		else
+			return (loc->_root);
 	}
 
 	
@@ -444,7 +458,7 @@ bool yd::isValidPathFile(std::string const &s)
 		bool Server::checkServer()
 		{
 			if (_port ==  INT_MAX)
-							throw (ConfigurationError("Port configuration is missing for a server"));
+							throw (ConfigurationError("port configuration is missing for a server"));
 			if (_ip ==  0)
 							throw (ConfigurationError("ip configuration is missing for a server"));
 			if (_locations.size() == 0)
@@ -452,7 +466,7 @@ bool yd::isValidPathFile(std::string const &s)
 			for (unsigned int i = 0; i < _locations.size(); i++)
 			{
 				if (_locations[i]._root.empty())
-							throw (ConfigurationError("A location need at least a root"));
+							throw (ConfigurationError("a location need at least a root"));
 			}
 			return (0);
 		}
@@ -623,17 +637,17 @@ bool yd::isValidPathFile(std::string const &s)
 // Exception gestion for token
 	Tokenizer::Unexpected::Unexpected(std::string token)  
 	{
-	std::cout << "\e[0;31mWebServ$> Syntax error : near unexpected token `" + token + "\".\e[0m " << std::endl; 
+	std::cout << "\e[0;31mWebServ$> Syntax error: near unexpected token `" + token + "\".\e[0m " << std::endl; 
 	}
 
 	FormatError::FormatError(std::string token, std::string expected_format)  
 	{
-	std::cout << "\e[0;31mWebServ$> Format error : \"" << token << "\" " << "Format expected : \"" << expected_format << "\".\e[0m" << std::endl ; 
+	std::cout << "\e[0;31mWebServ$> Format error: \"" << token << "\" " << "Format expected : \"" << expected_format << "\".\e[0m" << std::endl ; 
 	}
 
 	ConfigurationError::ConfigurationError(std::string message)
 	{
-		std::cout << "\e[0;31mWebServ$> Configuration error : " <<  message << ".\e[0m " <<  std::endl;
+		std::cout << "\e[0;31mWebServ$> Configuration error: " <<  message << ".\e[0m " <<  std::endl;
 	}
 
 
@@ -724,7 +738,7 @@ bool yd::isValidPathFile(std::string const &s)
 			}
 		}
 		else
-				throw std::runtime_error("\e[0;31mWebServ$> File error : couldn't open config file. \".\e[0m");
+				throw std::runtime_error("\e[0;31mWebServ$> File error: couldn't open config file. \e[0m");
 		if (atLeastOneServer == 0)
 				throw (ConfigurationError("Webserv need at least one server configure to working"));
 		}
