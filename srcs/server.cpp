@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/06 11:33:54 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/06 11:53:21 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ int main(int argc, char **argv)
 	
 	
 	config.selectServ();
+	std::cout <<"value : "  << config.getDirectoryListing("/g") << std::endl;
 	//std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/nolife/", "test.sh", config) << std::endl;
 	Methods test;
 	int ke = kqueue();

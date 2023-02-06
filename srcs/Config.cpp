@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/06 11:34:45 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/06 11:52:01 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,7 +147,7 @@
 	{
 		const Location *loc = getLocation(path);
 		if (loc == NULL)
-			return (0);
+			return ("");
 		else
 			return (loc->_root);
 	}
