@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/06 15:44:01 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/06 15:31:24by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,8 +48,8 @@ int main(int argc, char **argv)
 	
 	
 	config.selectServ();
-	std::cout <<"value : "  << config.getDirectoryListing("/g") << std::endl;
-	std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/", "a.out", config, req) << std::endl;
+	// std::cout <<"value : "  << config.getDirectoryListing("/g") << std::endl;
+	// std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/", "a.out", config, req) << std::endl;
 	Methods test;
 	int ke = kqueue();
 	try
@@ -76,13 +76,13 @@ int main(int argc, char **argv)
 				else
 					reponse_request = server.badRequest(config);
 					req.printRequest();
-					if(req.method.type == "STOP");
+					if(req.method.type == "STOP")
 						throw std::exception();
 				send(socket_client, reponse_request.c_str(), strlen(reponse_request.c_str()),0);
 				std::cout << std::endl << reponse_request << std::endl;
 				printf("------------------Hello message sent-------------------\n");
 				close(socket_client);
-				// req.reset();
+				req.reset();
 			}
 		}
 	}

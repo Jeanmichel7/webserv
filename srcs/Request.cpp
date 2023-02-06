@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/02 20:01:06 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/06 17:25:48 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -908,17 +908,18 @@ bool 	Body::parseMultipartBody( void ){
 	string 						line;
 	std::stringstream body_parsed;
 
-	cout << "parseMultipartBody : " << this->brut_body << endl;
-	while ((pos = str.find("\r\n")) != string::npos) {
-		pos_in_line += pos + 2; 
-		line = str.substr(0, pos);
-		if (line != "--" + this->boundary && line != "--" + this->boundary + "--")
-			body_parsed << line << "\r\n";
-		else
-			body_parsed << "\r\n";
-		str.erase(0, pos + 2);
-	}
-	this->content = body_parsed.str();
+	// cout << "parseMultipartBody : " << this->brut_body << endl;
+	// while ((pos = str.find("\r\n")) != string::npos) {
+	// 	pos_in_line += pos + 2; 
+	// 	line = str.substr(0, pos);
+	// 	if (line != "--" + this->boundary && line != "--" + this->boundary + "--")
+	// 		body_parsed << line << "\r\n";
+	// 	else
+	// 		body_parsed << "\r\n";
+	// 	str.erase(0, pos + 2);
+	// }
+	// this->content = body_parsed.str();
+	this->content = this->brut_body;
 	return 0;
 }
 

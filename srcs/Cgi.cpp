@@ -16,8 +16,9 @@
 CGI::CGI():_body(), _env(),_arg(),_tmpf(),_fd() {}
 
 
-void CGI::build(char *const scriptName, const Config &conf, const Request &req)
+void CGI::build(std::string &scriptName, const Config &conf, const Request &req)
 {
+	string test(scriptName);
 	//ACQUISITION DES RESSOURCES
 
 	// preparer les variables environnements 
@@ -60,8 +61,10 @@ void CGI::build(char *const scriptName, const Config &conf, const Request &req)
 	_fd = fileno(_tmpf);
 
 	//creer un arg pour l'envoyer au programme  (obligatoire et excve prend un char **)
+	size_t lenght = scriptName.size();
 	this->_arg = new char*[2];
-	this->_arg[0] = scriptName;
+	this->_arg[0] = new char[lenght + 1];
+	scriptName.copy(_arg[0],lenght);
 	this->_arg[1] = NULL;
 	}
 
@@ -82,10 +85,22 @@ void CGI::build(char *const scriptName, const Config &conf, const Request &req)
 			close(_fd);
 	}
 
-std::string CGI::execute_cgi(std::string const &request_content, std::string const &path, char *const scriptName, Config const &config, const Request &req)
+std::string CGI::execute_cgi(Config const &config, const Request &req)
 {	//declarer variable
 	std::string body;
 	CGI data;
+
+
+	string scriptName;
+	string::size_type position = 0;
+
+	if ((position = req.method.path.rfind("/")) != string::npos)
+	{
+		scriptName = req.method.path.substr(position + 1);
+	}
+	// cout << "script name : " << scriptName << endl;
+
+
 	try 
 	{
 		data.build(scriptName, config, req);
@@ -94,17 +109,21 @@ std::string CGI::execute_cgi(std::string const &request_content, std::string con
 	{
 		return ("Status: 500\n\r\n\r");
 	}
-	write(data._fd, request_content.c_str(), request_content.size());
+	write(data._fd, req.body.content.c_str(), req.body.content.size());
 	fseek(data._tmpf, 0, SEEK_SET);
 	
 	// on cherche l'extension adequate
-	char * pos;
-	pos = std::strchr(scriptName, '.');
-	std::cout << "VALEUR DE PATH : " <<  path << std::endl;
-	std::string const *cgi_path_str = config.getCgi(path, pos);
+	string ext = "";
+	string::size_type dotpos;
+	if ((dotpos = scriptName.rfind(".")) != string::npos)
+		ext = scriptName.substr(dotpos);
+
+	// pos = std::strchr(scriptName.c_str(), '.');
+	std::string const *cgi_path_str = config.getCgi(req.method.path, ext);
 	// si pas de cgi_path, on retourne NULL
 	if (cgi_path_str == NULL)
 		return ("Status: 404\n\r\n\r");
+
 	// creer le fork 
 	const char *cgi_path = cgi_path_str->c_str();
 	pid_t pid = fork();

@@ -29,20 +29,10 @@
 		<input type="file" name="file" id="file" /><br />
 		<label for="name2">Nom: </label><br />
 		<input type="text" name="name2" value="Jean" id="name2" /><br />
-		<input type="button" value="Envoyer" onclick="sendForm()" />
+		<input type="submit" value="Envoyer" >
 	</form>
 </body>
 
-<script type="text/javascript">
-	function sendForm() {
-		var req = new XMLHttpRequest();
-		var form = document.getElementById("form");
-		var formdata = new FormData();
-		formdata.append("file", form.file.files[0]);
-		req.open("POST", "http://localhost:80/bg/index.html", true);
-		req.send(formdata);
-	}
-</script>
 </html>
 
 <!-- <script>
