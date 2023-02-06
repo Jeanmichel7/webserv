@@ -16,7 +16,7 @@
 CGI::CGI():_body(), _env(),_arg(),_tmpf(),_fd() {}
 
 
-void CGI::build(char *const scriptName)
+void CGI::build(char *const scriptName, const Config &conf, const Request &req)
 {
 	//ACQUISITION DES RESSOURCES
 
@@ -34,7 +34,7 @@ void CGI::build(char *const scriptName)
 	env["REMOTE_PASSWORD"] = "acompleter";
 	env["SERVER_PROTOCOL"] = "HTTP/1.1";
 	env["SERVER_SOFTWARE"] = "WebServ/0.1";
-	env["SERVER_NAME"] = "nique ta mere";
+	env["SERVER_NAME"] = conf.getName();
 	env["GATEWAY_INTERFACE"] = "CGI/1.1";
 	
 	// Transformer la map en char ** (excve prend un char **)
@@ -82,13 +82,13 @@ void CGI::build(char *const scriptName)
 			close(_fd);
 	}
 
-std::string CGI::execute_cgi(std::string const &request_content, std::string const &path, char *const scriptName, Config const &config)
+std::string CGI::execute_cgi(std::string const &request_content, std::string const &path, char *const scriptName, Config const &config, const Request &req)
 {	//declarer variable
 	std::string body;
 	CGI data;
 	try 
 	{
-		data.build(scriptName);
+		data.build(scriptName, config, req);
 	}
 	catch (std::exception &e)
 	{

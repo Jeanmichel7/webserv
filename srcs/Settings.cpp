@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/03 15:57:01 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/06 12:07:25 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ std::string Settings::post( Config& config, Request const& req )
 		else if (strcmp(retour_cgi.c_str(), "Status: 500") == 0)
 			reponse.append("500 Internal Server Error\n");
 	}
-	rvalue_script = CGI::execute_cgi(req.body.content, req.method.path, "test.sh", config);
+	rvalue_script = CGI::execute_cgi(req.body.content, req.method.path, "test.sh", config, req);
 	reponse += Settings::date();
 	reponse += "server: " + *config.getName() + "\n";
 	reponse += "Content-Length: " + rvalue_script.size();
