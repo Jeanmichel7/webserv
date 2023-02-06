@@ -1,8 +1,9 @@
-#!/bin/sh 
-#!/bin/bash
+#include <stdio.h>
 
-echo 'cela fonctionne, valeur du buffer : '
-while read line; do
-  echo "$line"
-done
+int main(int argc, char **argv)
+{
+		int i;
+		for (i = 0; i < argc; i++) {
+				printf("%s
 
+}

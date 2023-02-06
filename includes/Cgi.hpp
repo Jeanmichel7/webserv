@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 09:47:09 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/06 12:09:48 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/06 14:50:38 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ class CGI
 {
 	public :
 		CGI();
-		void build(char *const scriptName, const Config &conf, const request &req);
+		void build(char *const scriptName, const Config &conf, const Request &req);
 		static std::string execute_cgi(std::string const &request_content, std::string const &path, char *const scriptName, Config const &config, Request const &req);
 		~CGI();
 		std::string _body;

@@ -22,19 +22,19 @@ void CGI::build(char *const scriptName, const Config &conf, const Request &req)
 
 	// preparer les variables environnements 
 	std::map<std::string, std::string> env;
-	env["REQUEST_METHOD"] = "POST";
-	env["QUERY_STRING"] = "";
-	env["CONTENT_LENGTH"] = "10" ;
-	env["CONTENT_TYPE"] = "text/plain";
-	env["PATH_INFO"] = "";
-	env["HTTP_USER_AGENT"] = "googlePersonalDataAbsorber.com";
+	env["REQUEST_METHOD"] = req.method.type;
+	env["QUERY_STRING"] = req.method.parameters;
+	env["CONTENT_LENGTH"] = req.header.content_length ;
+	env["CONTENT_TYPE"] = req.header.content_type;
+	env["PATH_INFO"] = req.method.path;
+	env["HTTP_USER_AGENT"] = req.header.str_user_agent;
 	env["REMOTE_ADDR"] = "78.211.126.94";
-	env["REMOTE_HOST"] = "WishMachine_SCAMERTYPE-tentation";
+	env["REMOTE_HOST"] = req.header.host;
 	env["REMOTE_USER"] = "jsp";
 	env["REMOTE_PASSWORD"] = "acompleter";
 	env["SERVER_PROTOCOL"] = "HTTP/1.1";
 	env["SERVER_SOFTWARE"] = "WebServ/0.1";
-	env["SERVER_NAME"] = conf.getName();
+	env["SERVER_NAME"] = *conf.getName();
 	env["GATEWAY_INTERFACE"] = "CGI/1.1";
 	
 	// Transformer la map en char ** (excve prend un char **)
@@ -60,9 +60,9 @@ void CGI::build(char *const scriptName, const Config &conf, const Request &req)
 	_fd = fileno(_tmpf);
 
 	//creer un arg pour l'envoyer au programme  (obligatoire et excve prend un char **)
-	char **arg = new char*[2];
-	arg[0] = scriptName;
-	arg[1] = NULL;
+	this->_arg = new char*[2];
+	this->_arg[0] = scriptName;
+	this->_arg[1] = NULL;
 	}
 
 	CGI::~CGI()
@@ -100,6 +100,7 @@ std::string CGI::execute_cgi(std::string const &request_content, std::string con
 	// on cherche l'extension adequate
 	char * pos;
 	pos = std::strchr(scriptName, '.');
+	std::cout << "VALEUR DE PATH : " <<  path << std::endl;
 	std::string const *cgi_path_str = config.getCgi(path, pos);
 	// si pas de cgi_path, on retourne NULL
 	if (cgi_path_str == NULL)
