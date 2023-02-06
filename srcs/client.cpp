@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 13:43:13 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/03 20:18:18 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/03 21:23:13 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,31 +33,25 @@ Content-Location: www.google.fr\r\n\
 \r\n\
 \"Simple string\"\r\n";
 
-	const char *requestChuncked1 = "\
-POST /api/create_order HTTP/1.1\r\n\
+const char* requestChuncked1 = "POST /cgi-bin/process_form HTTP/1.1\r\n\
 Host: www.example.com\r\n\
-Content-Type: application/json\r\n\
-Transfer-Encoding: chunked\r\n\
+Content-Type: multipart/form-data; boundary=AaB03x\r\n\
+Content-Length: 216\r\n\
 \r\n\
-e\r\n\
-{\"item_id\": 123,\r\n\
+--AaB03x\r\n\
+Content-Disposition: form-data; name=\"field1\"\r\n\
+\r\n\
+value1\r\n\
+--AaB03x\r\n\
+Content-Disposition: form-data; name=\"field2\"; filename=\"file.txt\"\r\n\
+Content-Type: text/plain\r\n\
+\r\n\
+This is the content of the file.\r\n\
+--AaB03x--\r\n\
 ";
 
-	const char *requestChuncked2 = "\
-14\r\n\
-\"quantity\": 2,\r\n\
-";
 
-	const char *requestChuncked3 = "\
-14\r\n\
-\"customer_id\": 789}\r\n\
-";
-
-	const char *requestChuncked4 = "\
-0\r\n\
-\r\n";
-
-	if (req.parseRequest(requestPost)) {
+	if (req.parseRequest(requestChuncked1)) {
 		cerr << "Error parsing request" << endl;
 		
 	}

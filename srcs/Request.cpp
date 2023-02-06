@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/03 20:42:35 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/04 13:38:13 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -800,8 +800,8 @@ bool Header::parseHeader( void ) {
 				this->content_language = value;
 			else if (key == "Content-Location")
 				this->content_location = value;
-			else
-				cerr << "Header '" << key << "' non implemente" << endl;
+			// else
+			// 	cerr << "Header '" << key << "' non implemente" << endl;
 			if (setAllHeaders(key, value))
 				return 1;
 			
@@ -932,6 +932,79 @@ bool 	Body::parseMultipartBody( void ){
 	// 	str.erase(0, pos + 2);
 	// }
 	// this->content = body_parsed.str();
+
+	/* suspition d'utilisation*/
+	std::map<std::string, std::string> result;
+
+	size_t boundary_start_pos = this->brut_body.find("--" + boundary);
+	size_t boundary_final_pos = this->brut_body.find("--" + boundary + "--");
+	std::string form_data = this->brut_body.substr(boundary_start_pos, boundary_final_pos - boundary_start_pos);
+
+	cout << "form_data : " << form_data << endl;
+
+	std::vector<std::string> parts;
+	size_t part_start_pos = 0;
+	size_t part_end_pos = form_data.find("\r\n--" + boundary);
+	while (part_end_pos != std::string::npos)
+	{
+		cerr << "part_end_pos : " << part_end_pos << endl;
+		parts.push_back(form_data.substr(part_start_pos, part_end_pos - part_start_pos));
+		part_start_pos = part_end_pos + boundary.length() + 4;
+		part_end_pos = form_data.find("\r\n--" + boundary, part_start_pos);
+	}
+
+	// Parse the form data parts
+	for (std::vector<std::string>::iterator it = parts.begin(); it != parts.end(); ++it)
+	{
+		cout << "part : " << *it << endl;
+		std::string part = *it;
+
+		std::string part_header;
+		std::stringstream part_stream(part);
+		std::string part_name;
+
+		// Read the part headers
+		while (std::getline(part_stream, part_header) && part_header != "\r")
+		{
+			size_t part_header_separator_pos = part_header.find(':');
+			if (part_header_separator_pos != std::string::npos)
+			{
+				std::string part_header_name = part_header.substr(0, part_header_separator_pos);
+				std::string part_header_value = part_header.substr(part_header_separator_pos + 2);
+				if (part_header_name == "Content-Disposition")
+				{
+					size_t name_start_pos = part_header_value.find("name=");
+					if (name_start_pos != std::string::npos)
+					{
+						part_name = part_header_value.substr(name_start_pos + 5);
+						if (part_name[0] == '"')
+						{
+							part_name = part_name.substr(1, part_name.length() - 2);
+						}
+					}
+				}
+			}
+		}
+
+		// Read the part value
+		std::string part_value;
+		std::getline(part_stream, part_value);
+		result[part_name] = part_value;
+
+
+
+		//display result
+		std::map<std::string, std::string>::iterator itm = result.begin();
+		std::map<std::string, std::string>::iterator ite = result.end();
+		cerr << "result (" << result.size() << ") : " << endl;
+		while (itm != ite)
+		{
+			std::cout << itm->first << " = " << itm->second << std::endl;
+			++itm;
+		}
+		
+	}
+
 	this->content = this->brut_body;
 	return 0;
 }
