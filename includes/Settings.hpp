@@ -22,7 +22,7 @@ class Settings
 	public:
 		struct		sockaddr_in interface;
 		struct		sockaddr_in interfacee;
-		int			build( Config const &config, struct kevent *change, char *i, int ke);
+		int			build( Config const &config, struct kevent *change, const char *i, int ke);
 		std::string	get( Config& config, Request const& req );
 		std::string post( Config& config, Request const& req );
 		std::string del( Config const& config );

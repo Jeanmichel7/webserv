@@ -910,11 +910,10 @@ bool Body::parseBody( void ) {
 }
 
 bool 	Body::parseMultipartBody( void ){
-	string::size_type pos = 0;
-	string::size_type pos_in_line = 0;
-	string 						str(this->brut_body);
-	string 						line;
-	std::stringstream body_parsed;
+	// string::size_type 	pos_in_line = 0;
+	string 				str(this->brut_body);
+	string 				line;
+	std::stringstream 	body_parsed;
 
 	// cout << "parseMultipartBody : " << this->brut_body << endl;
 	// while ((pos = str.find("\r\n")) != string::npos) {

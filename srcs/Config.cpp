@@ -548,7 +548,7 @@ bool yd::isValidPathFile(std::string const &s)
 			// 	if (!isalpha(tok.getToken()[i]) && tok.getToken()[i] != '.') 
 			// 		throw (FormatError(tok.getToken(), "alphanumeric characters"));
 			// }
-			if (tok.getToken().find('/',0) != -1)
+			if (tok.getToken().find('/',0) != (unsigned long)-1)
 					throw (FormatError(tok.getToken(), "/ forbiden in server_name"));
 			_server_name = tok.getToken();
 		}
