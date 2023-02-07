@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/06 12:00:59 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/07 09:57:07 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,6 +150,11 @@
 			return ("");
 		else
 			return (loc->_root);
+	}
+
+	const std::vector<Server> &Config::getServerTab() const
+	{
+		return (_server);
 	}
 
 	

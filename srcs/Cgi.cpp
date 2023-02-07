@@ -132,6 +132,7 @@ std::string CGI::execute_cgi(Config const &config, const Request &req)
 	 if (pid == 0)
 	 {
 		// erase stdin and stdout
+		std::cout << "VALEUR DE data._arg[0] : " << data._arg[0] << std::endl;
 		dup2(data._fd, 0);
 		dup2(data._fd, 1);
 		// executer l'interpreteur avec le programme et le nom de l'argument

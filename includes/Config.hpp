@@ -92,11 +92,11 @@ class Server
 		const std::string *getErrorPages(unsigned int error) const ;
 		const Location *getLocation(std::string const &path) const;
 		bool checkServer();
-	private:
-		bool _default;
 		std::string _server_name;
 		unsigned int					_port;
 		uint32_t		_ip;
+	private:
+		bool _default;
 		unsigned int _max_body_size;
 		std::map<unsigned int, std::string> _error_pages;
 		std::vector<Location> _locations;
@@ -117,15 +117,16 @@ class Config
 		const std::string *getError(const unsigned int error) const;
 		const std::string *getCgi(const std::string &path, const std::string &cgi) const;
 		const std::string *getUpload(const std::string &path) const;
+		const std::vector<Server> &getServerTab() const;
 		std::string getDirectoryListing(const std::string &path) const;
 		unsigned int getMaxSize() const;
 		void addServer(Server server);
 		const std::string *getName() const;
 		uint32_t getIp() const;
 		Config &operator=(Config const &other);
+		std::vector<Server> _server;
 	private : 
 		const Location *getLocation(std::string const &path) const;
-		std::vector<Server> _server;
 		Server *_server_selected;
 		std::string _buffer;
 };
