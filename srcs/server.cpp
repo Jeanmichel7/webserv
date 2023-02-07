@@ -63,7 +63,7 @@ try
 			{
 				int socket_client = accept( event.ident, (struct sockaddr *)event.udata, (socklen_t *)event.udata);
 				read(socket_client, buffer, 8000);
-				printf("%s\n", buffer);
+				// printf("%s\n", buffer);
 				if (req.parseRequest(buffer))
 					reponse_request = server.badRequest(config);
 				if (strncmp(buffer, "GET", 3) == 0)
@@ -72,11 +72,11 @@ try
 					reponse_request = server.post(config, req);
 				else
 					reponse_request = server.badRequest(config);
-					req.printRequest();
-					if(req.method.type == "STOP")
-						throw std::exception();
+				req.printRequest();
+				if(req.method.type == "STOP")
+					throw std::exception();
 				send(socket_client, reponse_request.c_str(), strlen(reponse_request.c_str()),0);
-				std::cout << std::endl << reponse_request << std::endl;
+				std::cout << std::endl << "Response : "<< reponse_request << std::endl;
 				printf("------------------Hello message sent-------------------\n");
 				close(socket_client);
 				req.reset();

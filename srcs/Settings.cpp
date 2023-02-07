@@ -58,30 +58,35 @@ std::string	Settings::get( Config& config, Request const& req )
 	std::fstream fd;
 	std::string tmp;
 	
-	fd.open(config.getFile(req.method.path)->c_str(), std::fstream::in);
-	if (fd.is_open())
-		reponse.append(" 200 OK\n");
-	else if (!config.getDirectoryListing(req.method.path).empty())
-	{
-		DIR* dir = opendir(config.getDirectoryListing(req.method.path).c_str());
-		if (dir)
+	if (config.getFile(req.method.path) == NULL)
+		reponse.append(" 404 Not Found\n");
+	else {
+		const char * file = config.getFile(req.method.path)->c_str();
+		fd.open(file, std::fstream::in);
+		if (fd.is_open())
+			reponse.append(" 200 OK\n");
+		else if (!config.getDirectoryListing(req.method.path).empty())
 		{
-			reponse += " 200 OK\r\n";
-			buffer = "<html><body><ul>";
-			
-			struct dirent* entry;
-			while ((entry = readdir(dir)) != nullptr)
-				if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
-					buffer += "<li>" + std::string(entry->d_name) + "</li>\n";
-			buffer += "</ul></body></html>\r\n";
-			closedir(dir);
-		}
-		else
-		{
-			fd.open(config.getError(404)->c_str());
-			if (!fd.is_open())
-				fd.open("http/404.html");
-			reponse.append(" 404 Not Found\n");
+			DIR* dir = opendir(config.getDirectoryListing(req.method.path).c_str());
+			if (dir)
+			{
+				reponse += " 200 OK\r\n";
+				buffer = "<html><body><ul>";
+				
+				struct dirent* entry;
+				while ((entry = readdir(dir)) != nullptr)
+					if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
+						buffer += "<li>" + std::string(entry->d_name) + "</li>\n";
+				buffer += "</ul></body></html>\r\n";
+				closedir(dir);
+			}
+			else
+			{
+				fd.open(config.getError(404)->c_str());
+				if (!fd.is_open())
+					fd.open("http/404.html");
+				reponse.append(" 404 Not Found\n");
+			}
 		}
 	}
 	while(getline(fd, tmp))
@@ -122,7 +127,6 @@ std::string Settings::post( Config& config, Request const& req )
 		else if (strcmp(retour_cgi.c_str(), "Status: 500") == 0)
 			reponse << "500 Internal Server Error\n";
 	}
-	std::cout << "truc ok " << std::endl;
 	rvalue_script = CGI::execute_cgi(config, req);
 	reponse << Settings::date();
 	reponse << "server: " + *config.getName() + "\n";
@@ -130,6 +134,10 @@ std::string Settings::post( Config& config, Request const& req )
 	reponse << "\nContent-Type: text/html\n";
 	reponse << "Connection: keep-alive\n\n";
 	reponse << rvalue_script;
+	
+	std::string::size_type pos = 0;
+	if ((pos = rvalue_script.find("content_length")) != std::string::npos)
+		reponse << EOF;
 	fd.close();
 	return (reponse.str());
 }

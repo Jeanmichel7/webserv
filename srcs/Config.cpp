@@ -94,6 +94,8 @@
 			else 
 				return (&_buffer);
 		}
+		std::cout << "TESTEEEEEEEE" << loc->_is_get << std::endl;
+
 	}
 	Methods	Config::getMethod(const std::string &path) const
 	{
@@ -482,16 +484,17 @@ bool yd::isValidPathFile(std::string const &s)
 			Location const *location_choose = NULL;
 			int length = 0;
 			int prev_length = 0;
+
+			// std::cout << "test" << std::endl;
 			for (unsigned int i = 0; i < _locations.size(); i++)
 			{
 				location_select = &_locations[i];
 				prev_length = length;
 				length = yd::comparePath(location_select->_path, path);
 				if (length > prev_length)
-				{	
 					location_choose = location_select;
-				}
 			}
+			// std::cout << "test 2 : "<<  location_choose->_is_get << std::endl;
 			return (location_choose);
 		}
 

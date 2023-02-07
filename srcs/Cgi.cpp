@@ -31,8 +31,8 @@ void CGI::build(std::string &scriptName, const Config &conf, const Request &req)
 	env["HTTP_USER_AGENT"] = req.header.str_user_agent;
 	env["REMOTE_ADDR"] = "78.211.126.94";
 	env["REMOTE_HOST"] = req.header.host;
-	env["REMOTE_USER"] = "jsp";
-	env["REMOTE_PASSWORD"] = "acompleter";
+	env["REMOTE_USER"] = "";
+	env["REMOTE_PASSWORD"] = "";
 	env["SERVER_PROTOCOL"] = "HTTP/1.1";
 	env["SERVER_SOFTWARE"] = "WebServ/0.1";
 	env["SERVER_NAME"] = *conf.getName();
@@ -55,9 +55,7 @@ void CGI::build(std::string &scriptName, const Config &conf, const Request &req)
 	// ouvrir un fichier
 	_tmpf = std::tmpfile();
 	if (_tmpf == NULL)
-	{
 		throw std::exception();
-	}
 	_fd = fileno(_tmpf);
 
 	//creer un arg pour l'envoyer au programme  (obligatoire et excve prend un char **)
@@ -66,24 +64,24 @@ void CGI::build(std::string &scriptName, const Config &conf, const Request &req)
 	this->_arg[0] = new char[lenght + 1];
 	scriptName.copy(_arg[0],lenght);
 	this->_arg[1] = NULL;
-	}
+}
 
-	CGI::~CGI()
+CGI::~CGI()
+{
+	if (_env != NULL)
 	{
-		if (_env != NULL)
-		{
 		for (int i = 0; _env[i] != NULL; i++)
 			delete[] _env[i];
 		_env = NULL;
 		delete[] _env;
-		}
-		if (_arg != NULL)
-			delete[] _arg;
-		if (_tmpf != NULL)
-			fclose(_tmpf);
-		if (_fd != 0 && _fd != 1 && _fd != 2)
-			close(_fd);
 	}
+	if (_arg != NULL)
+		delete[] _arg;
+	if (_tmpf != NULL)
+		fclose(_tmpf);
+	if (_fd != 0 && _fd != 1 && _fd != 2)
+		close(_fd);
+}
 
 std::string CGI::execute_cgi(Config const &config, const Request &req)
 {	//declarer variable
@@ -132,11 +130,11 @@ std::string CGI::execute_cgi(Config const &config, const Request &req)
 	 if (pid == 0)
 	 {
 		// erase stdin and stdout
-		std::cout << "VALEUR DE data._arg[0] : " << data._arg[0] << std::endl;
+		// std::cout << "VALEUR DE data._arg[0] : " << data._arg[0] << std::endl;
 		dup2(data._fd, 0);
 		dup2(data._fd, 1);
 		// executer l'interpreteur avec le programme et le nom de l'argument
-		execve(cgi_path,data._arg, data._env);
+		execve(cgi_path, data._arg, data._env);
 		std::cerr << "\e[0;31mWebServ$> " << "Execve has crashed " << "\e[0m" << std::endl;
 	 }
 	 else
