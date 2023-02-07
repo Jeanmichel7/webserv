@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/07 20:03:40 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/07 20:43:38 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,11 +78,11 @@
 				} 
 				else 
 				{
-						num = num * 10 + (i[[i] - '0');
+						num = num * 10 + (ip[i] - '0');
 				}
 		}
 		int int_ip = final_num;
-		int int_port = std::stoi(path.c_str());
+		int int_port = std::stoi(port);
 		for (unsigned int i = 0; i < _server.size(); i++)
 		{
 			if (_server[i].getIp() == int_ip && _server[i].getPort() == int_port)

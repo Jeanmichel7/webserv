@@ -112,7 +112,7 @@ class Config
 		friend class Tokenizer;
 		Config(const std::string &path);
 		bool	selectServ(const unsigned int ip = 2130706433, const unsigned int port = 80, const std::string path = "");
-		bool	Config::selectServ(std::string ip = "127.0.0.1", std::string port = "80", std::string path = "");
+		bool	selectServ(std::string ip = "127.0.0.1", std::string port = "80", std::string path = "");
 		const std::string *getFile(const std::string &path);
 		Methods getMethod(const std::string &path) const;
 		const std::string *getError(const unsigned int error) const;

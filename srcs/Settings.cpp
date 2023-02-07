@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/07 17:20:19 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/07 20:26:15 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@ int	Settings::build( Config const& config, struct kevent *change, const char *i,
 {
 	int					socket_fd;
 	struct sockaddr_in	serv_addr;
-	(void)config;
 
 	std::memset(&serv_addr , 0, sizeof(sockaddr_in));
  	// inet_pton(AF_INET, "8.8.8.8", &serv_addr.sin_addr);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/07 17:17:05 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/07 20:42:54 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,9 +45,7 @@ int main(int argc, char **argv)
 	struct kevent	event;
 	char buffer[8000] = {0};
 	Request req;
-	
-	
-	config.selectServ();
+	config.selectServ("127.0.0.1");
 	int ke = kqueue();
 try
 {
@@ -66,9 +64,11 @@ try
 				// printf("%s\n", buffer);
 				if (req.parseRequest(buffer))
 					reponse_request = server.badRequest(config);
-				if (strncmp(buffer, "GET", 3) == 0)
+				else if (!config.selectServ("127.0.0.1", "80", "127.0.0.1:80"))
+					reponse_request = server.badRequest(config);
+				else if (req.method.isGet)
 					reponse_request = server.get(config, req);
-				else if (strncmp(buffer, "POST", 4) == 0 || strncmp(buffer, "DELETE", 6) == 0)
+				else if (req.method.isPost || req.method.isDelete)
 					reponse_request = server.post(config, req);
 				else
 					reponse_request = server.badRequest(config);
