@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/01 09:32:00 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/06 11:20:16 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@
 # include <fstream>
 # include <cstdio>
 # include <cstdlib>
+# include <dirent.h>
 
 # include "Settings.hpp"
 # include "Request.hpp"

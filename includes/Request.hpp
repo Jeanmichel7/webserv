@@ -29,6 +29,7 @@ struct Method {
 	string	parameters;
 	string	anchor;
 	string	protocole;
+	string	port;
 
 	Method();
 	Method(Method const& src);

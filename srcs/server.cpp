@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/06 15:31:24by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/07 17:17:05 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 		return (0);
 	}
 	Settings		server;
-	int				socket_server_a;
+	// int				socket_server_a;
 	int				socket_server_b;
 	struct kevent	change;
 	struct kevent	event;
@@ -48,16 +48,13 @@ int main(int argc, char **argv)
 	
 	
 	config.selectServ();
-	std::cout <<"value : "  << *config.getFile("/bg/index.html") << std::endl;
-	// std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/", "a.out", config, req) << std::endl;
-	Methods test;
 	int ke = kqueue();
-	try
-	{
+try
+{
 		if (ke == -1)
 			throw Settings::badCreation();
-		socket_server_a = server.build(config, &change, "80", ke);
-		socket_server_b = server.build(config, &change, "4242", ke);
+		// socket_server_a = server.build(config, &change, "80", ke);
+		socket_server_b = server.build(config, &change, "80", ke);
 		while(1)
 		{
 			std::string reponse_request;
@@ -66,20 +63,20 @@ int main(int argc, char **argv)
 			{
 				int socket_client = accept( event.ident, (struct sockaddr *)event.udata, (socklen_t *)event.udata);
 				read(socket_client, buffer, 8000);
-				printf("%s\n", buffer);
+				// printf("%s\n", buffer);
 				if (req.parseRequest(buffer))
 					reponse_request = server.badRequest(config);
-				else if (strncmp(buffer, "GET", 3) == 0)
+				if (strncmp(buffer, "GET", 3) == 0)
 					reponse_request = server.get(config, req);
 				else if (strncmp(buffer, "POST", 4) == 0 || strncmp(buffer, "DELETE", 6) == 0)
 					reponse_request = server.post(config, req);
 				else
 					reponse_request = server.badRequest(config);
-					req.printRequest();
-					if(req.method.type == "STOP")
-						throw std::exception();
+				req.printRequest();
+				if(req.method.type == "STOP")
+					throw std::exception();
 				send(socket_client, reponse_request.c_str(), strlen(reponse_request.c_str()),0);
-				std::cout << std::endl << reponse_request << std::endl;
+				std::cout << std::endl << "Response : "<< reponse_request << std::endl;
 				printf("------------------Hello message sent-------------------\n");
 				close(socket_client);
 				req.reset();
@@ -87,8 +84,6 @@ int main(int argc, char **argv)
 		}
 	}
 	catch (const std::exception &e) {
-		close(socket_server_a);
-		close(socket_server_b);
 		std::cout << strerror(errno);
 		std::cerr << std::endl << e.what() << std::endl;
 	}

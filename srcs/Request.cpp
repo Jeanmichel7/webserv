@@ -89,7 +89,8 @@ Method::Method()
 	path(""),
 	parameters(""),
 	anchor(""),
-	protocole("")
+	protocole(""),
+	port("80")
 {
 }
 
@@ -118,6 +119,7 @@ Method &Method::operator=(Method const &rhs)
 		this->parameters = rhs.parameters;
 		this->anchor = rhs.anchor;
 		this->protocole = rhs.protocole;
+		this->port = rhs.port;
 	}
 	return (*this);
 }
@@ -127,6 +129,7 @@ Method &Method::operator=(Method const &rhs)
 bool Method::parseMethod( void ) {
 
 	size_t pos = 0;
+	size_t pos2 = 0;
 	string str(this->brut_method);
 	// cout << "method : " << str << endl;
 	
@@ -139,6 +142,11 @@ bool Method::parseMethod( void ) {
 	if ((pos = str.find(" ")) != string::npos
 	|| (pos = str.find("	")) != string::npos) {
 		this->url = str.substr(0, pos);
+
+		if ((pos2 = str.find(":")) != string::npos) {
+			this->port = str.substr(0, pos2);
+			str.erase(0, pos2 + 1);
+		}
 		str.erase(0, pos + 1);
 	}
 
@@ -902,11 +910,10 @@ bool Body::parseBody( void ) {
 }
 
 bool 	Body::parseMultipartBody( void ){
-	string::size_type pos = 0;
-	string::size_type pos_in_line = 0;
-	string 						str(this->brut_body);
-	string 						line;
-	std::stringstream body_parsed;
+	// string::size_type 	pos_in_line = 0;
+	string 				str(this->brut_body);
+	string 				line;
+	std::stringstream 	body_parsed;
 
 	// cout << "parseMultipartBody : " << this->brut_body << endl;
 	// while ((pos = str.find("\r\n")) != string::npos) {
@@ -1093,6 +1100,7 @@ void Request::printRequest() {
   cout << "params '" << this->method.parameters << "'" << endl;
   cout << "anchor '" << this->method.anchor <<  "'" << endl;
   cout << "protocle '" << this->method.protocole << "'" << endl;
+  cout << "port '" << this->method.port << "'" << endl;
   cout << "host '" << this->header.host << "'" << endl;
 
   // cout << "useragent '" << this->header.str_user_agent << "'" << endl;

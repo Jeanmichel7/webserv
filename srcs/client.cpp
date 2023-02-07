@@ -34,30 +34,6 @@ Content-Location: www.google.fr\r\n\
 \r\n\
 \"Simple string\"\r\n";
 
-	const char *requestChuncked1 = "\
-POST /api/create_order HTTP/1.1\r\n\
-Host: www.example.com\r\n\
-Content-Type: application/json\r\n\
-Transfer-Encoding: chunked\r\n\
-\r\n\
-e\r\n\
-{\"item_id\": 123,\r\n\
-";
-
-	const char *requestChuncked2 = "\
-14\r\n\
-\"quantity\": 2,\r\n\
-";
-
-	const char *requestChuncked3 = "\
-14\r\n\
-\"customer_id\": 789}\r\n\
-";
-
-	const char *requestChuncked4 = "\
-0\r\n\
-\r\n";
-	
 	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
 	
 	interface.sin_family = AF_INET;

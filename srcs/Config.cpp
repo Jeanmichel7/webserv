@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/07 12:08:14 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/07 17:16:57 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,7 @@
 			}
 			// ajout de la partie root
 			_buffer = (loc->_root + _buffer);
+			// _buffer.erase(0, 1);
 			if (_buffer.back() == '/')
 				_buffer.pop_back();
 			// std::cout << "VALEUR DE PATH : " << path << std::endl;
@@ -93,6 +94,8 @@
 			else 
 				return (&_buffer);
 		}
+		std::cout << "TESTEEEEEEEE" << loc->_is_get << std::endl;
+
 	}
 	Methods	Config::getMethod(const std::string &path) const
 	{
@@ -481,16 +484,17 @@ bool yd::isValidPathFile(std::string const &s)
 			Location const *location_choose = NULL;
 			int length = 0;
 			int prev_length = 0;
+
+			// std::cout << "test" << std::endl;
 			for (unsigned int i = 0; i < _locations.size(); i++)
 			{
 				location_select = &_locations[i];
 				prev_length = length;
 				length = yd::comparePath(location_select->_path, path);
 				if (length > prev_length)
-				{	
 					location_choose = location_select;
-				}
 			}
+			// std::cout << "test 2 : "<<  location_choose->_is_get << std::endl;
 			return (location_choose);
 		}
 
@@ -547,7 +551,7 @@ bool yd::isValidPathFile(std::string const &s)
 			// 	if (!isalpha(tok.getToken()[i]) && tok.getToken()[i] != '.') 
 			// 		throw (FormatError(tok.getToken(), "alphanumeric characters"));
 			// }
-			if (tok.getToken().find('/',0) != -1)
+			if (tok.getToken().find('/',0) != (unsigned long)-1)
 					throw (FormatError(tok.getToken(), "/ forbiden in server_name"));
 			_server_name = tok.getToken();
 		}
