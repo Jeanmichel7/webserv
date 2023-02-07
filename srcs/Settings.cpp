@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/06 17:27:32 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/07 12:13:17 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,12 @@ int	Settings::build( Config const& config, struct kevent *change, char *i, int k
 	struct sockaddr_in	serv_addr;
 	(void)config;
 
-	std::memset((char *)&serv_addr , 0, sizeof(sockaddr_in));
- 	// inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
+	std::memset(&serv_addr , 0, sizeof(sockaddr_in));
+ 	// inet_pton(AF_INET, "8.8.8.8", &serv_addr.sin_addr);
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(atoi(i));
-	serv_addr.sin_family = AF_INET; // yann a rajoute 
-	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	serv_addr.sin_family = AF_INET;
+	socket_fd = socket(AF_INET, SOCK_STREAM, 6);
 	if (bind(socket_fd, reinterpret_cast<const struct sockaddr *>(&serv_addr), (socklen_t)sizeof(serv_addr)) == -1)
 		throw Settings::badCreation();
 	if (listen(socket_fd, 10) == -1)
@@ -58,30 +58,38 @@ std::string	Settings::get( Config& config, Request const& req )
 	std::fstream fd;
 	std::string tmp;
 	
-	// std::cout << req.method.path << "\n";
-	// std::cout << config.getFile(req.method.path.c_str())<< "\n";
-	
-	if (!config.getFile(req.method.path.c_str()))
+	fd.open(config.getFile(req.method.path)->c_str(), std::fstream::in);
+	if (fd.is_open())
+		reponse.append(" 200 OK\n");
+	else if (!config.getDirectoryListing(req.method.path).empty())
 	{
-		fd.open(config.getError(404)->c_str());
-		reponse.append(" 404 Not Found\n");
-	}
-	else
-	{
-		fd.open(config.getFile(req.method.path)->c_str(), std::fstream::in);
-		if (!fd.is_open())
+		DIR* dir = opendir(config.getDirectoryListing(req.method.path).c_str());
+		if (dir)
 		{
-			fd.open(config.getError(404)->c_str());
-			reponse.append(" 404 Not Found\n");
+			reponse += " 200 OK\r\n";
+			buffer = "<html><body><ul>";
+			
+			struct dirent* entry;
+			while ((entry = readdir(dir)) != nullptr)
+				if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
+					buffer += "<li>" + std::string(entry->d_name) + "</li>\n";
+			buffer += "</ul></body></html>\r\n";
+			closedir(dir);
 		}
 		else
-		reponse.append(" 200 OK\n");
+		{
+			fd.open(config.getError(404)->c_str());
+			if (!fd.is_open())
+				fd.open("http/404.html");
+			reponse.append(" 404 Not Found\n");
+		}
 	}
+	while(getline(fd, tmp))
+		buffer += tmp + "\n";
 	reponse += Settings::date();
 	reponse += "server: " + *config.getName() + "\n";
 	reponse += "Last-Modified: \n";
-	while(getline(fd, tmp))
-		buffer += tmp + "\n";
+	
 	n << strlen(buffer.c_str());
 	reponse += "Content-Length: " + n.str() + "\n";
 	reponse += "Content-Type: " + req.header.content_type + "\n";

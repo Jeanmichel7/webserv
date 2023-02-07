@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/07 09:57:07 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/07 12:05:00 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@
 			}
 			// ajout de la partie root
 			_buffer = (loc->_root + _buffer);
-			_buffer.erase(0, 1);
+			// _buffer.erase(0, 1);
 			if (_buffer.back() == '/')
 				_buffer.pop_back();
 			// std::cout << "VALEUR DE PATH : " << path << std::endl;
