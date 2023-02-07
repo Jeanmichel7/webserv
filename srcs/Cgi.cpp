@@ -101,7 +101,6 @@ std::string CGI::execute_cgi(Config const &config, const Request &req)
 	}
 	// cout << "script name : " << scriptName << endl;
 
-
 	try 
 	{
 		data.build(scriptName, config, req);

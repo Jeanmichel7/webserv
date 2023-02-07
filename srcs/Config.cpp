@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/07 17:16:57 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/07 20:03:40 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,57 @@
 		for (unsigned int i = 0; i < _server.size(); i++)
 		{
 			if (_server[i].getIp() == ip && _server[i].getPort() == port)
+			{
+				if (!first_serv)
+				// par defaut on prend le premier seveur
+				_server_selected = &_server[i];
+				const std::string *server_name = _server[i].getServerName();
+				// si le serveur possede un nom de serveur
+				if ((*server_name).size() > 0)
+				{
+					for (int j = 0; (*server_name)[j] == path[j + 1];  j++)
+					{
+						// si le serveur name et le path correspondent exactement on change le nom de serveur
+						if ((*server_name)[j] == '\0' && (path[j + 1] == '/' || path[j + 1] == '\0'))
+						{
+							_server_selected = &_server[i];
+							break;
+						}
+					}
+				}
+				return (1);
+			}
+		}
+		return (0);
+	}
+		bool	Config::selectServ(std::string ip, std::string port, std::string path) 
+	{
+		bool first_serv = 0;
+		unsigned int num = 0;
+		unsigned int final_num = 0;
+		unsigned int octet = 3;
+		for (unsigned int i = 0; i <= ip.length(); i++) 
+		{
+				if (ip[i] == '.' || i == ip.length())
+				{
+						if (num < 0 || num > 255) 
+						{
+							throw (FormatError(ip, "numbers between 0 and 255"));
+						}
+						final_num = ((num << (8 * octet)) + final_num);
+						octet--;
+						num = 0;
+				} 
+				else 
+				{
+						num = num * 10 + (i[[i] - '0');
+				}
+		}
+		int int_ip = final_num;
+		int int_port = std::stoi(path.c_str());
+		for (unsigned int i = 0; i < _server.size(); i++)
+		{
+			if (_server[i].getIp() == int_ip && _server[i].getPort() == int_port)
 			{
 				if (!first_serv)
 				// par defaut on prend le premier seveur
