@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 	
 	
 	config.selectServ();
-	// std::cout <<"value : "  << config.getDirectoryListing("/g") << std::endl;
+	std::cout <<"value : "  << *config.getFile("/bg/index.html") << std::endl;
 	// std::cout << "valeur du body :" << CGI::execute_cgi("nique ta mere", "/", "a.out", config, req) << std::endl;
 	Methods test;
 	int ke = kqueue();

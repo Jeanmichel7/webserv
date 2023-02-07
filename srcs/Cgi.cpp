@@ -78,7 +78,10 @@ void CGI::build(std::string &scriptName, const Config &conf, const Request &req)
 		delete[] _env;
 		}
 		if (_arg != NULL)
+		{
+			delete _arg[0];
 			delete[] _arg;
+		}
 		if (_tmpf != NULL)
 			fclose(_tmpf);
 		if (_fd != 0 && _fd != 1 && _fd != 2)

@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/07 09:57:07 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/07 12:08:14 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,6 @@
 			}
 			// ajout de la partie root
 			_buffer = (loc->_root + _buffer);
-			_buffer.erase(0, 1);
 			if (_buffer.back() == '/')
 				_buffer.pop_back();
 			// std::cout << "VALEUR DE PATH : " << path << std::endl;
