@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/08 14:26:49 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 22:34:33 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 	char buffer[8000] = {0};
 	Request req;
 	// ip a changer ici, dans la fonction build et dans le fichier de conf
-	config.selectServ("127.0.0.1");
+	config.selectServ("127.0.0.1", "4241");
 	int ke = kqueue();
 	try
 	{

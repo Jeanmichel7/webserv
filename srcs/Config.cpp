@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/08 14:14:21 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 21:42:57y ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,8 +81,8 @@
 				num = num * 10 + (ip[i] - '0');
 			}
 		}
-		int int_ip = final_num;
-		int int_port = std::stoi(port);
+		uint32_t int_ip = final_num;
+		uint32_t int_port = std::stoi(port);
 		for (unsigned int i = 0; i < _server.size(); i++)
 		{
 			if ((int)_server[i].getIp() == int_ip && (int)_server[i].getPort() == int_port)
@@ -145,8 +145,6 @@
 			else 
 				return (&_buffer);
 		}
-		std::cout << "TESTEEEEEEEE" << loc->_is_get << std::endl;
-
 	}
 	Methods	Config::getMethod(const std::string &path) const
 	{
@@ -191,9 +189,9 @@
 		return (_server_selected->getServerName());
 	}
 
-	uint32_t Config::getIp() const
+	std::string Config::getIp() const
 	{
-		return (_server_selected->getIp());
+		return ( yd::intToIP(_server_selected->getIp()));
 	}
 
 	std::string Config::getDirectoryListing(const std::string &path) const
@@ -330,6 +328,14 @@ bool yd::isValidPathFile(std::string const &s)
 			count = 0;
 			return (count);
 	}
+	std::string yd::intToIP(unsigned int ip) {
+  std::stringstream ss;
+  ss << ((ip >> 24) & 0xff) << "." 
+     << ((ip >> 16) & 0xff) << "." 
+     << ((ip >> 8) & 0xff) << "." 
+     << (ip & 0xff);
+  return ss.str();
+}
 
 /*
 		int yd::comparePath(const std::string &path1, const std::string &path2)

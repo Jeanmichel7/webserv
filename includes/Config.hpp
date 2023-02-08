@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <sstream>
 
 #define RED "\e[0;31m"
 #define DEF "\e[0m" 
@@ -27,6 +28,7 @@ namespace yd{
 	bool isValidPathDir(std::string const &s);
 	bool isValidPathFile(std::string const &s);
 	int comparePath(const std::string &path1, const std::string &path2);
+	std::string intToIP(unsigned int ip);
 	bool compare_strings_ignoring_trailing_slash(const std::string &str1, const std::string &str2);
 }
 
@@ -123,7 +125,7 @@ class Config
 		unsigned int getMaxSize() const;
 		void addServer(Server server);
 		const std::string *getName() const;
-		uint32_t getIp() const;
+		std::string getIp() const;
 		Config &operator=(Config const &other);
 		std::vector<Server> _server;
 	private : 
