@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/07 20:43:38 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 12:38:14 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@
 		int int_port = std::stoi(port);
 		for (unsigned int i = 0; i < _server.size(); i++)
 		{
-			if (_server[i].getIp() == int_ip && _server[i].getPort() == int_port)
+			if ((int)_server[i].getIp() == int_ip && (int)_server[i].getPort() == int_port)
 			{
 				if (!first_serv)
 				// par defaut on prend le premier seveur

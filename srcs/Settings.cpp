@@ -6,29 +6,41 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/08 12:33:20 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 13:57:28 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Settings.hpp"
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
-int	Settings::build( Config const& config, struct kevent *change, const char *i, int ke)
+int	Settings::build(const char *i, int ke)
 {
-	int					socket_fd;
-	struct sockaddr_in	serv_addr;
+	static struct kevent	change;
+	int						socket_fd;
+	struct addrinfo			serv_addr, *res;
 
-	std::memset(&serv_addr , 0, sizeof(sockaddr_in));
- 	// inet_pton(AF_INET, "8.8.8.8", &serv_addr.sin_addr);
-	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serv_addr.sin_port = htons(atoi(i));
-	serv_addr.sin_family = AF_INET;
-	socket_fd = socket(AF_INET, SOCK_STREAM, 6);
-	if (bind(socket_fd, reinterpret_cast<const struct sockaddr *>(&serv_addr), (socklen_t)sizeof(serv_addr)) == -1)
+	std::memset(&serv_addr , 0, sizeof(serv_addr));
+	serv_addr.ai_family = AF_INET;
+	serv_addr.ai_socktype = SOCK_STREAM;
+	int status = getaddrinfo("10.12.2.7", i, &serv_addr, &res);
+	if (status != 0) {
+		std::cerr << "getaddrinfo error: " << gai_strerror(status) << std::endl;
 		throw Settings::badCreation();
+	}
+	socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if (socket_fd == -1)
+        throw Settings::badCreation();
+	int bind_status = bind(socket_fd, res->ai_addr, res->ai_addrlen);
+	if (bind_status == -1)
+		throw Settings::badCreation();
+	freeaddrinfo(res);
 	if (listen(socket_fd, 10) == -1)
 		throw Settings::badCreation();
-	EV_SET(change, socket_fd, EVFILT_READ , EV_ADD, 0, 0, &serv_addr);
-	if (kevent(ke, change, 1, NULL, 0, NULL) == -1)
+	EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD, 0, 0, &serv_addr);
+	if (kevent(ke, &change, 1, NULL, 0, NULL) == -1)
 			throw Settings::badCreation();
 	return (socket_fd);
 }

@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/08 11:57:01 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 12:38:23 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,7 +127,7 @@ Method &Method::operator=(Method const &rhs)
 bool Method::parseMethod( void ) {
 
 	size_t pos = 0;
-	size_t pos2 = 0;
+	// size_t pos2 = 0;
 	string str(this->brut_method);
 	// cout << "method : " << str << endl;
 	
