@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 11:31:34 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/02/08 12:38:14 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 14:14:21 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,22 +64,22 @@
 		unsigned int num = 0;
 		unsigned int final_num = 0;
 		unsigned int octet = 3;
-		for (unsigned int i = 0; i <= ip.length(); i++) 
+		for (unsigned int i = 0; i <= ip.length(); i++)
 		{
-				if (ip[i] == '.' || i == ip.length())
+			if (ip[i] == '.' || i == ip.length())
+			{
+				if (num < 0 || num > 255)
 				{
-						if (num < 0 || num > 255) 
-						{
-							throw (FormatError(ip, "numbers between 0 and 255"));
-						}
-						final_num = ((num << (8 * octet)) + final_num);
-						octet--;
-						num = 0;
-				} 
-				else 
-				{
-						num = num * 10 + (ip[i] - '0');
+					throw(FormatError(ip, "numbers between 0 and 255"));
 				}
+				final_num = ((num << (8 * octet)) + final_num);
+				octet--;
+				num = 0;
+			}
+			else
+			{
+				num = num * 10 + (ip[i] - '0');
+			}
 		}
 		int int_ip = final_num;
 		int int_port = std::stoi(port);

@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/08 12:38:23 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 14:20:04 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -248,6 +248,7 @@ Header::Header()
 	contain_body(false),
 	is_valid(false),
 	host(""),
+	host_ip("127.0.0.1"),
 	port("80"),
 	str_user_agent(""),
 	str_accepts(""),
@@ -298,6 +299,7 @@ Header &Header::operator=(Header const &rhs)
 		this->contain_body = rhs.contain_body;
 		this->is_valid = rhs.is_valid;
 		this->host = rhs.host;
+		this->host_ip = rhs.host_ip;
 		this->port = rhs.port;
 		this->user_agent = rhs.user_agent;
 		this->str_user_agent = rhs.str_user_agent;
@@ -422,8 +424,11 @@ bool Header::checkHostValue(const string &host ) {
 	cout << "test : " << str << endl;
 
 	if ((pos2 = str.find(":")) != string::npos){
+		this->host_ip = str.substr(0, pos2);
 		this->port = str.substr(pos2 + 1);
 	}
+	else
+		this->host_ip = str.substr(0);
 	while ((pos = str.find(".")) != string::npos) {
 		tag = str.substr(0, pos);
 		if (checkSyntaxeTag(host, tag))
@@ -849,6 +854,7 @@ void Header::reset( void ) {
 	this->contain_body = false;
 	this->is_valid = false;
 	this->host = "";
+	this->host_ip = "127.0.0.1"; // modif
 	this->port = "80";
 	this->user_agent.clear();
 	this->str_user_agent = "";
@@ -1109,6 +1115,7 @@ void Request::printRequest() {
   cout << "protocle '" << this->method.protocole << "'" << endl;
   cout << "port '" << this->header.port << "'" << endl;
   cout << "host '" << this->header.host << "'" << endl;
+  cout << "host ip '" << this->header.host_ip << "'" << endl;
 
   // cout << "useragent '" << this->header.str_user_agent << "'" << endl;
   // Header::t_user_agent_it it = this->header.user_agent.begin();

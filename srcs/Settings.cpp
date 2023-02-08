@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/08 13:57:28 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 14:24:09 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ int	Settings::build(const char *i, int ke)
 	std::memset(&serv_addr , 0, sizeof(serv_addr));
 	serv_addr.ai_family = AF_INET;
 	serv_addr.ai_socktype = SOCK_STREAM;
-	int status = getaddrinfo("10.12.2.7", i, &serv_addr, &res);
+	int status = getaddrinfo("127.0.0.1", i, &serv_addr, &res);
 	if (status != 0) {
 		std::cerr << "getaddrinfo error: " << gai_strerror(status) << std::endl;
 		throw Settings::badCreation();
@@ -57,7 +57,7 @@ std::string	Settings::date( void )
 	rdate = "date: " + rdate + ", " + s + " " + tmp;
 	getline(str, tmp, ' ');
 	getline(str, s, '\n');
-	rdate += " " + s + " " + tmp + " GMT\n";
+	rdate += " " + s + " " + tmp + " GMT";
 	return (rdate);
 }
 
@@ -140,7 +140,7 @@ std::string Settings::post( Config& config, Request const& req )
 	}
 	rvalue_script = CGI::execute_cgi(config, req);
 	reponse << Settings::date();
-	reponse << "server: " + *config.getName() + "\n";
+	reponse << "server: " << *config.getName() << "\n";
 	reponse << "Content-Length: " << rvalue_script.size();
 	reponse << "\nContent-Type: text/html\n";
 	reponse << "Connection: keep-alive\n\n";
@@ -158,7 +158,8 @@ std::string	Settings::badRequest( Config const& config )
 	std::stringstream	reponse;
 	reponse << "HTTP/1.1 400 Bad Request\n";
 	reponse << Settings::date() << "\n";
-	reponse << "server: " << *config.getName() + "\n";
+	// reponse << "server: " << *config.getName() + "\n";
+	reponse << "server: " << "myserv" << "\n";
 	reponse << "Content-Length: 0\n";
 	reponse << "Connection: closed\n\n";
 	return (reponse.str());

@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/08 11:53:23 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 14:04:59 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,7 @@ struct Header {
 	bool 					contain_body;
 	bool 					is_valid;
 	string 				host;
+	string	host_ip;
 	string					port;
 	t_user_agent 	user_agent;
 	string				str_user_agent;
