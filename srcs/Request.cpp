@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/06 17:25:48 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/08 11:57:01 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,8 +89,7 @@ Method::Method()
 	path(""),
 	parameters(""),
 	anchor(""),
-	protocole(""),
-	port("80")
+	protocole("")
 {
 }
 
@@ -119,7 +118,6 @@ Method &Method::operator=(Method const &rhs)
 		this->parameters = rhs.parameters;
 		this->anchor = rhs.anchor;
 		this->protocole = rhs.protocole;
-		this->port = rhs.port;
 	}
 	return (*this);
 }
@@ -143,10 +141,10 @@ bool Method::parseMethod( void ) {
 	|| (pos = str.find("	")) != string::npos) {
 		this->url = str.substr(0, pos);
 
-		if ((pos2 = str.find(":")) != string::npos) {
-			this->port = str.substr(0, pos2);
-			str.erase(0, pos2 + 1);
-		}
+		// if ((pos2 = str.find(":")) != string::npos) {
+		// 	this->port = str.substr(0, pos2);
+		// 	str.erase(0, pos2 + 1);
+		// }
 		str.erase(0, pos + 1);
 	}
 
@@ -250,6 +248,7 @@ Header::Header()
 	contain_body(false),
 	is_valid(false),
 	host(""),
+	port("80"),
 	str_user_agent(""),
 	str_accepts(""),
 	str_accept_languages(""),
@@ -299,6 +298,7 @@ Header &Header::operator=(Header const &rhs)
 		this->contain_body = rhs.contain_body;
 		this->is_valid = rhs.is_valid;
 		this->host = rhs.host;
+		this->port = rhs.port;
 		this->user_agent = rhs.user_agent;
 		this->str_user_agent = rhs.str_user_agent;
 		this->accepts = rhs.accepts;
@@ -402,6 +402,7 @@ bool Header::checkHostValue(const string &host ) {
 	int 							nbTag = 1;
 	string 						tag = "";
 	string 						str(host);
+	string::size_type pos2 = 0;
 
 	if (str.empty()) {
 		cerr << "Error : host is empty" << endl;
@@ -418,6 +419,11 @@ bool Header::checkHostValue(const string &host ) {
 	cout << "contain body : " << contain_body << endl;
 	/* check tags */
 	str = host;
+	cout << "test : " << str << endl;
+
+	if ((pos2 = str.find(":")) != string::npos){
+		this->port = str.substr(pos2 + 1);
+	}
 	while ((pos = str.find(".")) != string::npos) {
 		tag = str.substr(0, pos);
 		if (checkSyntaxeTag(host, tag))
@@ -843,6 +849,7 @@ void Header::reset( void ) {
 	this->contain_body = false;
 	this->is_valid = false;
 	this->host = "";
+	this->port = "80";
 	this->user_agent.clear();
 	this->str_user_agent = "";
 	this->accepts.clear();
@@ -1100,7 +1107,7 @@ void Request::printRequest() {
   cout << "params '" << this->method.parameters << "'" << endl;
   cout << "anchor '" << this->method.anchor <<  "'" << endl;
   cout << "protocle '" << this->method.protocole << "'" << endl;
-  cout << "port '" << this->method.port << "'" << endl;
+  cout << "port '" << this->header.port << "'" << endl;
   cout << "host '" << this->header.host << "'" << endl;
 
   // cout << "useragent '" << this->header.str_user_agent << "'" << endl;

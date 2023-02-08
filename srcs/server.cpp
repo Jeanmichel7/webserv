@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/07 20:42:54 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 12:29:14 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 		return (0);
 	}
 	Settings		server;
-	// int				socket_server_a;
+	int				socket_server_a;
 	int				socket_server_b;
 	struct kevent	change;
 	struct kevent	event;
@@ -51,7 +51,7 @@ try
 {
 		if (ke == -1)
 			throw Settings::badCreation();
-		// socket_server_a = server.build(config, &change, "80", ke);
+		socket_server_a = server.build(config, &change, "4242", ke);
 		socket_server_b = server.build(config, &change, "80", ke);
 		while(1)
 		{
@@ -64,10 +64,13 @@ try
 				// printf("%s\n", buffer);
 				if (req.parseRequest(buffer))
 					reponse_request = server.badRequest(config);
-				else if (!config.selectServ("127.0.0.1", "80", "127.0.0.1:80"))
+				else if (!config.selectServ("127.0.0.1", req.header.port, req.header.host))
 					reponse_request = server.badRequest(config);
 				else if (req.method.isGet)
+				{
+					std::cout << "my port: " << req.header.port << std::endl;
 					reponse_request = server.get(config, req);
+				}
 				else if (req.method.isPost || req.method.isDelete)
 					reponse_request = server.post(config, req);
 				else
@@ -84,6 +87,8 @@ try
 		}
 	}
 	catch (const std::exception &e) {
+		close(socket_server_b);
+		close(socket_server_a);
 		std::cout << strerror(errno);
 		std::cerr << std::endl << e.what() << std::endl;
 	}

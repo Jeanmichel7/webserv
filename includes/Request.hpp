@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/02 14:01:42 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/08 11:53:23 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@ struct Method {
 	string	parameters;
 	string	anchor;
 	string	protocole;
-	string	port;
 
 	Method();
 	Method(Method const& src);
@@ -80,6 +79,7 @@ struct Header {
 	bool 					contain_body;
 	bool 					is_valid;
 	string 				host;
+	string					port;
 	t_user_agent 	user_agent;
 	string				str_user_agent;
 	t_accepts 		accepts;
