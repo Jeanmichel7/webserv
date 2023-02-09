@@ -126,6 +126,7 @@ class Config
 		void addServer(Server server);
 		const std::string *getName() const;
 		std::string getIp() const;
+		std::string getPort() const;
 		Config &operator=(Config const &other);
 		std::vector<Server> _server;
 	private : 

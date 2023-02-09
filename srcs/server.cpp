@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/08 22:34:33 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/09 14:01:39 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ int main(int argc, char **argv)
 	Request req;
 	// ip a changer ici, dans la fonction build et dans le fichier de conf
 	config.selectServ("127.0.0.1", "4241");
+	std::cout << config.getPort() << std::endl;
 	int ke = kqueue();
 	try
 	{

@@ -193,6 +193,13 @@
 	{
 		return ( yd::intToIP(_server_selected->getIp()));
 	}
+		std::string Config::getPort() const
+	{
+		unsigned int p = _server_selected->getPort();
+		std::stringstream ss;
+		ss << p;
+		return (ss.str());
+	}
 
 	std::string Config::getDirectoryListing(const std::string &path) const
 	{
