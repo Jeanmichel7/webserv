@@ -153,7 +153,7 @@ std::string CGI::execute_cgi(Config const &config, const Request &req)
 		for (int rt = 1024; rt == 1024;)
 		{
 			rt = fread(&buffer, 8, 128, data._tmpf);
-			body += buffer;
+			// body += buffer;
 		}
 	 }
 		// on supprime l'environnement  cree

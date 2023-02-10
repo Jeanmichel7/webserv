@@ -82,6 +82,9 @@ std::string Settings::get(Request const &req)
 	else
 	{
 		const char *file = this->config.getFile(req.method.path)->c_str();
+		// const char *file = open(, O_RDONLY);
+
+
 		fd.open(file, std::fstream::in);
 		if (fd.is_open())
 			reponse.append(" 200 OK\n");
@@ -115,7 +118,7 @@ std::string Settings::get(Request const &req)
 	reponse += "server: " + *this->config.getName() + "\n";
 	reponse += "Last-Modified: \n";
 
-	n << strlen(buffer.c_str());
+	n << buffer.size();
 	reponse += "Content-Length: " + n.str() + "\n";
 	reponse += "Content-Type: " + req.header.content_type + "\n";
 	reponse += "Connection: keep-alive\n";

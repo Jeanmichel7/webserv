@@ -807,10 +807,6 @@ bool Header::parseHeader( void ) {
 
 			if (setAllHeaders(key, value))
 				return 1;
-
-
-
-
 			// else {
 			// 	cerr << "Header '" << key << "' non implemente" << endl;
 			// }
@@ -823,10 +819,16 @@ bool Header::parseHeader( void ) {
 	return 0;
 }
 bool Header::setAllHeaders(const string &key, const string &value) {
-	// if (this->list_headers.find(key) != this->list_headers.end()) {
-	// 	cerr << "Error : Header '" << key << "' already exist" << endl;
-	// 	return 1;
-	// }
+
+	t_list_header_it it_all_headers = this->list_headers.begin();
+	for (; it_all_headers != this->list_headers.end(); ++it_all_headers)
+	{
+		// cout << key << " == ?" << it_all_headers->first << endl;
+		// if (it_all_headers->first == key) {
+		// 	cerr << "Error : Header '" << key << "' already exist" << endl;
+		// 	return 1;
+		// }
+	}
 	this->list_headers[key] = value;
 	return 0;
 }
@@ -1131,66 +1133,70 @@ bool Request::parseRequest(string req) {
 	return 0;
 }
 
-void Request::printRequest() {
+void Request::printRequest()
+{
 
-	cout << "Header brut : \n" 
-	<< this->method.brut_method << endl
-	<< this->header.brut_header << endl;
-//   cout << this->method.isGet << endl;
-//   cout << this->method.isPost << endl;
-//   cout << this->method.isDelete << endl;
+	cout << "Header brut : \n"
+		 << this->method.brut_method << endl
+		 << this->header.brut_header << endl;
+	//   cout << this->method.isGet << endl;
+	//   cout << this->method.isPost << endl;
+	//   cout << this->method.isDelete << endl;
 
-//   cout << "url '" << this->method.url << "'" << endl;
-//   cout << "path '" << this->method.path << "'" << endl;
-//   cout << "params '" << this->method.parameters << "'" << endl;
-//   cout << "anchor '" << this->method.anchor <<  "'" << endl;
-//   cout << "protocle '" << this->method.protocole << "'" << endl;
-//   cout << "port '" << this->header.port << "'" << endl;
-//   cout << "host '" << this->header.host << "'" << endl;
+	//   cout << "url '" << this->method.url << "'" << endl;
+	//   cout << "path '" << this->method.path << "'" << endl;
+	//   cout << "params '" << this->method.parameters << "'" << endl;
+	//   cout << "anchor '" << this->method.anchor <<  "'" << endl;
+	//   cout << "protocle '" << this->method.protocole << "'" << endl;
+	//   cout << "port '" << this->header.port << "'" << endl;
+	//   cout << "host '" << this->header.host << "'" << endl;
 
-  // cout << "useragent '" << this->header.str_user_agent << "'" << endl;
-  // Header::t_user_agent_it it = this->header.user_agent.begin();
-  // for(; it != this->header.user_agent.end(); ++it) {
-  //   cout << "User-Agent "<< it->first << " : " << it->second << endl;
-  // }
+	// cout << "useragent '" << this->header.str_user_agent << "'" << endl;
+	// Header::t_user_agent_it it = this->header.user_agent.begin();
+	// for(; it != this->header.user_agent.end(); ++it) {
+	//   cout << "User-Agent "<< it->first << " : " << it->second << endl;
+	// }
 
-  // cout << "str_accept '" << this->header.str_accepts << "'" << endl;
-  // Header::t_accepts_it it_accept = this->header.accepts.begin();
-  // while (it_accept != this->header.accepts.end()) {
-  //   cout << "accept '" << it_accept->type << "/" 
-  //   << it_accept->subtype << "' " 
-  //   << "q="<< it_accept->q << endl;
-  //   it_accept++;
-  // }
+	// cout << "str_accept '" << this->header.str_accepts << "'" << endl;
+	// Header::t_accepts_it it_accept = this->header.accepts.begin();
+	// while (it_accept != this->header.accepts.end()) {
+	//   cout << "accept '" << it_accept->type << "/"
+	//   << it_accept->subtype << "' "
+	//   << "q="<< it_accept->q << endl;
+	//   it_accept++;
+	// }
 
-  // cout << "str_accept_language '" << this->header.str_accept_languages << "'" << endl;
-  // Header::t_languages_it it_lang = this->header.accept_languages.begin();
-  // for(; it_lang != this->header.accept_languages.end(); ++it_lang) {
-  //   cout << "accept_language "<< it_lang->lang 
-  //   << (it_lang->spec != "" ? "-" : "") << it_lang->spec 
-  //   << " q=" << it_lang->q << endl;
-  // }
+	// cout << "str_accept_language '" << this->header.str_accept_languages << "'" << endl;
+	// Header::t_languages_it it_lang = this->header.accept_languages.begin();
+	// for(; it_lang != this->header.accept_languages.end(); ++it_lang) {
+	//   cout << "accept_language "<< it_lang->lang
+	//   << (it_lang->spec != "" ? "-" : "") << it_lang->spec
+	//   << " q=" << it_lang->q << endl;
+	// }
 
-  // cout << "str_accept_encoding '" << this->header.str_accept_encodings << "'" << endl << endl;
-  // Header::t_encodings_it it_encod = this->header.accept_encodings.begin();
-  // for(; it_encod != this->header.accept_encodings.end(); ++it_encod) {
-  //   cout << "accept_encoding '"<< it_encod->type << "' q=" << it_encod->q << endl;
-  // }
+	// cout << "str_accept_encoding '" << this->header.str_accept_encodings << "'" << endl << endl;
+	// Header::t_encodings_it it_encod = this->header.accept_encodings.begin();
+	// for(; it_encod != this->header.accept_encodings.end(); ++it_encod) {
+	//   cout << "accept_encoding '"<< it_encod->type << "' q=" << it_encod->q << endl;
+	// }
 
-  // cout << "Connection : " << this->header.connection << endl;
+	// cout << "Connection : " << this->header.connection << endl;
 
+	// cout << "content_length '" << this->header.content_length << "'" << endl;
+	// cout << "content_type '" << this->header.content_type << "'" << endl;
+	// cout << "content_encoding '" << this->header.content_encoding << "'" << endl;
+	// cout << "content_language '" << this->header.content_language << "'" << endl;
+	// cout << "content_location '" << this->header.content_location << "'" << endl  << endl;
 
-  // cout << "content_length '" << this->header.content_length << "'" << endl;
-  // cout << "content_type '" << this->header.content_type << "'" << endl;
-  // cout << "content_encoding '" << this->header.content_encoding << "'" << endl;
-  // cout << "content_language '" << this->header.content_language << "'" << endl;
-  // cout << "content_location '" << this->header.content_location << "'" << endl  << endl;
+	cout << "All Header : " << endl;
+	Header::t_list_header_it it_all_headers = this->header.list_headers.begin();
+	for (; it_all_headers != this->header.list_headers.end(); ++it_all_headers)
+	{
+		cout << it_all_headers->first << " : " << it_all_headers->second << endl;
+	}
 
-
-  	// cout << "brut body '" << this->body.brut_body << "'" << endl;
-
-	this->contain_body ? cout << "body\n" << "'" << this->body.content << "'" << endl : cout << "no body" << endl;
-  	cout << "\n\nrequete " << (this->header.is_valid ? "valid" : "invalid") << endl;
+	// this->contain_body ? cout << "body\n" << "'" << this->body.content << "'" << endl : cout << "no body" << endl;
+	cout << "\n\nrequete " << (this->header.is_valid ? "valid" : "invalid") << endl;
 }
 
 void Request::resetBuffer( void ) {
