@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/10 13:52:50 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/10 15:52:20 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,7 +150,9 @@ std::string Settings::post(Request const &req)
 		else if (strcmp(retour_cgi.c_str(), "Status: 500") == 0)
 			reponse << "500 Internal Server Error\n";
 	}
+	std::cout << "Executing CGI..." << std::endl;
 	rvalue_script = CGI::execute_cgi(this->config, req);
+	std::cout << "Executing CGI end" << std::endl;
 	reponse << Settings::date();
 	reponse << "server: " << *this->config.getName() << "\n";
 	reponse << "Content-Length: " << rvalue_script.size();

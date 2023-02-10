@@ -61,6 +61,8 @@
 	}
 		bool	Config::selectServ(std::string ip, std::string port, std::string path) 
 	{
+		std::cout << "VALEUR IP " << ip << std::endl;
+		std::cout << "VALEUR PORT " << port << std::endl;
 		bool first_serv = 0;
 		unsigned int num = 0;
 		unsigned int final_num = 0;

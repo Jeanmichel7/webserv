@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/10 13:50:20 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/10 15:58:57 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,21 +61,28 @@ int main(int argc, char **argv)
 				sbuffer << req.buffer;
 				if (o_read == REQ_MAX_SIZE) {
 					while (o_read == REQ_MAX_SIZE) {
+						std::cout << "reading socket ..." << std::endl;
 						req.resetBuffer();
 						o_read = read(socket_client, req.buffer, REQ_MAX_SIZE);
 						sbuffer << req.buffer;
 					}
 				}
-				if (req.parseRequest(sbuffer.str()))
+				if (req.parseRequest(sbuffer.str())){
+					cerr << "merde ici " << endl;
 					reponse_request = server.badRequest();
-				else if (!server.config.selectServ(req.header.host_ip, req.header.port, req.header.host))
+				}
+				else if (!server.config.selectServ(req.header.host_ip, req.header.port, req.header.host)){
+					cerr << "merde la " << endl;
 					reponse_request = server.badRequest();
+				}
 				else if (req.method.isGet)
 					reponse_request = server.get(req);
 				else if (req.method.isPost || req.method.isDelete)
 					reponse_request = server.post(req);
-				else
+				else {
+					cerr << "merdouille ici" << endl;
 					reponse_request = server.badRequest();
+				}
 				req.printRequest();
 				send(socket_client, reponse_request.c_str(), strlen(reponse_request.c_str()), 0);
 				std::cout << std::endl

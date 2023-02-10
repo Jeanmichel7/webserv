@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/08 11:57:01 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/10 16:10:18 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -411,11 +411,14 @@ bool Header::checkHostValue(const string &host ) {
 	// cout << "contain body : " << contain_body << endl;
 	/* check tags */
 	str = host;
-	// cout << "test : " << str << endl;
+	cout << "test : " << str << endl;
 
 	if ((pos2 = str.find(":")) != string::npos){
+		this->host_ip = str.substr(0, pos2);
 		this->port = str.substr(pos2 + 1);
 	}
+	else
+		this->host_ip = str;
 	while ((pos = str.find(".")) != string::npos) {
 		tag = str.substr(0, pos);
 		if (checkSyntaxeTag(host, tag))
@@ -1212,3 +1215,6 @@ void Request::reset( void ) {
 	this->contain_body = false;
 	this->resetBuffer();
 }
+
+
+
