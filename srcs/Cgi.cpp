@@ -58,11 +58,11 @@ void CGI::build(std::string &scriptName, const Config &conf, const Request &req)
 		throw std::exception();
 	_fd = fileno(_tmpf);
 
-	//creer un arg pour l'envoyer au programme  (obligatoire et excve prend un char **)
+	// creer un arg pour l'envoyer au programme  (obligatoire et excve prend un char **)
 	size_t lenght = scriptName.size();
-	this->_arg = new char*[2];
+	this->_arg = new char *[2];
 	this->_arg[0] = new char[lenght + 1];
-	scriptName.copy(_arg[0],lenght);
+	scriptName.copy(_arg[0], lenght);
 	this->_arg[1] = NULL;
 }
 
