@@ -147,12 +147,12 @@ std::string CGI::execute_cgi(Config const &config, const Request &req)
 		if (rt == 1)
 			return ("Status: 500\n\r\n\r");
 		char buffer[1024];
-		std::memset(&buffer, 0, 128);
 		// on recupere le contenue du fichier
 	  fseek(data._tmpf, 0, SEEK_SET);
-		for (int rt = 1024; rt == 1024;)
+		for (int rt = 1023; rt == 1023;)
 		{
-			rt = fread(&buffer, 8, 128, data._tmpf);
+			rt = fread(&buffer, sizeof(char), 1023, data._tmpf);
+			buffer[rt] = '\0';
 			body += buffer;
 		}
 	 }
