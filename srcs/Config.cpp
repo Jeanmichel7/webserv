@@ -86,7 +86,7 @@
 		uint32_t int_port = std::stoi(port);
 		for (unsigned int i = 0; i < _server.size(); i++)
 		{
-			if ((int)_server[i].getIp() == int_ip && (int)_server[i].getPort() == int_port)
+			if ((uint32_t)_server[i].getIp() == int_ip && (uint32_t)_server[i].getPort() == int_port)
 			{
 				if (!first_serv)
 				// par defaut on prend le premier seveur

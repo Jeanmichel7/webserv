@@ -6,11 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/02/10 13:19:21 by ydumaine         ###   ########.fr       */
-=======
-/*   Updated: 2023/02/10 12:57:56 by lomasson         ###   ########.fr       */
->>>>>>> 1a13b1a7b286819030b770e2e20c30ba4804005b
+/*   Updated: 2023/02/10 13:50:20 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +14,7 @@
 
 int main(int argc, char **argv)
 {
-	Config config;
+	Settings server;
 	if (argc < 2)
 	{
 		std::cout << RED << "WebServ$> Bad argument: please enter the path of the configuration file." << DEF << std::endl;
@@ -31,7 +27,7 @@ int main(int argc, char **argv)
 	}
 	try
 	{
-		config = Config(argv[1]);
+		server.config = Config(argv[1]);
 	}
 	catch (std::runtime_error &e)
 	{
@@ -42,22 +38,15 @@ int main(int argc, char **argv)
 	{
 		return (0);
 	}
-	Settings server;
-	int socket_server_a;
-	int socket_server_b;
-
 	struct kevent event;
 	char buffer[8000] = {0};
 	Request req;
-	// ip a changer ici, dans la fonction build et dans le fichier de conf
-	config.selectServ("127.0.0.1", "4241");
 	int ke = kqueue();
 	try
 	{
 		if (ke == -1)
 			throw Settings::badCreation();
-		socket_server_a = server.build("4242", ke);
-		socket_server_b = server.build("4241", ke);
+		server.build(ke);
 		while (1)
 		{
 			std::string reponse_request;
@@ -66,17 +55,14 @@ int main(int argc, char **argv)
 			{
 				int socket_client = accept(event.ident, (struct sockaddr *)event.udata, (socklen_t *)event.udata);
 				read(socket_client, buffer, 8000);
-				// printf("%s\n", buffer);
-				if (req.parseRequest(buffer))
-					reponse_request = server.badRequest(config);
-				else if (!config.selectServ(req.header.host_ip, req.header.port, req.header.host))
-					reponse_request = server.badRequest(config);
+				if (req.parseRequest(buffer) || !server.config.selectServ(req.header.host_ip, req.header.port, req.header.host))
+					reponse_request = server.badRequest();
 				else if (req.method.isGet)
-					reponse_request = server.get(config, req);
+					reponse_request = server.get(req);
 				else if (req.method.isPost || req.method.isDelete)
-					reponse_request = server.post(config, req);
+					reponse_request = server.post(req);
 				else
-					reponse_request = server.badRequest(config);
+					reponse_request = server.badRequest();
 				req.printRequest();
 				if (req.method.type == "STOP")
 					throw std::exception();
@@ -91,8 +77,6 @@ int main(int argc, char **argv)
 	}
 	catch (const std::exception &e)
 	{
-		close(socket_server_b);
-		close(socket_server_a);
 		std::cout << strerror(errno);
 		std::cerr << std::endl
 				  << e.what() << std::endl;

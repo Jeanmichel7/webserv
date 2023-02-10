@@ -14,20 +14,21 @@
 # define SETTINGS_HPP
 
 # include "server.hpp"
-class Config;
+# include "Config.hpp"
 struct Request;
 
 class Settings
 {
 	public:
-		struct		sockaddr_in interface;
-		struct		sockaddr_in interfacee;
-		int			build(const char *i, int ke);
-		std::string	get( Config& config, Request const& req );
-		std::string post( Config& config, Request const& req );
-		std::string del( Config const& config );
+		Config		config;
+		int			*list_of_serv_socket;
+		void		build(int ke);
+		std::string	get( Request const& req );
+		std::string post( Request const& req );
+		std::string del( void );
 		std::string	date( void );
-		std::string	badRequest( Config const & config );
+		std::string	badRequest( void );
+		Settings( Config const& base );
 		Settings();
 		~Settings();
 		class badCreation : public std::exception
