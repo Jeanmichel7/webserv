@@ -26,7 +26,7 @@
 		return (*this);
 	}
 
-	Config::Config(): _server(), _server_selected(), _buffer()
+	Config::Config(): _server(), _server_selected(), _buffer(), _pos_server()
 	{
 	}
 	bool	Config::selectServ(const unsigned int ip, const unsigned int port, std::string path) 
@@ -49,6 +49,7 @@
 						if ((*server_name)[j] == '\0' && (path[j + 1] == '/' || path[j + 1] == '\0'))
 						{
 							_server_selected = &_server[i];
+							_pos_server = i;
 							break;
 						}
 					}
@@ -210,11 +211,36 @@
 			return (loc->_root);
 	}
 
+	unsigned int Config::getServNumb() const
+	{
+		return (_server.size());
+	}
+
+	unsigned int Config::selectFirstServ()
+	{
+		_server_selected = &_server[0];
+		_pos_server = 0;
+	}
+
 	const std::vector<Server> &Config::getServerTab() const
 	{
 		return (_server);
 	}
 
+	void Config::operator++()
+	{
+		if (_pos_server + 1 == _server.size())
+			return ;
+		else 
+			_server_selected = &_server[++_pos_server];
+	}
+	void Config::operator--()
+	{
+		if (_pos_server == 0)
+			return ;
+		else 
+			_server_selected = &_server[--_pos_server];
+	}
 	
 //--------------------------------------------------------------------------------------//
 //                                      libft Yann                                      //

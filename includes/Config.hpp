@@ -129,9 +129,15 @@ class Config
 		std::string getPort() const;
 		Config &operator=(Config const &other);
 		std::vector<Server> _server;
+		unsigned int getServNumb() const;
+		unsigned int selectFirstServ();
+		void operator++();
+		void operator--();
+
 	private : 
 		const Location *getLocation(std::string const &path) const;
 		Server *_server_selected;
+		unsigned int _pos_server;
 		std::string _buffer;
 };
 
