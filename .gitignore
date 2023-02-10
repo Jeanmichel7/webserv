@@ -3,4 +3,3 @@ server
 objs
 .vscode
 *.o
-test.cpp

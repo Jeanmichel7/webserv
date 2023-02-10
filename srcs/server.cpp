@@ -38,9 +38,8 @@ int main(int argc, char **argv)
 	{
 		return (0);
 	}
-	struct kevent event;
-	char buffer[8000] = {0};
-	Request req;
+	struct kevent 	event;
+	Request 		req;
 	int ke = kqueue();
 	try
 	{
@@ -49,13 +48,27 @@ int main(int argc, char **argv)
 		server.build(ke);
 		while (1)
 		{
-			std::string reponse_request;
+			std::string 	reponse_request;
+			stringstream 	sbuffer;
+
 			int nevents = kevent(ke, NULL, 0, &event, 2, NULL);
 			if (nevents > 0)
 			{
 				int socket_client = accept(event.ident, (struct sockaddr *)event.udata, (socklen_t *)event.udata);
-				read(socket_client, buffer, 8000);
-				if (req.parseRequest(buffer) || !server.config.selectServ(req.header.host_ip, req.header.port, req.header.host))
+
+				string::size_type o_read = 0;
+				o_read = read(socket_client, req.buffer, REQ_MAX_SIZE);
+				sbuffer << req.buffer;
+				if (o_read == REQ_MAX_SIZE) {
+					while (o_read == REQ_MAX_SIZE) {
+						req.resetBuffer();
+						o_read = read(socket_client, req.buffer, REQ_MAX_SIZE);
+						sbuffer << req.buffer;
+					}
+				}
+				if (req.parseRequest(sbuffer.str()))
+					reponse_request = server.badRequest();
+				else if (!server.config.selectServ(req.header.host_ip, req.header.port, req.header.host))
 					reponse_request = server.badRequest();
 				else if (req.method.isGet)
 					reponse_request = server.get(req);
@@ -64,12 +77,10 @@ int main(int argc, char **argv)
 				else
 					reponse_request = server.badRequest();
 				req.printRequest();
-				if (req.method.type == "STOP")
-					throw std::exception();
 				send(socket_client, reponse_request.c_str(), strlen(reponse_request.c_str()), 0);
 				std::cout << std::endl
 						  << "Response : " << reponse_request << std::endl;
-				printf("------------------Hello message sent-------------------\n");
+				printf("------------------ Waiting new connection-------------------\n");
 				close(socket_client);
 				req.reset();
 			}

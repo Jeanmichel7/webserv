@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/08 14:20:04 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/08 11:57:01 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,9 +127,7 @@ Method &Method::operator=(Method const &rhs)
 bool Method::parseMethod( void ) {
 
 	size_t pos = 0;
-	// size_t pos2 = 0;
 	string str(this->brut_method);
-	// cout << "method : " << str << endl;
 	
 	if ((pos = str.find(" ")) != string::npos
 	|| (pos = str.find("	")) != string::npos) {
@@ -140,19 +138,9 @@ bool Method::parseMethod( void ) {
 	if ((pos = str.find(" ")) != string::npos
 	|| (pos = str.find("	")) != string::npos) {
 		this->url = str.substr(0, pos);
-
-		// if ((pos2 = str.find(":")) != string::npos) {
-		// 	this->port = str.substr(0, pos2);
-		// 	str.erase(0, pos2 + 1);
-		// }
 		str.erase(0, pos + 1);
 	}
-
 	this->protocole = str.substr(0);
-
-	// cout << "type : '" << this->type << "'" << endl;
-	// cout << "url : '" << this->url << "'" << endl;
-	// cout << "protocole : '" << this->protocole << "'" << endl;
 
 	if (this->checkType()
 	||	this->checkUri()
@@ -261,7 +249,8 @@ Header::Header()
 	content_language(""),
 	content_location(""),
 	is_chuncked(false),
-	boundary("")
+	boundary(""),
+	list_headers()
 {
 	t_user_agent user_agent;
 	user_agent["product"] = "";
@@ -312,6 +301,7 @@ Header &Header::operator=(Header const &rhs)
 		this->connection = rhs.connection;
 		this->is_chuncked = rhs.is_chuncked;
 		this->boundary = rhs.boundary;
+		this->list_headers = rhs.list_headers;
 
 		this->content_type = rhs.content_type;
 		this->content_length = rhs.content_length;
@@ -418,17 +408,14 @@ bool Header::checkHostValue(const string &host ) {
 			return 1;
 		}
 	}
-	cout << "contain body : " << contain_body << endl;
+	// cout << "contain body : " << contain_body << endl;
 	/* check tags */
 	str = host;
-	cout << "test : " << str << endl;
+	// cout << "test : " << str << endl;
 
 	if ((pos2 = str.find(":")) != string::npos){
-		this->host_ip = str.substr(0, pos2);
 		this->port = str.substr(pos2 + 1);
 	}
-	else
-		this->host_ip = str.substr(0);
 	while ((pos = str.find(".")) != string::npos) {
 		tag = str.substr(0, pos);
 		if (checkSyntaxeTag(host, tag))
@@ -817,15 +804,30 @@ bool Header::parseHeader( void ) {
 				this->content_language = value;
 			else if (key == "Content-Location")
 				this->content_location = value;
-			else {
-				cerr << "Header '" << key << "' non implemente" << endl;
-			}
+
+			if (setAllHeaders(key, value))
+				return 1;
+
+
+
+
+			// else {
+			// 	cerr << "Header '" << key << "' non implemente" << endl;
+			// }
 		}
 		// else {
 		// 	cerr << "Error : Error syntaxe separator \": \" in '" << line << "'" << endl;
 		// 	return 1;
 		// }
 	}
+	return 0;
+}
+bool Header::setAllHeaders(const string &key, const string &value) {
+	// if (this->list_headers.find(key) != this->list_headers.end()) {
+	// 	cerr << "Error : Header '" << key << "' already exist" << endl;
+	// 	return 1;
+	// }
+	this->list_headers[key] = value;
 	return 0;
 }
 
@@ -884,7 +886,7 @@ void Header::reset( void ) {
 /* *************   CONSTRCUTOR   ************* */
 
 // Body::Body() : brut_body(), content(""), concat_body(""), is_chuncked(false) {
-Body::Body() : brut_body(), content(""), is_chuncked(false) {
+Body::Body() : brut_body(), content(""), is_chuncked(false), socket_client(-1) {
 	return ;
 }
 
@@ -911,7 +913,7 @@ Body &Body::operator=(Body const &rhs) {
 
 bool Body::parseBody( void ) {
 	// cout << "start parse body " << this->brut_body << endl;
-	if (this->is_chuncked && this->boundary.empty()) {
+	if (this->is_chuncked) {
 		if (parseTransferEncoding())
 			return 1;
 	} else if (!this->boundary.empty()) {
@@ -951,31 +953,57 @@ bool Body::parseTransferEncoding( void ) {
 	string 						line;
 	string 						line_concat;
 
-	cout << "TransferEncoding : " << str << endl;
-	if ((pos = str.find("\r\n")) != string::npos) {
-		nb_hexa = str.substr(0, pos);
-		str.erase(0, pos + 2);
+	cout << "TransferEncoding, body size : " << str.length() << endl;
 
-		string::size_type x;
-    std::stringstream ss;
-    ss << std::hex << nb_hexa;
-    ss >> x;
-		size = static_cast<string::size_type>(x);
+	this->content = this->brut_body;
 
-		std::stringstream ret;
-		ret << str.substr(0, size);
 
-		// cout << "TEST : " << ret.str() << endl;
+	// for(string::size_type i = 0; i < str.length() - 1; i++) {
+	// 	if (str[i] == 'A' && str[i + 1] != 'A')
+	// 		cout << "A";
+	// 	else if (str[i] == 'A' && str[i + 1] == 'A') 
+	// 		{}
+	// 	else
+	// 		cout << str[i];
+	// }
+	// cout << str[str.length() - 1] << endl;
 
-    // output it as a signed type
-		// cout << "str: " << str	<< endl;
-    // std::cout << "TESTE : "<< size << std::endl;
-		// this->concat_body = ret.str();
-	}
-	else {
-		cerr << "Error : Error syntaxe separator \": \" in '" << nb_hexa << "'" << endl;
-		return 1;
-	}
+
+	// std::filebuf fb;
+ 	// fb.open ("testout2.txt",std::ios::out);
+ 	// std::ostream os(&fb);
+ 	// os << this->brut_body;
+ 	// fb.close();
+
+	// cout << "coucou je suis bien la et je dois regarder si je read and dechunck dans parseTransferEncoding() ou dans le server.cpp, et toi quel est ton avis ?" << endl;
+	// if ((pos = str.find("\r\n")) != string::npos)
+	// {
+	// 	nb_hexa = str.substr(0, pos);
+	// 	str.erase(0, pos + 2);
+
+	// 	string::size_type x;
+	// 	std::stringstream ss;
+	// 	std::stringstream ssbody;
+	// 	ss << std::hex << nb_hexa;
+	// 	ss >> x;
+	// 	size = static_cast<string::size_type>(x);
+	// 	char buffer[REQ_MAX_SIZE] = {0};
+
+	// 	// read(this->socket_client, buffer, req.header.);
+
+	// 	ssbody << buffer;
+
+	// 	// cout << "TEST : " << ret.str() << endl;
+
+	// 	// output it as a signed type
+	// 	// cout << "str: " << str	<< endl;
+	// 	// std::cout << "TESTE : "<< size << std::endl;
+	// 	// this->concat_body = ret.str();
+	// }
+	// else {
+	// 	cerr << "Error : Error syntaxe separator \": \" in '" << nb_hexa << "'" << endl;
+	// 	return 1;
+	// }
 	return 0;
 }
 
@@ -1000,11 +1028,10 @@ void Body::reset( void ) {
 /* *************************************************** */
 
 /* *************   CONSTRCUTOR   ************* */
-Request::Request() : method(Method()), header(Header()), body(Body()), contain_body(false)
+Request::Request() : method(Method()), header(Header()), body(Body()), contain_body(false), socket_client(-1)
 {
-	// method = Method();
-	// header = Header();
-	// body = Body();
+	for(int i = 0; i < REQ_MAX_SIZE; i++)
+		buffer[i] = 0;
 	return ; 
 }
 
@@ -1012,6 +1039,7 @@ Request::Request(Request const &src){
 	this->method = src.method;
 	this->header = src.header;
 	this->body = src.body;
+	this->socket_client = src.socket_client;
 	return ;
 }
 
@@ -1038,12 +1066,11 @@ bool Request::splitRequest(string req) {
 	string::size_type b_pos;
 	string::size_type bl_pos;
 
-	// cout << "LHBFILBLDHFBDSLFHBDSLFHBDLFHB : '" << req << "'" << endl;
-
-	if (req.size() > 8192) {
-		cerr << "Error : request size is too big" << endl;
-		return 1;
-	}
+	// cout << "size request : " << req.size() << endl;
+	// if (req.size() > 8200) {
+	// 	cerr << "Error : request size is too big" << endl;
+	// 	return 1;
+	// }
 	if (req.size() == 0) {
 		cerr << "Error : request is empty" << endl;
 		return 1;
@@ -1052,6 +1079,7 @@ bool Request::splitRequest(string req) {
 	// 	cerr << "Error : the end of the request do not include a line break" << endl;
 	// 	return 1;
 	// }
+
 
 	/* split request method */
 	ml_pos = req.find("\r\n");
@@ -1089,7 +1117,7 @@ bool Request::splitRequest(string req) {
 }
 
 bool Request::parseRequest(string req) {
-	cout << "********************* \n" << req << "\n*********************" << endl;
+	// cout << "********************* \n" << req << "\n*********************" << endl;
 	// cout << "Request Brut size : " << req.size() << endl;
 
 	if (splitRequest(req) || method.parseMethod() || header.parseHeader()) {
@@ -1104,18 +1132,21 @@ bool Request::parseRequest(string req) {
 }
 
 void Request::printRequest() {
-  cout << this->method.isGet << endl;
-  cout << this->method.isPost << endl;
-  cout << this->method.isDelete << endl;
 
-  cout << "url '" << this->method.url << "'" << endl;
-  cout << "path '" << this->method.path << "'" << endl;
-  cout << "params '" << this->method.parameters << "'" << endl;
-  cout << "anchor '" << this->method.anchor <<  "'" << endl;
-  cout << "protocle '" << this->method.protocole << "'" << endl;
-  cout << "port '" << this->header.port << "'" << endl;
-  cout << "host '" << this->header.host << "'" << endl;
-  cout << "host ip '" << this->header.host_ip << "'" << endl;
+	cout << "Header brut : \n" 
+	<< this->method.brut_method << endl
+	<< this->header.brut_header << endl;
+//   cout << this->method.isGet << endl;
+//   cout << this->method.isPost << endl;
+//   cout << this->method.isDelete << endl;
+
+//   cout << "url '" << this->method.url << "'" << endl;
+//   cout << "path '" << this->method.path << "'" << endl;
+//   cout << "params '" << this->method.parameters << "'" << endl;
+//   cout << "anchor '" << this->method.anchor <<  "'" << endl;
+//   cout << "protocle '" << this->method.protocole << "'" << endl;
+//   cout << "port '" << this->header.port << "'" << endl;
+//   cout << "host '" << this->header.host << "'" << endl;
 
   // cout << "useragent '" << this->header.str_user_agent << "'" << endl;
   // Header::t_user_agent_it it = this->header.user_agent.begin();
@@ -1156,12 +1187,16 @@ void Request::printRequest() {
   // cout << "content_location '" << this->header.content_location << "'" << endl  << endl;
 
 
-  // cout << "brut body '" << this->body.brut_body << "'" << endl;
-	this->contain_body ? cout << "body\n" << this->body.content << endl : cout << "no body" << endl;
-	// cout << "body concatene '" << this->body.concat_body << "'" << endl;
+  	// cout << "brut body '" << this->body.brut_body << "'" << endl;
 
-  cout << "requete " << (this->header.is_valid ? "valid" : "invalid") << endl;
-	return ;
+	this->contain_body ? cout << "body\n" << "'" << this->body.content << "'" << endl : cout << "no body" << endl;
+  	cout << "\n\nrequete " << (this->header.is_valid ? "valid" : "invalid") << endl;
+}
+
+void Request::resetBuffer( void ) {
+	for(int i = 0; i < REQ_MAX_SIZE; i++){
+		this->buffer[i] = 0;
+	}
 }
 
 void Request::reset( void ) {
@@ -1169,5 +1204,5 @@ void Request::reset( void ) {
 	this->header.reset();
 	this->body.reset();
 	this->contain_body = false;
-
+	this->resetBuffer();
 }

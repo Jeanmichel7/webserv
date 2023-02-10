@@ -13,6 +13,8 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
+# define REQ_MAX_SIZE 8192 
+
 # include <sys/socket.h>
 # include <sys/types.h>
 # include <netinet/ip.h>
