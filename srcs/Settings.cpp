@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/08 14:24:09 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/10 12:58:25 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ int	Settings::build(const char *i, int ke)
 	return (socket_fd);
 }
 
-std::string	Settings::date( void )
+std::string Settings::date(void)
 {
 	time_t tmm = time(0);
 	std::string rdate, s, tmp;
@@ -61,30 +61,31 @@ std::string	Settings::date( void )
 	return (rdate);
 }
 
-std::string	Settings::get( Config& config, Request const& req )
+std::string Settings::get(Config &config, Request const &req)
 {
 	std::string buffer;
-	std::string	reponse = "HTTP/1.1";
+	std::string reponse = "HTTP/1.1";
 	std::stringstream n;
 	std::fstream fd;
 	std::string tmp;
-	
+
 	if (config.getFile(req.method.path) == NULL)
 		reponse.append(" 404 Not Found\n");
-	else {
-		const char * file = config.getFile(req.method.path)->c_str();
+	else
+	{
+		const char *file = config.getFile(req.method.path)->c_str();
 		fd.open(file, std::fstream::in);
 		if (fd.is_open())
 			reponse.append(" 200 OK\n");
 		else if (!config.getDirectoryListing(req.method.path).empty())
 		{
-			DIR* dir = opendir(config.getDirectoryListing(req.method.path).c_str());
+			DIR *dir = opendir(config.getDirectoryListing(req.method.path).c_str());
 			if (dir)
 			{
 				reponse += " 200 OK\r\n";
 				buffer = "<html><body><ul>";
-				
-				struct dirent* entry;
+
+				struct dirent *entry;
 				while ((entry = readdir(dir)) != nullptr)
 					if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
 						buffer += "<li>" + std::string(entry->d_name) + "</li>\n";
@@ -100,12 +101,12 @@ std::string	Settings::get( Config& config, Request const& req )
 			}
 		}
 	}
-	while(getline(fd, tmp))
+	while (getline(fd, tmp))
 		buffer += tmp + "\n";
 	reponse += Settings::date();
 	reponse += "server: " + *config.getName() + "\n";
 	reponse += "Last-Modified: \n";
-	
+
 	n << strlen(buffer.c_str());
 	reponse += "Content-Length: " + n.str() + "\n";
 	reponse += "Content-Type: " + req.header.content_type + "\n";
@@ -115,11 +116,11 @@ std::string	Settings::get( Config& config, Request const& req )
 	return (reponse);
 }
 
-std::string Settings::post( Config& config, Request const& req )
+std::string Settings::post(Config &config, Request const &req)
 {
-	std::stringstream	reponse;
-	std::string			rvalue_script;
-	std::fstream		fd;
+	std::stringstream reponse;
+	std::string rvalue_script;
+	std::fstream fd;
 
 	reponse << "HTTP/1.1";
 	fd.open(config.getFile(req.method.path)->c_str(), std::fstream::in);
@@ -145,7 +146,7 @@ std::string Settings::post( Config& config, Request const& req )
 	reponse << "\nContent-Type: text/html\n";
 	reponse << "Connection: keep-alive\n\n";
 	reponse << rvalue_script;
-	
+
 	std::string::size_type pos = 0;
 	if ((pos = rvalue_script.find("content_length")) != std::string::npos)
 		reponse << EOF;
@@ -153,9 +154,9 @@ std::string Settings::post( Config& config, Request const& req )
 	return (reponse.str());
 }
 
-std::string	Settings::badRequest( Config const& config )
+std::string Settings::badRequest(Config const &config)
 {
-	std::stringstream	reponse;
+	std::stringstream reponse;
 	reponse << "HTTP/1.1 400 Bad Request\n";
 	reponse << Settings::date() << "\n";
 	// reponse << "server: " << *config.getName() + "\n";
@@ -167,9 +168,7 @@ std::string	Settings::badRequest( Config const& config )
 
 Settings::Settings()
 {
-			
 }
 Settings::~Settings()
 {
-			
 }
