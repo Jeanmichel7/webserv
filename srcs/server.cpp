@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/13 14:55:25 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/13 18:37:37 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,13 +75,6 @@ int main(int argc, char **argv)
 					{
 						std::cout << "READING" << std::endl;
 						sbuffer = server.reading(clients[i], req);
-						if (sbuffer.empty())
-						{
-							close(clients[i]);
-							event[i].flags = 0;
-							clients.erase(clients.begin() + i);
-						}
-						else
 							event[i].flags = EVFILT_WRITE;
 					}
 					if (event[i].flags & EVFILT_WRITE)

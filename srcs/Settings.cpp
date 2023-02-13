@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/13 15:08:34 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/13 18:46:13 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@ void	Settings::build(int ke)
 	int						socket_fd;
 	struct addrinfo			serv_addr, *res;
 
-	this->list_of_serv_socket = new int[this->config.getServNumb()];
 	this->config.selectFirstServ();
 	for(unsigned int i = 0; i < this->config.getServNumb(); i++)
 	{
@@ -51,7 +50,6 @@ void	Settings::build(int ke)
 		EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE | EV_EOF, 0, 0, &serv_addr);
 		if (kevent(ke, &change, 1, NULL, 0, NULL) == -1)
 				throw Settings::badCreation();
-		this->list_of_serv_socket[i] = socket_fd;
 		++config;
 	}
 }
@@ -80,8 +78,8 @@ std::string Settings::get(Request const &req)
 	std::fstream fd;
 	std::string tmp;
 
-	// if (!this->config.getMethod(req.method.path).isget)
-	// 	return (this->badRequest());
+	if (!this->config.getMethod(req.method.path).isget)
+		return (this->badRequest());
 	if (this->config.getFile(req.method.path) == NULL)
 	{
 		reponse.append(" 404 Not Found\n");
@@ -92,9 +90,6 @@ std::string Settings::get(Request const &req)
 	else
 	{
 		const char *file = this->config.getFile(req.method.path)->c_str();
-		// const char *file = open(, O_RDONLY);
-
-
 		fd.open(file, std::fstream::in);
 		if (fd.is_open())
 			reponse.append(" 200 OK\n");
@@ -192,8 +187,6 @@ std::string Settings::reading(int socket, Request req)
 	string::size_type o_read = 0;
 	std::cout << "Max size " << config.getMaxSize() << std::endl;
 	o_read = recv(socket, req.buffer, REQ_MAX_SIZE, 0);
-	// if (o_read == 0
-	// // );
 	sbuffer << req.buffer;
 	if (o_read == REQ_MAX_SIZE) {
 		while (o_read == REQ_MAX_SIZE) {
@@ -219,10 +212,12 @@ void Settings::writing(int socket, Request & req, std::string sbuffer)
 		reponse_request = this->post(req);
 	else
 		reponse_request = this->badRequest();
-	// std::cout << "Request:" << std::endl;
-	// req.printRequest();
-	// std::cout << std::endl << std::endl << "Response : "  << std::endl << reponse_request << std::endl;
+	std::cout << "Request:" << std::endl;
+	req.printRequest();
+	std::cout << std::endl << std::endl << "Response : "  << std::endl << reponse_request << std::endl;
 	req.reset();
+	// if (reponse_request.compare(this->badRequest()))
+	// 	close(socket);
 	send(socket, reponse_request.c_str(), reponse_request.size(), 0);
 }
 
