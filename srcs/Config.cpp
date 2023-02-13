@@ -152,6 +152,8 @@
 	Methods	Config::getMethod(const std::string &path) const
 	{
 		const Location *loc = getLocation(path);
+		if (loc == NULL)
+			return (Methods());
 		Methods rt;
 		if (loc->_is_get == 1)
 			rt.isget = true;
@@ -250,22 +252,10 @@
 	
 bool yd::isValidPathDir(std::string const &s)
 {
-	bool hasAlphaNum = false;
-	if (s == "/")
-		return true;
 	for (unsigned int i = 0; i < s.size(); i++) {
-			if (isalnum(s[i])) {
-					hasAlphaNum = true;
-			}
-			else if (s[i] != '/') {
-					return false;
-			}
 			if (s[i] == '/' && s[i + 1] == '/') {
 					return false;
 			}
-	}
-	if (!hasAlphaNum) {
-			return false;
 	}
 	return true;
 }
@@ -286,15 +276,6 @@ bool yd::isValidPathFile(std::string const &s)
     if (pos != std::string::npos) {
         return false;
     }
-
-    // Vérifier si le chemin ne contient que des caractères autorisés
-    for (std::string::size_type i = 0; i < s.size(); ++i) {
-        char c = s[i];
-        if (!isalnum(c) && c != '/' && c != '.') {
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -483,7 +464,7 @@ bool yd::isValidPathFile(std::string const &s)
 	void Location::setDefaultFile(Tokenizer &tok)
 	{
 		if (!yd::isValidPathFile(tok.getToken()))
-			throw (FormatError(tok.getToken(), "path /x/x/x.xx"));
+			throw (FormatError(tok.getToken(), "// forbiden in a path"));
 		else 
 			_default_file =  tok.getToken();
 	}
@@ -501,7 +482,7 @@ bool yd::isValidPathFile(std::string const &s)
 	void Location::setRoot(Tokenizer &tok)
 	{
 		if (!yd::isValidPathDir(tok.getToken()))
-			throw (FormatError(tok.getToken(), "path /x/x/x"));
+			throw (FormatError(tok.getToken(), "// forbiden in a path"));
 		if (tok.getToken().back() == '/')
 			throw (FormatError(tok.getToken(), "/x/x/x"));
 		else 
@@ -511,7 +492,7 @@ bool yd::isValidPathFile(std::string const &s)
 	void Location::setUploadFile(Tokenizer &tok)	
 	{
 		if (!yd::isValidPathDir(tok.getToken()))
-			throw (FormatError(tok.getToken(), "path /x/x/x"));
+			throw (FormatError(tok.getToken(), "// forbiden in a path"));
 		else 
 			_upload_file = tok.getToken();
 	}
@@ -519,7 +500,9 @@ bool yd::isValidPathFile(std::string const &s)
 		void Location::setPath(Tokenizer &tok)
 	{
 		if (!yd::isValidPathDir(tok.getToken()))
-			throw (FormatError(tok.getToken(), "path /x/x/x"));
+			throw (FormatError(tok.getToken(), "// forbiden in a path"));
+		if (tok.getToken()[0] != '/')
+			throw (FormatError(tok.getToken(), "location path must start with /"));
 		if (tok.getToken().size() > 1 && tok.getToken().back() == '/')
 			throw (FormatError(tok.getToken(), "path /x/x/x not /x/x/x/"));
 		else 
