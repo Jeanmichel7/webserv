@@ -28,6 +28,8 @@ class Settings
 		std::string del( void );
 		std::string	date( void );
 		std::string	badRequest( void );
+		std::string reading(int socket, Request req);
+		void writing(int socket, Request & req, std::string sbuffer);
 		Settings( Config const& base );
 		Settings();
 		~Settings();

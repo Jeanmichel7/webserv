@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/10 16:10:18 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/13 10:39:57 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -951,10 +951,10 @@ bool 	Body::parseMultipartBody( void ){
 }
 
 bool Body::parseTransferEncoding( void ) {
-	string::size_type pos = 0;
+	// string::size_type pos = 0;
 	string 						str(this->brut_body);
 	string						nb_hexa;
-	string::size_type size = 0;
+	// string::size_type size = 0;
 	string 						line;
 	string 						line_concat;
 

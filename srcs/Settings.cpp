@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/10 15:52:20 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/13 15:08:34 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,14 +38,17 @@ void	Settings::build(int ke)
 			throw Settings::badCreation();
 		socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 		if (socket_fd == -1)
-    	    throw Settings::badCreation();
+			throw Settings::badCreation();
+		int r = 1;
+		if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0)
+			throw Settings::badCreation();
 		int bind_status = bind(socket_fd, res->ai_addr, res->ai_addrlen);
 		if (bind_status == -1)
 			throw Settings::badCreation();
 		freeaddrinfo(res);
 		if (listen(socket_fd, 10) == -1)
 			throw Settings::badCreation();
-		EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD, 0, 0, &serv_addr);
+		EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE | EV_EOF, 0, 0, &serv_addr);
 		if (kevent(ke, &change, 1, NULL, 0, NULL) == -1)
 				throw Settings::badCreation();
 		this->list_of_serv_socket[i] = socket_fd;
@@ -77,8 +80,15 @@ std::string Settings::get(Request const &req)
 	std::fstream fd;
 	std::string tmp;
 
+	// if (!this->config.getMethod(req.method.path).isget)
+	// 	return (this->badRequest());
 	if (this->config.getFile(req.method.path) == NULL)
+	{
 		reponse.append(" 404 Not Found\n");
+		fd.open(this->config.getError(404)->c_str());
+		if (!fd.is_open())
+			fd.open("http/404.html");
+	}
 	else
 	{
 		const char *file = this->config.getFile(req.method.path)->c_str();
@@ -114,13 +124,12 @@ std::string Settings::get(Request const &req)
 	}
 	while (getline(fd, tmp))
 		buffer += tmp + "\n";
-	reponse += Settings::date();
+	reponse += Settings::date() + "\n";
 	reponse += "server: " + *this->config.getName() + "\n";
-	reponse += "Last-Modified: \n";
-
 	n << buffer.size();
 	reponse += "Content-Length: " + n.str() + "\n";
-	reponse += "Content-Type: " + req.header.content_type + "\n";
+	if (!req.header.content_type.empty())
+		reponse += "Content-Type: " + req.header.content_type + "\n";
 	reponse += "Connection: keep-alive\n";
 	reponse += "\n" + buffer;
 	fd.close();
@@ -134,6 +143,8 @@ std::string Settings::post(Request const &req)
 	std::fstream fd;
 
 	reponse << "HTTP/1.1";
+	if (!this->config.getMethod(req.method.path).ispost)
+		return (this->badRequest());
 	fd.open(this->config.getFile(req.method.path)->c_str(), std::fstream::in);
 	if (!fd.is_open())
 	{
@@ -142,16 +153,12 @@ std::string Settings::post(Request const &req)
 			fd.open("http/404.html", O_RDONLY);
 		reponse << " 404 Not Found\n";
 	}
-	else
-	{
-		std::string retour_cgi = "Status: 500";
-		if (!retour_cgi.c_str())
-			reponse << " 204 No Content\n";
-		else if (strcmp(retour_cgi.c_str(), "Status: 500") == 0)
-			reponse << "500 Internal Server Error\n";
-	}
 	std::cout << "Executing CGI..." << std::endl;
 	rvalue_script = CGI::execute_cgi(this->config, req);
+	if (!rvalue_script.c_str())
+		reponse << " 204 No Content\n";
+	else if (strcmp(rvalue_script.c_str(), "Status: 500") == 0)
+		reponse << "500 Internal Server Error\n";
 	std::cout << "Executing CGI end" << std::endl;
 	reponse << Settings::date();
 	reponse << "server: " << *this->config.getName() << "\n";
@@ -177,6 +184,46 @@ std::string Settings::badRequest()
 	reponse << "Content-Length: 0\n";
 	reponse << "Connection: closed\n\n";
 	return (reponse.str());
+}
+
+std::string Settings::reading(int socket, Request req)
+{
+	std::stringstream 	sbuffer;
+	string::size_type o_read = 0;
+	std::cout << "Max size " << config.getMaxSize() << std::endl;
+	o_read = recv(socket, req.buffer, REQ_MAX_SIZE, 0);
+	// if (o_read == 0
+	// // );
+	sbuffer << req.buffer;
+	if (o_read == REQ_MAX_SIZE) {
+		while (o_read == REQ_MAX_SIZE) {
+			std::cout << "reading socket ..." << std::endl;
+			req.resetBuffer();
+			o_read = recv(socket, req.buffer, REQ_MAX_SIZE, 0);
+			sbuffer << req.buffer;
+		}
+	}
+	return (sbuffer.str());
+}
+
+void Settings::writing(int socket, Request & req, std::string sbuffer)
+{
+	std::string reponse_request;
+	if (req.parseRequest(sbuffer))
+		reponse_request = this->badRequest();
+	else if (!this->config.selectServ(req.header.host_ip, req.header.port, req.header.host))
+		reponse_request = this->badRequest();
+	else if (req.method.isGet)
+		reponse_request = this->get(req);
+	else if (req.method.isPost || req.method.isDelete)
+		reponse_request = this->post(req);
+	else
+		reponse_request = this->badRequest();
+	// std::cout << "Request:" << std::endl;
+	// req.printRequest();
+	// std::cout << std::endl << std::endl << "Response : "  << std::endl << reponse_request << std::endl;
+	req.reset();
+	send(socket, reponse_request.c_str(), reponse_request.size(), 0);
 }
 
 Settings::Settings(Config const& base) : config(base)

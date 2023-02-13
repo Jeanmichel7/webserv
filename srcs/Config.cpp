@@ -152,6 +152,8 @@
 	Methods	Config::getMethod(const std::string &path) const
 	{
 		const Location *loc = getLocation(path);
+		if (loc == NULL)
+			return (Methods());
 		Methods rt;
 		if (loc->_is_get == 1)
 			rt.isget = true;

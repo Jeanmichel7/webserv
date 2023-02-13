@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/10 15:58:57 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/13 14:55:25 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,9 @@ int main(int argc, char **argv)
 	{
 		return (0);
 	}
-	struct kevent 	event;
+	struct kevent 	event[1024];
 	Request 		req;
+	std::vector<int>	clients;
 	int ke = kqueue();
 	try
 	{
@@ -49,47 +50,47 @@ int main(int argc, char **argv)
 		while (1)
 		{
 			std::string 	reponse_request;
-			stringstream 	sbuffer;
+			std::string 	sbuffer;
 
-			int nevents = kevent(ke, NULL, 0, &event, 2, NULL);
+			printf("------------------ Waiting new connection-------------------\n");
+			int nevents = kevent(ke, NULL, 0, event, 2, NULL);
 			if (nevents > 0)
 			{
-				int socket_client = accept(event.ident, (struct sockaddr *)event.udata, (socklen_t *)event.udata);
-
-				string::size_type o_read = 0;
-				o_read = read(socket_client, req.buffer, REQ_MAX_SIZE);
-				sbuffer << req.buffer;
-				if (o_read == REQ_MAX_SIZE) {
-					while (o_read == REQ_MAX_SIZE) {
-						std::cout << "reading socket ..." << std::endl;
-						req.resetBuffer();
-						o_read = read(socket_client, req.buffer, REQ_MAX_SIZE);
-						sbuffer << req.buffer;
+				for(int i = 0; i < nevents; i++)
+				{
+					if (std::find(clients.begin(), clients.end(), event[i].ident) == clients.end())
+					{
+						std::cout << "ACCEPT" << std::endl;
+						int socket_client = accept(event[0].ident, (struct sockaddr *)event[0].udata, (socklen_t *)event[0].udata);
+						clients.push_back(socket_client);
+						// event[i].flags = EVFILT_READ;
+						struct kevent changeEvent;
+						EV_SET(&changeEvent, socket_client, EVFILT_READ, EV_ADD, 0, 0, nullptr);
+						if (kevent(ke, &changeEvent, 1, nullptr, 0, nullptr) == -1)
+						{
+						  std::cerr << "Could not add client socket to kqueue" << std::endl;
+						}
+					}
+					if (event[i].flags & EVFILT_READ)
+					{
+						std::cout << "READING" << std::endl;
+						sbuffer = server.reading(clients[i], req);
+						if (sbuffer.empty())
+						{
+							close(clients[i]);
+							event[i].flags = 0;
+							clients.erase(clients.begin() + i);
+						}
+						else
+							event[i].flags = EVFILT_WRITE;
+					}
+					if (event[i].flags & EVFILT_WRITE)
+					{
+						std::cout << "WRITING" << std::endl;
+						server.writing(clients[i], req, sbuffer);
+						event[i].flags = EVFILT_READ;
 					}
 				}
-				if (req.parseRequest(sbuffer.str())){
-					cerr << "merde ici " << endl;
-					reponse_request = server.badRequest();
-				}
-				else if (!server.config.selectServ(req.header.host_ip, req.header.port, req.header.host)){
-					cerr << "merde la " << endl;
-					reponse_request = server.badRequest();
-				}
-				else if (req.method.isGet)
-					reponse_request = server.get(req);
-				else if (req.method.isPost || req.method.isDelete)
-					reponse_request = server.post(req);
-				else {
-					cerr << "merdouille ici" << endl;
-					reponse_request = server.badRequest();
-				}
-				req.printRequest();
-				send(socket_client, reponse_request.c_str(), strlen(reponse_request.c_str()), 0);
-				std::cout << std::endl
-						  << "Response : " << reponse_request << std::endl;
-				printf("------------------ Waiting new connection-------------------\n");
-				close(socket_client);
-				req.reset();
 			}
 		}
 	}

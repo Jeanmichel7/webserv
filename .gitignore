@@ -3,3 +3,7 @@ server
 objs
 .vscode
 *.o
+YoupiBanane
+cgi_tester
+test.conf
+tester
