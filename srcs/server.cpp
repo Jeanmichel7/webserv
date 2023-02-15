@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/13 18:37:37 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/14 19:03:21 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,28 +60,35 @@ int main(int argc, char **argv)
 				{
 					if (std::find(clients.begin(), clients.end(), event[i].ident) == clients.end())
 					{
-						std::cout << "ACCEPT" << std::endl;
 						int socket_client = accept(event[0].ident, (struct sockaddr *)event[0].udata, (socklen_t *)event[0].udata);
 						clients.push_back(socket_client);
-						// event[i].flags = EVFILT_READ;
+						event[i].flags = 1;
 						struct kevent changeEvent;
-						EV_SET(&changeEvent, socket_client, EVFILT_READ, EV_ADD, 0, 0, nullptr);
+						fcntl(socket_client, F_SETFL, fcntl(socket_client, F_GETFL, 0) | O_NONBLOCK);
+						EV_SET(&changeEvent, socket_client, -1, EV_ADD, 0, 0, nullptr);
 						if (kevent(ke, &changeEvent, 1, nullptr, 0, nullptr) == -1)
 						{
 						  std::cerr << "Could not add client socket to kqueue" << std::endl;
 						}
 					}
-					if (event[i].flags & EVFILT_READ)
+					if (event[i].flags & 1)
 					{
-						std::cout << "READING" << std::endl;
 						sbuffer = server.reading(clients[i], req);
-							event[i].flags = EVFILT_WRITE;
+						if (!sbuffer.empty())
+							event[i].flags = 2;
+						else
+						{
+							struct kevent changeEvent;
+							EV_SET(&changeEvent, clients[i], 0, EV_DELETE, 0, 0, nullptr);
+							kevent(ke, &changeEvent, 1, 0, 0, 0);
+							close(clients[i]);
+							clients.erase(clients.begin() + i);
+						}
 					}
-					if (event[i].flags & EVFILT_WRITE)
+					if (event[i].flags & 2)
 					{
-						std::cout << "WRITING" << std::endl;
 						server.writing(clients[i], req, sbuffer);
-						event[i].flags = EVFILT_READ;
+						event[i].flags = 1;
 					}
 				}
 			}

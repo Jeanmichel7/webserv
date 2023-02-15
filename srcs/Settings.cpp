@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/13 18:46:13 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/14 18:43:35 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ void	Settings::build(int ke)
 		int r = 1;
 		if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0)
 			throw Settings::badCreation();
+  		fcntl(socket_fd, F_SETFL, fcntl(socket_fd, F_GETFL, 0) | O_NONBLOCK);
 		int bind_status = bind(socket_fd, res->ai_addr, res->ai_addrlen);
 		if (bind_status == -1)
 			throw Settings::badCreation();
@@ -56,9 +57,9 @@ void	Settings::build(int ke)
 
 std::string Settings::date(void)
 {
-	time_t tmm = time(0);
-	std::string rdate, s, tmp;
-	std::stringstream str(asctime(localtime(&tmm)));
+	time_t				tmm = time(0);
+	std::string			rdate, s, tmp;
+	std::stringstream	str(asctime(localtime(&tmm)));
 
 	getline(str, rdate, ' ');
 	getline(str, tmp, ' ');
@@ -72,14 +73,14 @@ std::string Settings::date(void)
 
 std::string Settings::get(Request const &req)
 {
-	std::string buffer;
-	std::string reponse = "HTTP/1.1";
-	std::stringstream n;
-	std::fstream fd;
-	std::string tmp;
+	std::string			buffer;
+	std::string			reponse = "HTTP/1.1";
+	std::stringstream	n;
+	std::fstream		fd;
+	std::string			tmp;
 
 	if (!this->config.getMethod(req.method.path).isget)
-		return (this->badRequest());
+		return (this->method_not_allowed(req));
 	if (this->config.getFile(req.method.path) == NULL)
 	{
 		reponse.append(" 404 Not Found\n");
@@ -139,7 +140,7 @@ std::string Settings::post(Request const &req)
 
 	reponse << "HTTP/1.1";
 	if (!this->config.getMethod(req.method.path).ispost)
-		return (this->badRequest());
+		return (this->method_not_allowed(req));
 	fd.open(this->config.getFile(req.method.path)->c_str(), std::fstream::in);
 	if (!fd.is_open())
 	{
@@ -149,13 +150,14 @@ std::string Settings::post(Request const &req)
 		reponse << " 404 Not Found\n";
 	}
 	std::cout << "Executing CGI..." << std::endl;
-	rvalue_script = CGI::execute_cgi(this->config, req);
-	if (!rvalue_script.c_str())
+	if (req.body.content.size() > 30)
+		rvalue_script = CGI::execute_cgi(this->config, req);
+	if (rvalue_script.size() == 0)
 		reponse << " 204 No Content\n";
 	else if (strcmp(rvalue_script.c_str(), "Status: 500") == 0)
 		reponse << "500 Internal Server Error\n";
 	std::cout << "Executing CGI end" << std::endl;
-	reponse << Settings::date();
+	reponse << Settings::date() << "\n";
 	reponse << "server: " << *this->config.getName() << "\n";
 	reponse << "Content-Length: " << rvalue_script.size();
 	reponse << "\nContent-Type: text/html\n";
@@ -166,27 +168,57 @@ std::string Settings::post(Request const &req)
 	if ((pos = rvalue_script.find("content_length")) != std::string::npos)
 		reponse << EOF;
 	fd.close();
-	return (reponse.str());
+	std::string test = "HTTP/1.1 405 Method Not Allowed\nAllow: GET\nContent-Type: text/plain\nContent-Length: 25\n\nMethod Not Allowed (405)\n";
+	return (test);
 }
 
-std::string Settings::badRequest()
+std::string Settings::badRequest(Request const& req)
 {
 	std::stringstream reponse;
+	
 	reponse << "HTTP/1.1 400 Bad Request\n";
 	reponse << Settings::date() << "\n";
 	reponse << "server: " << *this->config.getName() + "\n";
 	reponse << "server: " << "myserv" << "\n";
-	reponse << "Content-Length: 0\n";
-	reponse << "Connection: closed\n\n";
+	reponse << "Content-Length: 21\n";
+	reponse << "Connection: keep-alive\n\n";
+	reponse << "Malformed ";
+	if (this->config.getMethod(req.method.path).isget)
+		reponse << "GET";
+	else if (this->config.getMethod(req.method.path).ispost)
+		reponse << "POST";
+	reponse << "\n request\n";
+	return (reponse.str());
+}
+
+std::string Settings::method_not_allowed(Request const& req)
+{
+	std::stringstream reponse;
+	
+	reponse << "HTTP/1.1 405 Method Not Allowed\n";
+	reponse << "Allow:";
+	if (this->config.getMethod(req.method.path).ispost)
+		reponse << " POST";
+	if (this->config.getMethod(req.method.path).isget)
+		reponse << " GET";
+	reponse << "\nContent-Type: text/plain\n"; 
+
+	reponse << Settings::date() << "\n";
+	reponse << "server: " << *this->config.getName() + "\n";
+	reponse << "Content-Length: 25\n\n";
+	reponse << "Method Not Allowed (405)\n";
 	return (reponse.str());
 }
 
 std::string Settings::reading(int socket, Request req)
 {
 	std::stringstream 	sbuffer;
-	string::size_type o_read = 0;
+	string::size_type	o_read = 0;
+	std::memset(&req.buffer, 0, sizeof(req.buffer));
 	std::cout << "Max size " << config.getMaxSize() << std::endl;
 	o_read = recv(socket, req.buffer, REQ_MAX_SIZE, 0);
+	if (o_read == -1)
+		return (std::string());
 	sbuffer << req.buffer;
 	if (o_read == REQ_MAX_SIZE) {
 		while (o_read == REQ_MAX_SIZE) {
@@ -196,29 +228,43 @@ std::string Settings::reading(int socket, Request req)
 			sbuffer << req.buffer;
 		}
 	}
+	std::cout << "\n\nbuffer:\n" << sbuffer << "\n\n";
 	return (sbuffer.str());
 }
 
 void Settings::writing(int socket, Request & req, std::string sbuffer)
 {
 	std::string reponse_request;
-	if (req.parseRequest(sbuffer))
-		reponse_request = this->badRequest();
-	else if (!this->config.selectServ(req.header.host_ip, req.header.port, req.header.host))
-		reponse_request = this->badRequest();
-	else if (req.method.isGet)
-		reponse_request = this->get(req);
-	else if (req.method.isPost || req.method.isDelete)
-		reponse_request = this->post(req);
+	if (std::strncmp(sbuffer.c_str(), "HEAD", 4) == 0)
+	{
+		reponse_request += "HTTP/1.1 200 OK\n";
+		reponse_request += this->date() + "\n";
+		reponse_request += "server: " + *this->config.getName() + "\n";
+		reponse_request += "Content-Length: 0\n";
+		reponse_request += "Connection: keep-alive\n";
+	}
 	else
-		reponse_request = this->badRequest();
+	{
+		if (req.parseRequest(sbuffer))
+			reponse_request = this->method_not_allowed(req);
+		else if (!this->config.selectServ(req.header.host_ip, req.header.port, req.header.host))
+			reponse_request = this->badRequest(req);
+		else if (req.method.isGet)
+			reponse_request = this->get(req);
+		else if (req.method.isPost || req.method.isDelete)
+			reponse_request = this->post(req);
+		else
+			reponse_request = this->badRequest(req);
+	}
 	std::cout << "Request:" << std::endl;
-	req.printRequest();
+	// req.printRequest();
 	std::cout << std::endl << std::endl << "Response : "  << std::endl << reponse_request << std::endl;
 	req.reset();
 	// if (reponse_request.compare(this->badRequest()))
 	// 	close(socket);
-	send(socket, reponse_request.c_str(), reponse_request.size(), 0);
+	write(socket, reponse_request.c_str(), reponse_request.size());
+	
+	
 }
 
 Settings::Settings(Config const& base) : config(base)
@@ -231,3 +277,19 @@ Settings::Settings()
 Settings::~Settings()
 {
 }
+/*
+POST / HTTP/1.1
+Host: 127.0.0.1:4241
+User-Agent: Go-http-client/1.1\
+Transfer-Encoding: chunked
+Content-Type: test/file
+Accept-Encoding: gzip
+
+0
+
+HEAD / HTTP/1.1
+Host: 127.0.0.1:4241
+User-Agent: Go-http-client/1.1
+
+
+*/
