@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/14 18:43:35 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/15 15:01:35 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,6 @@ void	Settings::build(int ke)
 		std::memset(&serv_addr , 0, sizeof(serv_addr));
 		serv_addr.ai_family = AF_INET;
 		serv_addr.ai_socktype = SOCK_STREAM;
-		std::cout << std::endl;
-		std::cout << "Ip: " << this->config.getIp() << std::endl;
-		std::cout << "Port: " << this->config.getPort() << std::endl;
-		std::cout << std::endl;
 		int status = getaddrinfo(this->config.getIp().c_str(), this->config.getPort().c_str(), &serv_addr, &res);
 		if (status != 0)
 			throw Settings::badCreation();
@@ -46,7 +42,7 @@ void	Settings::build(int ke)
 		if (bind_status == -1)
 			throw Settings::badCreation();
 		freeaddrinfo(res);
-		if (listen(socket_fd, 10) == -1)
+		if (listen(socket_fd, 4000) == -1)
 			throw Settings::badCreation();
 		EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE | EV_EOF, 0, 0, &serv_addr);
 		if (kevent(ke, &change, 1, NULL, 0, NULL) == -1)
@@ -73,7 +69,7 @@ std::string Settings::date(void)
 
 std::string Settings::get(Request const &req)
 {
-	std::string			buffer;
+	std::string			buffer = "";
 	std::string			reponse = "HTTP/1.1";
 	std::stringstream	n;
 	std::fstream		fd;
@@ -111,7 +107,8 @@ std::string Settings::get(Request const &req)
 			}
 			else
 			{
-				fd.open(this->config.getError(404)->c_str());
+				if (this->config.getError(404))
+					fd.open(this->config.getError(404)->c_str());
 				if (!fd.is_open())
 					fd.open("http/404.html");
 				reponse.append(" 404 Not Found\n");
@@ -149,14 +146,14 @@ std::string Settings::post(Request const &req)
 			fd.open("http/404.html", O_RDONLY);
 		reponse << " 404 Not Found\n";
 	}
-	std::cout << "Executing CGI..." << std::endl;
+	// std::cout << "Executing CGI..." << std::endl;
 	if (req.body.content.size() > 30)
 		rvalue_script = CGI::execute_cgi(this->config, req);
 	if (rvalue_script.size() == 0)
 		reponse << " 204 No Content\n";
 	else if (strcmp(rvalue_script.c_str(), "Status: 500") == 0)
 		reponse << "500 Internal Server Error\n";
-	std::cout << "Executing CGI end" << std::endl;
+	// std::cout << "Executing CGI end" << std::endl;
 	reponse << Settings::date() << "\n";
 	reponse << "server: " << *this->config.getName() << "\n";
 	reponse << "Content-Length: " << rvalue_script.size();
@@ -168,8 +165,7 @@ std::string Settings::post(Request const &req)
 	if ((pos = rvalue_script.find("content_length")) != std::string::npos)
 		reponse << EOF;
 	fd.close();
-	std::string test = "HTTP/1.1 405 Method Not Allowed\nAllow: GET\nContent-Type: text/plain\nContent-Length: 25\n\nMethod Not Allowed (405)\n";
-	return (test);
+	return (reponse.str());
 }
 
 std::string Settings::badRequest(Request const& req)
@@ -213,35 +209,37 @@ std::string Settings::method_not_allowed(Request const& req)
 std::string Settings::reading(int socket, Request req)
 {
 	std::stringstream 	sbuffer;
-	string::size_type	o_read = 0;
+	int					o_read = 0;
 	std::memset(&req.buffer, 0, sizeof(req.buffer));
-	std::cout << "Max size " << config.getMaxSize() << std::endl;
-	o_read = recv(socket, req.buffer, REQ_MAX_SIZE, 0);
+	// std::cout << "Max size: \n" << config.getMaxSize() << std::endl;
+	o_read = recv(socket, req.buffer, config.getMaxSize(), MSG_DONTWAIT);
+	// std::cout << "le retour de recv: " << o_read << std::endl;
 	if (o_read == -1)
 		return (std::string());
 	sbuffer << req.buffer;
-	if (o_read == REQ_MAX_SIZE) {
-		while (o_read == REQ_MAX_SIZE) {
-			std::cout << "reading socket ..." << std::endl;
+	if (o_read == config.getMaxSize()) {
+		while (o_read == config.getMaxSize()) {
+			// std::cout << "reading socket ..." << std::endl;
 			req.resetBuffer();
 			o_read = recv(socket, req.buffer, REQ_MAX_SIZE, 0);
 			sbuffer << req.buffer;
 		}
 	}
-	std::cout << "\n\nbuffer:\n" << sbuffer << "\n\n";
+	std::cout << "\n\nREAD:\n" << sbuffer.str() << "\n\n";
 	return (sbuffer.str());
 }
 
 void Settings::writing(int socket, Request & req, std::string sbuffer)
 {
 	std::string reponse_request;
-	if (std::strncmp(sbuffer.c_str(), "HEAD", 4) == 0)
+	if (std::strncmp(sbuffer.c_str(), "HEAD", 4) == 0 || std::strncmp(sbuffer.c_str(), "PUT", 4) == 0)
 	{
-		reponse_request += "HTTP/1.1 200 OK\n";
-		reponse_request += this->date() + "\n";
-		reponse_request += "server: " + *this->config.getName() + "\n";
-		reponse_request += "Content-Length: 0\n";
-		reponse_request += "Connection: keep-alive\n";
+		reponse_request = this->method_not_allowed(req);
+		// reponse_request += "HTTP/1.1 200 OK\n";
+		// reponse_request += this->date() + "\n";
+		// reponse_request += "server: " + *this->config.getName() + "\n";
+		// reponse_request += "Content-Length: 0\n";
+		// reponse_request += "Connection: keep-alive\n";
 	}
 	else
 	{
@@ -256,15 +254,20 @@ void Settings::writing(int socket, Request & req, std::string sbuffer)
 		else
 			reponse_request = this->badRequest(req);
 	}
-	std::cout << "Request:" << std::endl;
-	// req.printRequest();
-	std::cout << std::endl << std::endl << "Response : "  << std::endl << reponse_request << std::endl;
-	req.reset();
-	// if (reponse_request.compare(this->badRequest()))
-	// 	close(socket);
-	write(socket, reponse_request.c_str(), reponse_request.size());
-	
-	
+	std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
+	send(socket, reponse_request.c_str(), reponse_request.size(), MSG_DONTWAIT);	
+}
+
+int Settings::checkmethod(Request const& req)
+{
+	std::string method;
+	for(int i = 0; sbuffer.c_str()[i] != ' '; i++)
+		method += sbuffer.c_str()[i];
+	if (method == "PUT" || method == "HEAD" || method == "OPTIONS" || method == "TRACE" || method == "CONNECT")
+		return (-1);
+	else if (method == "POST" && this->config.getMethod(req.method.path).ispost)
+		return (0);
+	if ()
 }
 
 Settings::Settings(Config const& base) : config(base)

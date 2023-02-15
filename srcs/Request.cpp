@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/13 10:39:57 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/15 14:37:45 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -411,7 +411,7 @@ bool Header::checkHostValue(const string &host ) {
 	// cout << "contain body : " << contain_body << endl;
 	/* check tags */
 	str = host;
-	cout << "test : " << str << endl;
+	// cout << "test : " << str << endl;
 
 	if ((pos2 = str.find(":")) != string::npos){
 		this->host_ip = str.substr(0, pos2);

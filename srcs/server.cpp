@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/14 19:03:21 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/15 14:47:40 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,13 +47,14 @@ int main(int argc, char **argv)
 		if (ke == -1)
 			throw Settings::badCreation();
 		server.build(ke);
+		std::string 	sbuffer;
 		while (1)
 		{
 			std::string 	reponse_request;
-			std::string 	sbuffer;
+			
 
-			printf("------------------ Waiting new connection-------------------\n");
-			int nevents = kevent(ke, NULL, 0, event, 2, NULL);
+			// printf("------------------ Waiting new connection-------------------\n");
+			int nevents = kevent(ke, NULL, 0, event, 1024, NULL);
 			if (nevents > 0)
 			{
 				for(int i = 0; i < nevents; i++)
@@ -88,6 +89,7 @@ int main(int argc, char **argv)
 					if (event[i].flags & 2)
 					{
 						server.writing(clients[i], req, sbuffer);
+						req.reset();
 						event[i].flags = 1;
 					}
 				}

@@ -30,6 +30,7 @@ class Settings
 		std::string	badRequest( Request const& req );
 		std::string method_not_allowed( Request const& req );
 		std::string reading(int socket, Request req);
+		int 		checkmethod(Request const& req);
 		void writing(int socket, Request & req, std::string sbuffer);
 		Settings( Config const& base );
 		Settings();
