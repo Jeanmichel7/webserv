@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/15 14:47:40 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/16 11:38:13 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 						event[i].flags = 1;
 						struct kevent changeEvent;
 						fcntl(socket_client, F_SETFL, fcntl(socket_client, F_GETFL, 0) | O_NONBLOCK);
-						EV_SET(&changeEvent, socket_client, -1, EV_ADD, 0, 0, nullptr);
+						EV_SET(&changeEvent, socket_client, EVFILT_READ, EV_ADD, 0, 0, nullptr);
 						if (kevent(ke, &changeEvent, 1, nullptr, 0, nullptr) == -1)
 						{
 						  std::cerr << "Could not add client socket to kqueue" << std::endl;

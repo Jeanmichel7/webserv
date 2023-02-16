@@ -143,6 +143,14 @@
 				_buffer.pop_back();
 			// std::cout << "VALEUR DE PATH : " << path << std::endl;
 			// std::cout << "VALEUR DE LOC PATH : " << loc->_path << std::endl;
+			// std::fstream		fd;
+			// fd.open(loc->_path, std::fstream::in | std::fstream::out);
+			// if (!fd.is_open())
+			// {
+			// 	fd.close();
+			// 	return(&loc->_default_file);
+			// }
+			// fd.close();
 			if (yd::compare_strings_ignoring_trailing_slash(path,loc->_path))
 				return(&loc->_default_file);
 			else 
