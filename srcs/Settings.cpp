@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/17 17:59:27 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/17 18:04:32 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -317,7 +317,7 @@ std::string Settings::reading(int socket, Request req)
 	std::stringstream 	sbuffer;
 	int					o_read = 0;
 	std::memset(&req.buffer, 0, sizeof(req.buffer));
-	usleep(500);
+	usleep(1000);
 	o_read = recv(socket, req.buffer, config.getMaxSize(), 0);
 	if (o_read == -1 || o_read == 0)
 		return (std::string());
