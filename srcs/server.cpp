@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/16 11:38:13 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/17 17:19:46 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,50 +47,57 @@ int main(int argc, char **argv)
 		if (ke == -1)
 			throw Settings::badCreation();
 		server.build(ke);
-		std::string 	sbuffer;
 		while (1)
 		{
-			std::string 	reponse_request;
-			
-
 			// printf("------------------ Waiting new connection-------------------\n");
 			int nevents = kevent(ke, NULL, 0, event, 1024, NULL);
 			if (nevents > 0)
 			{
 				for(int i = 0; i < nevents; i++)
 				{
-					if (std::find(clients.begin(), clients.end(), event[i].ident) == clients.end())
+					std::string 	reponse_request;
+					std::string 	sbuffer;
+					if (event[i].flags & EV_EOF)
 					{
-						int socket_client = accept(event[0].ident, (struct sockaddr *)event[0].udata, (socklen_t *)event[0].udata);
-						clients.push_back(socket_client);
-						event[i].flags = 1;
 						struct kevent changeEvent;
-						fcntl(socket_client, F_SETFL, fcntl(socket_client, F_GETFL, 0) | O_NONBLOCK);
-						EV_SET(&changeEvent, socket_client, EVFILT_READ, EV_ADD, 0, 0, nullptr);
-						if (kevent(ke, &changeEvent, 1, nullptr, 0, nullptr) == -1)
-						{
-						  std::cerr << "Could not add client socket to kqueue" << std::endl;
-						}
+						EV_SET(&changeEvent, clients[i], 0, EV_DELETE, 0, 0, nullptr);
+						kevent(ke, &changeEvent, 1, 0, 0, 0);
+						close(clients[i]);
+						clients.erase(clients.begin() + i);
 					}
-					if (event[i].flags & 1)
+					else
 					{
-						sbuffer = server.reading(clients[i], req);
-						if (!sbuffer.empty())
-							event[i].flags = 2;
-						else
+						if (std::find(clients.begin(), clients.end(), event[i].ident) == clients.end())
 						{
-							struct kevent changeEvent;
-							EV_SET(&changeEvent, clients[i], 0, EV_DELETE, 0, 0, nullptr);
-							kevent(ke, &changeEvent, 1, 0, 0, 0);
-							close(clients[i]);
-							clients.erase(clients.begin() + i);
+							int socket_client = accept(event[0].ident, (struct sockaddr *)event[0].udata, (socklen_t *)event[0].udata);
+							clients.push_back(socket_client);
+							server.set_event(ke, socket_client, EVFILT_READ, EV_ADD | EV_ENABLE);
+							event[i].filter = EVFILT_READ;
 						}
-					}
-					if (event[i].flags & 2)
-					{
-						server.writing(clients[i], req, sbuffer);
-						req.reset();
-						event[i].flags = 1;
+						if (event[i].filter == EVFILT_READ)
+						{
+							sbuffer = server.reading(clients[i], req);
+							if (!sbuffer.empty())
+							{
+								event[i].filter = EVFILT_WRITE;
+								server.set_event(ke, clients[i], EVFILT_READ, EV_DELETE);
+								server.set_event(ke, clients[i], EVFILT_WRITE, EV_ADD | EV_ENABLE);
+							}
+							// {
+							// 	struct kevent changeEvent;
+							// 	EV_SET(&changeEvent, clients[i], 0, EV_DELETE, 0, 0, nullptr);
+							// 	kevent(ke, &changeEvent, 1, 0, 0, 0);
+							// 	close(clients[i]);
+							// 	clients.erase(clients.begin() + i);
+							// }
+						}
+						if (event[i].filter == EVFILT_WRITE)
+						{
+							server.writing(clients[i], req, sbuffer);
+							req.reset();
+							server.set_event(ke, clients[i], EVFILT_WRITE, EV_DELETE);
+              				server.set_event(ke, clients[i], EVFILT_READ, EV_ADD | EV_ENABLE);
+						}
 					}
 				}
 			}
