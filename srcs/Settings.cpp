@@ -163,6 +163,7 @@ void	Settings::build(int ke)
 	static struct kevent	change;
 	int						socket_fd;
 	struct addrinfo			serv_addr, *res;
+	// struct socklen_t optlen;
 
 	this->config.selectFirstServ();
 	for(unsigned int i = 0; i < this->config.getServNumb(); i++)
@@ -191,6 +192,8 @@ void	Settings::build(int ke)
 				throw Settings::badCreation();
 		++config;
 	}
+	// for(unsigned int i = 0; i < this->config.getServNumb(); i++)
+	// 	--config;
 }
 
 
@@ -318,7 +321,8 @@ std::string Settings::reading(int socket, Request req)
 	int					o_read = 0;
 	std::memset(&req.buffer, 0, sizeof(req.buffer));
 	usleep(1000);
-	o_read = recv(socket, req.buffer, config.getMaxSize(), 0);
+	o_read = recv(socket , req.buffer, config.getMaxSize(), 0);
+	cout << "RESQUST : " << req.buffer << endl;
 	if (o_read == -1 || o_read == 0)
 		return (std::string());
 	sbuffer << req.buffer;
@@ -334,6 +338,7 @@ std::string Settings::reading(int socket, Request req)
 		}
 	}
 	std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
+	// cout << "req.header.port" << req.header.port << endl;
 	return (sbuffer.str());
 }
 
@@ -349,10 +354,16 @@ void Settings::writing(int socket, Request & req, std::string sbuffer)
 		fd.open(*this->config.getFile(req.method.path));
 	if (req.parseRequest(sbuffer))
 		reponse_request = this->method_not_allowed(req);
+
+
+	if (!this->config.selectServ(req.header.host_ip, req.header.port, req.header.host))
+		this->badRequest(req);
 	if (!sbuffer.empty())
 		valid = this->checkmethod(sbuffer, this->config.getMethod(req.method.path));
-	if (valid == -2)
+	if (valid == -2) {
+		cout << "ici HAAAAAAAAAAAAAAA" << endl;
 		reponse_request = this->method_not_allowed(req);
+	}
 	else if (valid == -1)
 		reponse_request = this->method_not_allowed(req);
 	// else if (valid == 10) // A mettre a la main dans le debugger pour passer le GET sur /directory/Yeah je sais pas pk ca doit aller en 404
@@ -448,6 +459,10 @@ int Settings::checkmethod(std::string const& request, Methods const& t)
 	
 	for(int i = 0; request.c_str()[i] != ' ' && request.c_str()[i] ; i++)
 		method += request.c_str()[i];
+	cout << "method : " << method << endl;
+	cout << "isget : " << t.isget << endl;
+	cout << "ispost : " << t.ispost << endl;
+	cout << "isdelete : " << t.isdelete << endl;
 	if (method == "PUT" || method == "HEAD" || method == "OPTIONS" || method == "TRACE" || method == "CONNECT")
 		return (-1);
 	else if (method == "POST" && !t.ispost)
@@ -600,7 +615,7 @@ std::string Settings::badRequest(Request const& req)
 	reponse << "HTTP/1.1 400 Bad Request\n";
 	reponse << Settings::date() << "\n";
 	reponse << "server: " << *this->config.getName() + "\n";
-	reponse << "server: " << "myserv" << "\n";
+	// reponse << "server: " << "myserv" << "\n";
 	reponse << "Content-Length: 21\n";
 	reponse << "Connection: keep-alive\n";
 	reponse << "\nMalformed ";
