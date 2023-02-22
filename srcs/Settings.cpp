@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/17 18:04:32 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/21 19:50:27 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,34 +161,55 @@ Settings::~Settings()
 void	Settings::build(int ke)
 {
 	static struct kevent	change;
+	// structure for defined socker to be monitored	by kevent
 	int						socket_fd;
 	struct addrinfo			serv_addr, *res;
+	// structure for	convert the ip and the port to a format usable by the bind function
 
 	this->config.selectFirstServ();
+	// Select the first server in the configuration file and iterate with each server in the config file 
+	std::cout << this->config.getServNumb() << std::endl;
 	for(unsigned int i = 0; i < this->config.getServNumb(); i++)
 	{
 		std::memset(&serv_addr , 0, sizeof(serv_addr));
+		// clean the struct addrinfo 
 		serv_addr.ai_family = AF_INET;
+		// set the address format to ipv4  
 		serv_addr.ai_socktype = SOCK_STREAM;
+		// set the protocol to TCP before send the struct to getaddrinfo 
 		int status = getaddrinfo(this->config.getIp().c_str(), this->config.getPort().c_str(), &serv_addr, &res);
+		/* getaddrinfo convert the ip and the port to a format usable by the bind function, 
+		the function need serv_addr to correctly convert the ip at the right format, the function return a rest list if  */
 		if (status != 0)
 			throw Settings::badCreation();
 		socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		/* create a socket */ 
 		if (socket_fd == -1)
 			throw Settings::badCreation();
 		int r = 1;
 		if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0)
 			throw Settings::badCreation();
-  		fcntl(socket_fd, F_SETFL, fcntl(socket_fd, F_GETFL, 0) | O_NONBLOCK);
+		// define the socket option. SO_REUSEADDR allow the socket to be reused by another process immediatly after the process is closed 
+		// and SOL_SOCKET is the level at which the option is defined ( in not case in the socket level and not in the protocol level)
+  	fcntl(socket_fd, F_SETFL, fcntl(socket_fd, F_GETFL, 0) | O_NONBLOCK);
+		/* set the socket to non blocking mode by adding the O_NONBLOCK flag to the existing flags
+		 returned by the fcntl function passed as arguments, the O_NONBLOCK FLag allows read function 
+		 to not wait for new data on socket */
 		int bind_status = bind(socket_fd, res->ai_addr, res->ai_addrlen);
+		// connect the socket to the ip and port noted inside the struct addrinfo
 		if (bind_status == -1)
 			throw Settings::badCreation();
 		freeaddrinfo(res);
+		// free the res list returned by getaddrinfo
 		if (listen(socket_fd, 1024) == -1)
 			throw Settings::badCreation();
+		// set the socket to listen mode and set the max number of connection to 1024
 		EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, &serv_addr);
+		// set the kevent struct change to monitor the socket for read event, the serv_addr correspond to the udata arg of the EV_SET and is use
+		// to provide a information about the addrinfo consern 
 		if (kevent(ke, &change, 1, NULL, 0, NULL) == -1)
 				throw Settings::badCreation();
+		// add the socket to the kevent list to be monitored by the kevent function, if we dont do that we risk to infinit wait for a new connection in a accept function
 		++config;
 	}
 }
