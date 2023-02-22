@@ -68,6 +68,8 @@
 		unsigned int num = 0;
 		unsigned int final_num = 0;
 		unsigned int octet = 3;
+		if (ip == "localhost")
+			ip = "127.0.0.1";
 		for (unsigned int i = 0; i <= ip.length(); i++)
 		{
 			if (ip[i] == '.' || i == ip.length())
