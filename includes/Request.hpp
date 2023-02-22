@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/08 11:53:23 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/22 18:20:26 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,7 +168,7 @@ struct Request {
 	Header 		header;
 	Body 		body;
 	bool 		contain_body;
-	char		buffer[REQ_MAX_SIZE];
+	char		buffer[8192];
 	int 		socket_client;
 	
 	bool splitRequest(string req);

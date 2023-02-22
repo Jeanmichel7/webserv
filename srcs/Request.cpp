@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/16 19:27:36 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/22 16:59:05 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -848,7 +848,7 @@ bool Header::parseContentType(const string &value) {
 	}
 	if ((pos = str.find("boundary=")) != string::npos) {
 		str.erase(0, pos + 9);
-		this->is_chuncked = true;
+		// this->is_chuncked = true;
 		this->boundary = str;
 	}
 	this->content_type = value;

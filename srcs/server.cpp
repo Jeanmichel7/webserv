@@ -3,14 +3,27 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/22 14:36:15 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/22 19:10:08 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
+
+
+bool reqIsChuncked(std::string buffer) {
+	string str(buffer);
+	str.erase(str.find("\r\n") + 2);
+	cout << "que des hexq : " << str << endl;
+
+	for(size_t i = 0; i < str.length(); i++) {
+		if (!isxdigit(str[i]))
+			return 1;
+	}
+	return 0;
+}
 
 int main(int argc, char **argv)
 {
@@ -38,26 +51,26 @@ int main(int argc, char **argv)
 	{
 		return (0);
 	}
-	struct kevent 	event[1024];
-	Request 		req;
-	std::vector<int>	clients;
+	struct kevent event[1024];
+	Request req;
+	std::vector<int> clients;
 	int ke = kqueue();
 	try
 	{
 		if (ke == -1)
 			throw Settings::badCreation();
 		server.build(ke);
-		std::string 	sbuffer[1024];
+		std::string sbuffer[1024];
 		while (1)
 		{
 			// printf("------------------ Waiting new connection-------------------\n");
 			int nevents = kevent(ke, NULL, 0, event, 1024, NULL);
 			if (nevents > 0)
 			{
-				for(int i = 0; i < nevents; i++)
+				for (int i = 0; i < nevents; i++)
 				{
-					std::string 	reponse_request;
-					
+					std::string reponse_request;
+
 					if (event[i].flags & EV_EOF)
 					{
 						server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
@@ -77,54 +90,71 @@ int main(int argc, char **argv)
 						if (event[i].filter == EVFILT_READ)
 						{
 							std::string buffer;
+							// cout << "is chunck : " << req.header.is_chuncked << endl;
+							// focntion qui check si c'est chunk
 							buffer = server.reading(event[i].ident, req);
-							buffer += server.reading(event[i].ident, req); // a terme ca va vire
-							//focntion qui check si c'est chunk
-							// SI OUI:
-								// {
-								//fonction qui compare buffer avec "0\n\r":
-									//SI OUI
-										// if (!sbuffer[event[i].ident].empty())
-										// {
-										// 	server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
-										// 	server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-										// }
-									//SINON
-										// sbuffer[event[i].ident] += buffer;
-								// }
-							// SINON
-								sbuffer[event[i].ident] = buffer;
-
-
-
-
-
-								
-							
-							if (!sbuffer[event[i].ident].empty())
+							if (!reqIsChuncked(buffer))
 							{
+								if (buffer == "0\r\n\r\n")
+								{
+									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
+									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+								} 
+								else {
+									string str(buffer);
+									str.erase(0, str.find("\r\n") + 2);
+									sbuffer[event[i].ident] += str;
+									cout << sbuffer[event[i].ident] << endl;
+								}
+
+							}
+							else
+							{
+								// req.splitRequest(buffer);
+								// req.header.parseHeader();
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+								sbuffer[event[i].ident] += buffer;
 							}
+							// SI OUI:
+							// {
+							// fonction qui compare buffer avec "0\n\r":
+							// SI OUI
+							// sbuffer[event[i].ident] += buffer;
+							// if (!sbuffer[event[i].ident].empty())
+							// {
+							// 	server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
+							// 	server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+							// }
+							// SINON
+							//  sbuffer[event[i].ident] += buffer;
+							// }
+							// SINON
 						}
-						if (event[i].filter == EVFILT_WRITE)
-						{
-							server.writing(event[i].ident, req, sbuffer[event[i].ident]);
-							req.reset();
-							sbuffer[event[i].ident] = "";
-							server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-							server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
-							
-						}
+
+						// que si la requete est en entier
+						// if (!sbuffer[event[i].ident].empty())
+						// {
+						// 	server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
+						// 	server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+						// }
+					}
+					if (event[i].filter == EVFILT_WRITE)
+					{
+						server.writing(event[i].ident, req, sbuffer[event[i].ident]);
+						req.reset();
+						sbuffer[event[i].ident] = "";
+						server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+						server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
 					}
 				}
 			}
 		}
 	}
-	catch (const std::exception &e)
-	{
-		std::cout << strerror(errno);
-		std::cerr << std::endl
-				  << e.what() << std::endl;
-	}
+catch (const std::exception &e)
+{
+	std::cout << strerror(errno);
+	std::cerr << std::endl
+			  << e.what() << std::endl;
+}
 }

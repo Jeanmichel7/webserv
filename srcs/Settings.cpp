@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/22 14:36:14 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/22 19:13:27 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -323,19 +323,26 @@ std::string Settings::reading(int socket, Request req)
 	int					o_read = 0;
 	std::memset(&req.buffer, 0, sizeof(req.buffer));
 	usleep(1000);
-	o_read = recv(socket, req.buffer, config.getMaxSize(), 0);
+	o_read = recv(socket, req.buffer, 35000, 0);
 	if (o_read == -1 || o_read == 0)
 		return (std::string());
 	sbuffer << req.buffer;
-	// if (o_read == config.getMaxSize()) {
-	// 	while (o_read == config.getMaxSize()) {
+	// if (o_read == 8192) {
+	// 	while (o_read == 8192) {
 	// 		req.resetBuffer();
 	// 		// o_read = recv(socket, req.buffer, REQ_MAX_SIZE, 0);
-	// 		o_read = recv(socket, req.buffer, config.getMaxSize(), 0);
+	// 		o_read = recv(socket, req.buffer, 8192, 0);
 	// 		sbuffer << req.buffer;
 	// 	}
 	// }
 	std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
+
+	// req.splitRequest(buffer);
+	// req.header.parseHeader();
+	// if (!this->config.selectServ(req.header.host_ip, req.header.port))
+	// 	reponse_request = this->badRequest(req);
+
+
 	return (sbuffer.str());
 }
 
@@ -349,7 +356,7 @@ void Settings::writing(int socket, Request & req, std::string sbuffer)
 	std::fstream fd;
 	if (!req.method.path.empty())
 		fd.open(*this->config.getFile(req.method.path));
-	std::cout << "request:\n" << sbuffer << std::endl;
+	// std::cout << "request:\n" << sbuffer << std::endl;
 	if (req.parseRequest(sbuffer))
 		reponse_request = this->method_not_allowed(req);
 	if (!this->config.selectServ(req.header.host_ip, req.header.port))
@@ -469,7 +476,7 @@ void	Settings::set_event(int ke, int socket, short filter, short flag)
 	struct kevent changeEvent;
 	EV_SET(&changeEvent, socket, filter, flag, 0, 0, nullptr);
 	if (kevent(ke, &changeEvent, 1, nullptr, 0, nullptr) == -1)
-		std::cerr << "Could not add client socket to kqueue" << std::endl;
+		std::cerr << "Could not add client " << socket <<" socket to kqueue" << std::endl;
 }
 
 
