@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/22 13:52:46 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/22 14:36:14 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -327,14 +327,14 @@ std::string Settings::reading(int socket, Request req)
 	if (o_read == -1 || o_read == 0)
 		return (std::string());
 	sbuffer << req.buffer;
-	if (o_read == config.getMaxSize()) {
-		while (o_read == config.getMaxSize()) {
-			req.resetBuffer();
-			// o_read = recv(socket, req.buffer, REQ_MAX_SIZE, 0);
-			o_read = recv(socket, req.buffer, config.getMaxSize(), 0);
-			sbuffer << req.buffer;
-		}
-	}
+	// if (o_read == config.getMaxSize()) {
+	// 	while (o_read == config.getMaxSize()) {
+	// 		req.resetBuffer();
+	// 		// o_read = recv(socket, req.buffer, REQ_MAX_SIZE, 0);
+	// 		o_read = recv(socket, req.buffer, config.getMaxSize(), 0);
+	// 		sbuffer << req.buffer;
+	// 	}
+	// }
 	std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
 	return (sbuffer.str());
 }

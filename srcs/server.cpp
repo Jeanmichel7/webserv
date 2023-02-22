@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/22 13:54:06 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/22 14:36:15 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,31 @@ int main(int argc, char **argv)
 						}
 						if (event[i].filter == EVFILT_READ)
 						{
-							sbuffer[event[i].ident] += server.reading(event[i].ident, req);
+							std::string buffer;
+							buffer = server.reading(event[i].ident, req);
+							buffer += server.reading(event[i].ident, req); // a terme ca va vire
+							//focntion qui check si c'est chunk
+							// SI OUI:
+								// {
+								//fonction qui compare buffer avec "0\n\r":
+									//SI OUI
+										// if (!sbuffer[event[i].ident].empty())
+										// {
+										// 	server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
+										// 	server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+										// }
+									//SINON
+										// sbuffer[event[i].ident] += buffer;
+								// }
+							// SINON
+								sbuffer[event[i].ident] = buffer;
+
+
+
+
+
+								
+							
 							if (!sbuffer[event[i].ident].empty())
 							{
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
