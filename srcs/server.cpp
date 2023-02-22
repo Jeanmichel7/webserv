@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/17 17:19:46 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/22 13:54:06 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ int main(int argc, char **argv)
 		if (ke == -1)
 			throw Settings::badCreation();
 		server.build(ke);
+		std::string 	sbuffer[1024];
 		while (1)
 		{
 			// printf("------------------ Waiting new connection-------------------\n");
@@ -56,47 +57,40 @@ int main(int argc, char **argv)
 				for(int i = 0; i < nevents; i++)
 				{
 					std::string 	reponse_request;
-					std::string 	sbuffer;
+					
 					if (event[i].flags & EV_EOF)
 					{
-						struct kevent changeEvent;
-						EV_SET(&changeEvent, clients[i], 0, EV_DELETE, 0, 0, nullptr);
-						kevent(ke, &changeEvent, 1, 0, 0, 0);
-						close(clients[i]);
+						server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+						server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
+						close(event[i].ident);
 						clients.erase(clients.begin() + i);
 					}
 					else
 					{
 						if (std::find(clients.begin(), clients.end(), event[i].ident) == clients.end())
 						{
-							int socket_client = accept(event[0].ident, (struct sockaddr *)event[0].udata, (socklen_t *)event[0].udata);
+							int socket_client = accept(event[i].ident, (struct sockaddr *)event[i].udata, (socklen_t *)event[i].udata);
 							clients.push_back(socket_client);
+							event[i].filter = 10;
 							server.set_event(ke, socket_client, EVFILT_READ, EV_ADD | EV_ENABLE);
-							event[i].filter = EVFILT_READ;
 						}
 						if (event[i].filter == EVFILT_READ)
 						{
-							sbuffer = server.reading(clients[i], req);
-							if (!sbuffer.empty())
+							sbuffer[event[i].ident] += server.reading(event[i].ident, req);
+							if (!sbuffer[event[i].ident].empty())
 							{
-								event[i].filter = EVFILT_WRITE;
-								server.set_event(ke, clients[i], EVFILT_READ, EV_DELETE);
-								server.set_event(ke, clients[i], EVFILT_WRITE, EV_ADD | EV_ENABLE);
+								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
+								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 							}
-							// {
-							// 	struct kevent changeEvent;
-							// 	EV_SET(&changeEvent, clients[i], 0, EV_DELETE, 0, 0, nullptr);
-							// 	kevent(ke, &changeEvent, 1, 0, 0, 0);
-							// 	close(clients[i]);
-							// 	clients.erase(clients.begin() + i);
-							// }
 						}
 						if (event[i].filter == EVFILT_WRITE)
 						{
-							server.writing(clients[i], req, sbuffer);
+							server.writing(event[i].ident, req, sbuffer[event[i].ident]);
 							req.reset();
-							server.set_event(ke, clients[i], EVFILT_WRITE, EV_DELETE);
-              				server.set_event(ke, clients[i], EVFILT_READ, EV_ADD | EV_ENABLE);
+							sbuffer[event[i].ident] = "";
+							server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+							server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
+							
 						}
 					}
 				}

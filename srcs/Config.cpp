@@ -704,7 +704,7 @@ bool yd::isValidPathFile(std::string const &s)
 				throw (ConfigurationError("redefinition of error page"));
 		}
 
-	Server::Server(): _server_name(), _port(INT_MAX), _ip(0), _max_body_size(), 
+	Server::Server(): _server_name(), _port(INT_MAX), _ip(0), _max_body_size(4096), 
 	_error_pages(), _locations(), _tokens() 
 	{
 	_tokens["server_name"] = &Server::setServerName;

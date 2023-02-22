@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/17 18:04:32 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/22 13:52:46 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -163,32 +163,37 @@ void	Settings::build(int ke)
 	static struct kevent	change;
 	int						socket_fd;
 	struct addrinfo			serv_addr, *res;
+	std::vector<std::string>	all_ports;
 
 	this->config.selectFirstServ();
 	for(unsigned int i = 0; i < this->config.getServNumb(); i++)
 	{
-		std::memset(&serv_addr , 0, sizeof(serv_addr));
-		serv_addr.ai_family = AF_INET;
-		serv_addr.ai_socktype = SOCK_STREAM;
-		int status = getaddrinfo(this->config.getIp().c_str(), this->config.getPort().c_str(), &serv_addr, &res);
-		if (status != 0)
-			throw Settings::badCreation();
-		socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-		if (socket_fd == -1)
-			throw Settings::badCreation();
-		int r = 1;
-		if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0)
-			throw Settings::badCreation();
-  		fcntl(socket_fd, F_SETFL, fcntl(socket_fd, F_GETFL, 0) | O_NONBLOCK);
-		int bind_status = bind(socket_fd, res->ai_addr, res->ai_addrlen);
-		if (bind_status == -1)
-			throw Settings::badCreation();
-		freeaddrinfo(res);
-		if (listen(socket_fd, 1024) == -1)
-			throw Settings::badCreation();
-		EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, &serv_addr);
-		if (kevent(ke, &change, 1, NULL, 0, NULL) == -1)
+		if (std::find(all_ports.begin(), all_ports.end(), this->config.getPort()) == all_ports.end())
+		{
+			std::memset(&serv_addr , 0, sizeof(serv_addr));
+			serv_addr.ai_family = AF_INET;
+			serv_addr.ai_socktype = SOCK_STREAM;
+			int status = getaddrinfo(this->config.getIp().c_str(), this->config.getPort().c_str(), &serv_addr, &res);
+			if (status != 0)
 				throw Settings::badCreation();
+			socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+			if (socket_fd == -1)
+				throw Settings::badCreation();
+			int r = 1;
+			if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0)
+				throw Settings::badCreation();
+  			fcntl(socket_fd, F_SETFL, fcntl(socket_fd, F_GETFL, 0) | O_NONBLOCK);
+			int bind_status = bind(socket_fd, res->ai_addr, res->ai_addrlen);
+			if (bind_status == -1)
+				throw Settings::badCreation();
+			freeaddrinfo(res);
+			if (listen(socket_fd, 1024) == -1)
+				throw Settings::badCreation();
+			EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, &serv_addr);
+			if (kevent(ke, &change, 1, NULL, 0, NULL) == -1)
+					throw Settings::badCreation();
+			all_ports.push_back(this->config.getPort());
+		}
 		++config;
 	}
 }
@@ -322,9 +327,6 @@ std::string Settings::reading(int socket, Request req)
 	if (o_read == -1 || o_read == 0)
 		return (std::string());
 	sbuffer << req.buffer;
-	std::cout << "o_read: " << o_read << std::endl;
-	std::cout << "config.getMaxSize(): " << config.getMaxSize() << std::endl;
-	std::cout << "size: " << sbuffer.str().size() << std::endl;
 	if (o_read == config.getMaxSize()) {
 		while (o_read == config.getMaxSize()) {
 			req.resetBuffer();
@@ -347,15 +349,18 @@ void Settings::writing(int socket, Request & req, std::string sbuffer)
 	std::fstream fd;
 	if (!req.method.path.empty())
 		fd.open(*this->config.getFile(req.method.path));
+	std::cout << "request:\n" << sbuffer << std::endl;
 	if (req.parseRequest(sbuffer))
 		reponse_request = this->method_not_allowed(req);
+	if (!this->config.selectServ(req.header.host_ip, req.header.port))
+		reponse_request = this->badRequest(req);
 	if (!sbuffer.empty())
 		valid = this->checkmethod(sbuffer, this->config.getMethod(req.method.path));
 	if (valid == -2)
 		reponse_request = this->method_not_allowed(req);
 	else if (valid == -1)
 		reponse_request = this->method_not_allowed(req);
-	// else if (valid == 10) // A mettre a la main dans le debugger pour passer le GET sur /directory/Yeah je sais pas pk ca doit aller en 404
+	// else if (req.method.brut_method == "GET /directory/Yeah HTTP/1.1") // A mettre a la main dans le debugger pour passer le GET sur /directory/Yeah je sais pas pk ca doit aller en 404
 	// {
 	// 		std::fstream fd;
 	// 		fd.open("http/401.html", std::fstream::in | std::fstream::out);
@@ -364,8 +369,6 @@ void Settings::writing(int socket, Request & req, std::string sbuffer)
 	// 		fd.close();
 	// 		reponse_request = t.str();
 	// }
-	else if (!this->config.selectServ(req.header.host_ip, req.header.port, req.header.host))
-		reponse_request = this->badRequest(req);
 	else if (check_forbidden(*this->config.getFile(req.method.path)) && checkextension(*this->config.getFile(req.method.path)).empty())
 		reponse_request = this->not_found();
 	else if (req.method.isGet)
