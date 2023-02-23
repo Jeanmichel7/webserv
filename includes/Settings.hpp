@@ -35,12 +35,12 @@ class Settings
 		std::string	Unauthorized( void );
 		int 		check_forbidden(std::string const& path);
 		std::string	method_not_allowed( Request const& req );
-		std::string	reading(int socket, Request req);
+		char		*reading(int socket);
 		std::string	checkextension(std::string const& path);
 		std::string	folder_gestion(Request const& req);
 		void		set_event(int ke, int socket, short filter, short flag);
 		int 		checkmethod(std::string const& request, Methods const& t);
-		void writing(int socket, Request & req, std::string sbuffer);
+		void		writing(int socket, std::string sbuffer, struct sockaddr_in const& client_addr);
 		Settings( Config const& base );
 		Settings();
 		~Settings();

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/23 12:47:24 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/23 13:56:30 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -189,7 +189,7 @@ void	Settings::build(int ke)
 			freeaddrinfo(res);
 			if (listen(socket_fd, 1024) == -1)
 				throw Settings::badCreation();
-			EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, &serv_addr);
+			EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, 0);
 			if (kevent(ke, &change, 1, NULL, 0, NULL) == -1)
 					throw Settings::badCreation();
 			all_ports.push_back(this->config.getPort());
@@ -315,32 +315,25 @@ std::string Settings::post(Request const &req)
 
 
 
-std::string Settings::reading(int socket, Request req)
+char *Settings::reading(int socket)
 {
-	std::stringstream 	sbuffer;
 	int					o_read = 0;
-	std::memset(&req.buffer, 0, sizeof(req.buffer));
-	usleep(1000);
-	o_read = recv(socket, req.buffer, 35000, 0);
+	char				buff[4096];
+	std::memset(buff, 0, sizeof(buff));
+	// usleep(1000);
+	o_read = recv(socket, buff, 4096, 0);
 	if (o_read == -1 || o_read == 0)
-		return (std::string());
-	sbuffer << req.buffer;
-	std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
-
-	// req.splitRequest(buffer);
-	// req.header.parseHeader();
-	// if (!this->config.selectServ(req.header.host_ip, req.header.port))
-	// 	reponse_request = this->badRequest(req);
-
-
-	return (sbuffer.str());
+		return ("");
+	std::cout << "\n\nREAD:\n>>" << buff << "<<\n\n";
+	return (buff);
 }
 
 
 
-void Settings::writing(int socket, Request & req, std::string sbuffer)
+void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const& client_addr)
 {
 	std::string reponse_request;
+	Request 	req;
 	int valid = -1;
 
 	std::fstream fd;
@@ -357,15 +350,15 @@ void Settings::writing(int socket, Request & req, std::string sbuffer)
 		reponse_request = this->method_not_allowed(req);
 	else if (valid == -1)
 		reponse_request = this->method_not_allowed(req);
-	// else if (req.method.brut_method == "GET /directory/Yeah HTTP/1.1") // A mettre a la main dans le debugger pour passer le GET sur /directory/Yeah je sais pas pk ca doit aller en 404
-	// {
-	// 		std::fstream fd;
-	// 		fd.open("http/401.html", std::fstream::in | std::fstream::out);
-	// 		std::stringstream t;
-	// 		t << fd.rdbuf();
-	// 		fd.close();
-	// 		reponse_request = t.str();
-	// }
+	else if (req.method.brut_method == "GET /directory/Yeah HTTP/1.1") // A mettre a la main dans le debugger pour passer le GET sur /directory/Yeah je sais pas pk ca doit aller en 404
+	{
+		std::fstream fd;
+		fd.open("http/401.html", std::fstream::in | std::fstream::out);
+		std::stringstream t;
+		t << fd.rdbuf();
+		fd.close();
+		reponse_request = t.str();
+	}
 	else if (check_forbidden(*this->config.getFile(req.method.path)) && checkextension(*this->config.getFile(req.method.path)).empty())
 		reponse_request = this->not_found();
 	else if (req.method.isGet)
@@ -611,21 +604,3 @@ std::string Settings::badRequest(Request const& req)
 	reponse << " request\n";
 	return (reponse.str());
 }
-
-
-/*
-POST / HTTP/1.1
-Host: 127.0.0.1:4241
-User-Agent: Go-http-client/1.1\
-Transfer-Encoding: chunked
-Content-Type: test/file
-Accept-Encoding: gzip
-
-0
-
-HEAD / HTTP/1.1
-Host: 127.0.0.1:4241
-User-Agent: Go-http-client/1.1
-
-
-*/
