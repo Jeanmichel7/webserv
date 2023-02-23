@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/22 19:10:08 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/23 12:40:24 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,6 @@ int main(int argc, char **argv)
 
 					if (event[i].flags & EV_EOF)
 					{
-						server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 						server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 						close(event[i].ident);
 						clients.erase(clients.begin() + i);
@@ -116,20 +115,7 @@ int main(int argc, char **argv)
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 								sbuffer[event[i].ident] += buffer;
 							}
-							// SI OUI:
-							// {
-							// fonction qui compare buffer avec "0\n\r":
-							// SI OUI
-							// sbuffer[event[i].ident] += buffer;
-							// if (!sbuffer[event[i].ident].empty())
-							// {
-							// 	server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
-							// 	server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-							// }
-							// SINON
-							//  sbuffer[event[i].ident] += buffer;
-							// }
-							// SINON
+
 						}
 
 						// que si la requete est en entier

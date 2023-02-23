@@ -13,12 +13,11 @@
 #include "Cgi.hpp"
 
 
-CGI::CGI():_body(), _env(),_arg(),_tmpf(),_fd() {}
+CGI::CGI():_body(), _env(),_arg(),_file_stdin(),_file_stdout(),_fd_stdin(), _fd_stdout() {}
 
 
-void CGI::build(std::string &scriptName, const Config &conf, const Request &req)
+void CGI::build(Config &conf, const Request &req)
 {
-	string test(scriptName);
 	//ACQUISITION DES RESSOURCES
 
 	// preparer les variables environnements 
@@ -40,6 +39,8 @@ void CGI::build(std::string &scriptName, const Config &conf, const Request &req)
 	
 	// Transformer la map en char ** (excve prend un char **)
 	_env = new char*[env.size() + 1];
+	if (_env == NULL)
+		throw std::exception();
 	std::map<std::string, std::string>::iterator start = env.begin();
 	std::map<std::string, std::string>::iterator end = env.end();
 	int i = 0;
@@ -47,22 +48,36 @@ void CGI::build(std::string &scriptName, const Config &conf, const Request &req)
 	{
 		std::string el = (start->first + "=" + start->second).c_str();
 		_env[i] = new char[el.size() + 1];
+		if (_env[i] == NULL)
+			throw std::exception();
 		_env[i] = strcpy(_env[i], el.c_str());
 		++i;
 	}
 	_env[i] = NULL;
 
-	// ouvrir un fichier
-	_tmpf = std::tmpfile();
-	if (_tmpf == NULL)
+	// ouvrir 2 fichiers, un pour entre standard
+	// et un pour la sortie standard
+	/* au debut j'avais fais qu'un fichier sauf que quand le script ecrivait pas sur la sortie standard j'avais
+	 comme retour de mon programme un fichier avec l'entree standard lol, il est possible que le script n'ecrive pas 
+	 sur la sortie standard quand par exemple le script lancer par execve n'existe pas, donc execve ne fait rien */
+	_file_stdin = std::tmpfile();
+	_file_stdout = std::tmpfile();
+	if (_file_stdin == NULL || _file_stdout == NULL)
 		throw std::exception();
-	_fd = fileno(_tmpf);
+	_fd_stdin = fileno(_file_stdin);
+	_fd_stdout = fileno(_file_stdout);
 
-	// creer un arg pour l'envoyer au programme  (obligatoire et excve prend un char **)
-	size_t lenght = scriptName.size();
+	// creer un arg pour l'envoyer au programme (obligatoire et excve prend un char**)
+	// l'arg est le chemin du fichier
+	size_t length = conf.getFile(req.method.path)->length();
 	this->_arg = new char *[2];
-	this->_arg[0] = new char[lenght + 1];
-	scriptName.copy(_arg[0], lenght);
+	if (this->_arg == NULL)
+		throw std::exception();
+	this->_arg[0] = new char[length + 1];
+	if (this->_arg[0] == NULL)
+		throw std::exception();
+	this->_arg[0][length] = 0;
+	conf.getFile(req.method.path)->copy(_arg[0], length);
 	this->_arg[1] = NULL;
 }
 
@@ -72,21 +87,25 @@ CGI::~CGI()
 	{
 		for (int i = 0; _env[i] != NULL; i++)
 			delete[] _env[i];
-		_env = NULL;
 		delete[] _env;
 	}
 	if (_arg != NULL)
 	{
-		delete _arg[0];
+		if (_arg[0] != NULL)
+			delete _arg[0];
 		delete[] _arg;
 	}
-	if (_tmpf != NULL)
-		fclose(_tmpf);
-	if (_fd != 0 && _fd != 1 && _fd != 2)
-		close(_fd);
+	if (_file_stdin != NULL)
+		fclose(_file_stdin);
+	if (_file_stdout != NULL)
+		fclose(_file_stdin);
+	if (_fd_stdin != 0)
+		close(_fd_stdin);
+	if (_fd_stdout != 0)
+		close(_fd_stdout);
 }
 
-std::string CGI::execute_cgi(Config const &config, const Request &req)
+std::string CGI::execute_cgi(Config &config, const Request &req)
 {	//declarer variable
 	std::string body;
 	CGI data;
@@ -95,22 +114,22 @@ std::string CGI::execute_cgi(Config const &config, const Request &req)
 	string scriptName;
 	string::size_type position = 0;
 
+	// On extrait le nom du script pour ensuite pouvoir checher l'extension adequat
 	if ((position = req.method.path.rfind("/")) != string::npos)
 	{
 		scriptName = req.method.path.substr(position + 1);
 	}
-	// cout << "script name : " << scriptName << endl;
-
+	// On essaye d'allouer les ressources necessaires
 	try 
 	{
-		data.build(scriptName, config, req);
+		data.build(config, req);
 	}
 	catch (std::exception &e)
 	{
 		return ("Status: 500\n\r\n\r");
 	}
-	write(data._fd, req.body.content.c_str(), req.body.content.size());
-	fseek(data._tmpf, 0, SEEK_SET);
+	write(data._fd_stdin, req.body.content.c_str(), req.body.content.size());
+	fseek(data._file_stdin, 0, SEEK_SET);
 	
 	// on cherche l'extension adequate
 	string ext = "";
@@ -133,9 +152,10 @@ std::string CGI::execute_cgi(Config const &config, const Request &req)
 	 {
 		// erase stdin and stdout
 		// std::cout << "VALEUR DE data._arg[0] : " << data._arg[0] << std::endl;
-		dup2(data._fd, 0);
-		dup2(data._fd, 1);
+		dup2(data._fd_stdin, 0);
+		dup2(data._fd_stdout, 1);
 		// executer l'interpreteur avec le programme et le nom de l'argument
+		// l'emplacement relatif de l'executable correspond au programme qui utilise execve et pas celui du binaire appele. 
 		execve(cgi_path, data._arg, data._env);
 		std::cerr << "\e[0;31mWebServ$> " << "Execve has crashed " << "\e[0m" << std::endl;
 	 }
@@ -148,15 +168,14 @@ std::string CGI::execute_cgi(Config const &config, const Request &req)
 			return ("Status: 500\n\r\n\r");
 		char buffer[1024];
 		// on recupere le contenue du fichier
-	  fseek(data._tmpf, 0, SEEK_SET);
+	  fseek(data._file_stdout, 0, SEEK_SET);
 		for (int rt = 1023; rt == 1023;)
 		{
-			rt = fread(&buffer, sizeof(char), 1023, data._tmpf);
+			rt = fread(&buffer, sizeof(char), 1023, data._file_stdout);
 			buffer[rt] = '\0';
 			body += buffer;
 		}
 	 }
 		// on supprime l'environnement  cree
-
 		return (body);
 }

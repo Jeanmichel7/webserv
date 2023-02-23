@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/22 19:13:27 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/23 12:47:24 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -293,14 +293,12 @@ std::string Settings::post(Request const &req)
 			fd.open("http/404.html", O_RDONLY);
 		reponse << " 404 Not Found\n";
 	}
-	// std::cout << "Executing CGI..." << std::endl;
 	if (req.body.content.size() > 30)
 		rvalue_script = CGI::execute_cgi(this->config, req);
 	if (rvalue_script.size() == 0)
 		reponse << " 204 No Content\n";
 	else if (strcmp(rvalue_script.c_str(), "Status: 500") == 0)
 		reponse << "500 Internal Server Error\n";
-	// std::cout << "Executing CGI end" << std::endl;
 	reponse << Settings::date() << "\n";
 	reponse << "server: " << *this->config.getName() << "\n";
 	reponse << "Content-Length: " << rvalue_script.size();
@@ -327,14 +325,6 @@ std::string Settings::reading(int socket, Request req)
 	if (o_read == -1 || o_read == 0)
 		return (std::string());
 	sbuffer << req.buffer;
-	// if (o_read == 8192) {
-	// 	while (o_read == 8192) {
-	// 		req.resetBuffer();
-	// 		// o_read = recv(socket, req.buffer, REQ_MAX_SIZE, 0);
-	// 		o_read = recv(socket, req.buffer, 8192, 0);
-	// 		sbuffer << req.buffer;
-	// 	}
-	// }
 	std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
 
 	// req.splitRequest(buffer);
