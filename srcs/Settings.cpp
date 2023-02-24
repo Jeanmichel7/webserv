@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/24 13:08:17 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/24 14:09:32 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -317,6 +317,7 @@ std::string Settings::post(Request const &req, struct sockaddr_in const& client_
 	reponse << "\nContent-Type: " << this->checkextension(req.method.path) << "\n";
 	reponse << "Connection: keep-alive\n\n";
 	reponse << rvalue_script;
+	std::cout << rvalue_script << std::endl;
 
 	std::string::size_type pos = 0;
 	if ((pos = rvalue_script.find("content_length")) != std::string::npos)

@@ -4,6 +4,18 @@
 <head>
 	<title> WebServ </title>
 	<meta charset="UTF-8">
+	<style>
+		.btn {
+			font-size: 24px; /* Taille de police de caractères */
+			padding: 10px 20px; /* Espacement intérieur du bouton */
+			background-color: #008CBA; /* Couleur de fond du bouton */
+			color: #FFFFFF; /* Couleur de texte du bouton */
+			border: none; /* Supprime la bordure du bouton */
+			border-radius: 5px; /* Arrondi les bords du bouton */
+			cursor: pointer; /* Change le curseur de la souris au survol du bouton */
+			float: center; /* Place le bouton à gauche */
+		}
+	</style>
 </head>
 
 <body>
@@ -31,6 +43,29 @@
 		<input type="text" name="name2" value="Jean" id="name2" /><br />
 		<input type="submit" value="Envoyer" >
 	</form>
+	
+	<button class="btn" onclick="loadStyle()">TEST 2 REQUETES CSS et HTML</button>
+
+	<script>
+		function loadStyle() {
+			// Créer un nouvel objet XMLHttpRequest
+			var xhr = new XMLHttpRequest();
+			
+			// Définir le gestionnaire d'événement onload
+			xhr.onload = function() {
+				// Vérifier que la requête s'est terminée avec succès
+				if (xhr.status === 200) {
+					// Mettre à jour le contenu de la page avec la réponse de la requête
+					document.documentElement.innerHTML = xhr.responseText;
+				}
+			};
+			
+			// Envoyer une requête GET à la page style.html
+			xhr.open('GET', 'style.html');
+			xhr.send();
+		}
+	</script>
+</body>
 </body>
 
 </html>
