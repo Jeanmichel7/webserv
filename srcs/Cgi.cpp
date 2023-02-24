@@ -16,9 +16,15 @@
 CGI::CGI():_body(), _env(),_arg(),_file_stdin(),_file_stdout(),_fd_stdin(), _fd_stdout() {}
 
 
-void CGI::build(Config &conf, const Request &req)
+void CGI::build(Config &conf, const Request &req,  struct sockaddr_in const &client_addr)
 {
-	//ACQUISITION DES RESSOURCES
+	//ACQUISITION DES RESSOURCE
+
+	// RECUPERATION DE L'IP CLIENT
+	socklen_t client_addr_len = sizeof(client_addr);
+
+	char client_ip[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client_addr.sin_addr), client_ip, INET_ADDRSTRLEN);
 
 	// preparer les variables environnements 
 	std::map<std::string, std::string> env;
@@ -28,7 +34,7 @@ void CGI::build(Config &conf, const Request &req)
 	env["CONTENT_TYPE"] = req.header.content_type;
 	env["PATH_INFO"] = req.method.path;
 	env["HTTP_USER_AGENT"] = req.header.str_user_agent;
-	env["REMOTE_ADDR"] = "78.211.126.94";
+	env["REMOTE_ADDR"] = client_ip;
 	env["REMOTE_HOST"] = req.header.host;
 	env["REMOTE_USER"] = "";
 	env["REMOTE_PASSWORD"] = "";
@@ -105,24 +111,20 @@ CGI::~CGI()
 		close(_fd_stdout);
 }
 
-std::string CGI::execute_cgi(Config &config, const Request &req)
+std::string CGI::execute_cgi(Config &config, const Request &req, struct sockaddr_in const &client_addr)
 {	//declarer variable
 	std::string body;
 	CGI data;
 
 
 	string scriptName;
-	string::size_type position = 0;
 
 	// On extrait le nom du script pour ensuite pouvoir checher l'extension adequat
-	if ((position = req.method.path.rfind("/")) != string::npos)
-	{
-		scriptName = req.method.path.substr(position + 1);
-	}
+
 	// On essaye d'allouer les ressources necessaires
 	try 
 	{
-		data.build(config, req);
+		data.build(config, req, client_addr);
 	}
 	catch (std::exception &e)
 	{
@@ -132,11 +134,9 @@ std::string CGI::execute_cgi(Config &config, const Request &req)
 	fseek(data._file_stdin, 0, SEEK_SET);
 	
 	// on cherche l'extension adequate
-	string ext = "";
-	string::size_type dotpos;
-	if ((dotpos = scriptName.rfind(".")) != string::npos)
-		ext = scriptName.substr(dotpos);
-
+	string ext = yd::getExtension(req.method.path);
+	if (ext == "")
+		return ("Status: 404\n\r\n\r");
 	// pos = std::strchr(scriptName.c_str(), '.');
 	std::string const *cgi_path_str = config.getCgi(req.method.path, ext);
 	// si pas de cgi_path, on retourne NULL

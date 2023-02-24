@@ -25,8 +25,8 @@ class Settings
 		Config		config;
 		int			*list_of_serv_socket;
 		void		build(int ke);
-		std::string	get( Request const& req );
-		std::string	post( Request const& req );
+		std::string	get( Request const& req,  struct sockaddr_in const& client_addr);
+		std::string	post( Request const& req,  struct sockaddr_in const& client_addr);
 		std::string	del( void );
 		std::string	date( void );
 		std::string	badRequest( Request const& req );

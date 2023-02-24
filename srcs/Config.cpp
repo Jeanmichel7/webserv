@@ -296,6 +296,20 @@ bool yd::isValidPathFile(std::string const &s)
     return true;
 }
 
+	std::string yd::getExtension(std::string const &path)
+	{
+		std::string::size_type position = 0;
+		std::string scriptName;
+		if ((position =path.rfind("/")) != std::string::npos)
+		{
+			scriptName =path.substr(position + 1);
+		}
+		std::string::size_type dotpos;
+		if ((dotpos = scriptName.rfind(".")) != std::string::npos)
+			return (scriptName.substr(dotpos));
+		return ("");
+	}
+
 // path1 must be location path
 
 	int yd::comparePath(const std::string &path1, const std::string &path2)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/23 13:56:30 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/24 13:08:17 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -218,7 +218,7 @@ std::string Settings::date(void)
 
 
 
-std::string Settings::get(Request const &req)
+std::string Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 {
 	std::string			buffer = "";
 	std::string			reponse = "HTTP/1.1";
@@ -227,8 +227,10 @@ std::string Settings::get(Request const &req)
 	std::string			tmp;
 	int					value = 0;
 
+	// check methode
 	if (!this->config.getMethod(req.method.path).isget)
 		return (this->method_not_allowed(req));
+	// WTF pk value == 10 ? 
 	if (value == 10)
 	{
 		std::cout << "2\n";
@@ -247,22 +249,30 @@ std::string Settings::get(Request const &req)
 	}
 	else
 	{
-		char *file = (char *)this->config.getFile(req.method.path)->c_str();
-		if(file[0] == '/')
-			file++;
-		fd.open(file, std::fstream::in | std::fstream::out);
-		if (fd.is_open())
-			reponse.append(" 200 OK\n");
-		else if (!this->checkextension(req.method.path).empty())
+		if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
 		{
-			reponse.append(" 404 Not Found\n");
-			fd.open("http/404.html");
+			reponse.append(" 200 OK\n");
+			buffer = CGI::execute_cgi(this->config, req, client_addr);
 		}
-		else if (!this->config.getDirectoryListing(req.method.path).empty())
-			return (folder_gestion(req));
+		else
+		{
+			char *file = (char *)this->config.getFile(req.method.path)->c_str();
+			if(file[0] == '/')
+				file++;
+			fd.open(file, std::fstream::in | std::fstream::out);
+			if (fd.is_open())
+				reponse.append(" 200 OK\n");
+			else if (!this->checkextension(req.method.path).empty())
+			{
+				reponse.append(" 404 Not Found\n");
+				fd.open("http/404.html");
+			}
+			else if (!this->config.getDirectoryListing(req.method.path).empty())
+				return (folder_gestion(req));
+			while (getline(fd, tmp))
+				buffer += tmp + "\n";
+		}
 	}
-	while (getline(fd, tmp))
-		buffer += tmp + "\n";
 	reponse += Settings::date() + "\n";
 	reponse += "server: " + *this->config.getName() + "\n";
 	n << buffer.size();
@@ -276,7 +286,7 @@ std::string Settings::get(Request const &req)
 
 
 
-std::string Settings::post(Request const &req)
+std::string Settings::post(Request const &req, struct sockaddr_in const& client_addr)
 {
 	std::stringstream reponse;
 	std::string rvalue_script;
@@ -286,15 +296,17 @@ std::string Settings::post(Request const &req)
 	if (!this->config.getMethod(req.method.path).ispost)
 		return (this->method_not_allowed(req));
 	fd.open(this->config.getFile(req.method.path)->c_str(), std::fstream::in);
-	if (!fd.is_open())
+	if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
+		rvalue_script = CGI::execute_cgi(this->config, req, client_addr);
+	else if (!fd.is_open())
 	{
 		fd.open(this->config.getError(404)->c_str(), O_RDONLY);
 		if (!fd.is_open())
 			fd.open("http/404.html", O_RDONLY);
 		reponse << " 404 Not Found\n";
 	}
-	if (req.body.content.size() > 30)
-		rvalue_script = CGI::execute_cgi(this->config, req);
+	
+
 	if (rvalue_script.size() == 0)
 		reponse << " 204 No Content\n";
 	else if (strcmp(rvalue_script.c_str(), "Status: 500") == 0)
@@ -339,11 +351,13 @@ void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const
 	std::fstream fd;
 	if (!req.method.path.empty())
 		fd.open(*this->config.getFile(req.method.path));
-	// std::cout << "request:\n" << sbuffer << std::endl;
+	// check the ,ethode
 	if (req.parseRequest(sbuffer))
 		reponse_request = this->method_not_allowed(req);
+	// check if is allowed
 	if (!this->config.selectServ(req.header.host_ip, req.header.port))
 		reponse_request = this->badRequest(req);
+		// select the server
 	if (!sbuffer.empty())
 		valid = this->checkmethod(sbuffer, this->config.getMethod(req.method.path));
 	if (valid == -2)
@@ -362,9 +376,9 @@ void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const
 	else if (check_forbidden(*this->config.getFile(req.method.path)) && checkextension(*this->config.getFile(req.method.path)).empty())
 		reponse_request = this->not_found();
 	else if (req.method.isGet)
-		reponse_request = this->get(req);
+		reponse_request = this->get(req, client_addr);
 	else if (req.method.isPost || req.method.isDelete)
-		reponse_request = this->post(req);
+		reponse_request = this->post(req, client_addr);
 	else
 		reponse_request = this->badRequest(req);
 	std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
