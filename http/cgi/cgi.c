@@ -3,9 +3,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 16384
 
-int main() {
+int main(int argc, char *argv[], char *envp[]) {
     char buffer[BUFFER_SIZE];
     int fd = open("http/cgi/cgi.html", O_RDONLY);
     if (fd == -1) {
@@ -21,5 +21,34 @@ int main() {
     path = getcwd(buffer, 1024);
     printf("Emplacement courant : %s\n", path);*/
     close(fd);
+		printf("<h1 class = \"cgi\" >CGI STDIN </h1>\n");
+		printf("<p class = \"cgi\" >\n");
+		char c;
+		    while ((c = fgetc(stdin)) != EOF) {
+        if (c == '\n') {
+            printf("<br>\n");  // utilise la balise HTML pour les nouvelles lignes
+        } else if (c == '<') {
+            printf("&lt;");    // utilise la référence HTML pour le caractère '<'
+        } else if (c == '>') {
+            printf("&gt;");    // utilise la référence HTML pour le caractère '>'
+        } else if (c == '&') {
+            printf("&amp;");   // utilise la référence HTML pour le caractère '&'
+        } else {
+            putchar(c);
+        }
+    }
+		printf("\n");
+		printf("</p>\n");
+		printf("<h1 class = \"cgi\" >CGI ENV </h1>\n");
+		printf("<ul class = \"cgi\">\n");
+		for (int i = 0; envp[i] != NULL; i++) 
+		{
+			printf("<li>");
+			printf("%s/n", envp[i]);
+			printf("</li>");
+		}
+		printf("</ul>\n");
+		printf("</body>\n");
+		printf("</html>\n");
     return 0;
 }
