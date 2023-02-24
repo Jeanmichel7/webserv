@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 13:43:13 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/13 12:01:28 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/24 12:06:31 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,38 @@
 
 int main(int argc, char **argv)
 {
+	int NB_OF_FORK;
+	int p = 0;
 	struct sockaddr_in interface;
 	std::memset(&interface , 0, sizeof(interface));
+	int pid = fork();
+	if (pid == 0)
+	{
+		p++;
+		interface.sin_port = htons(4241);
+	}
+	else
+		interface.sin_port = htons(4242);
+	if (argc >= 2)
+		NB_OF_FORK = atoi(argv[1]);
+	else
+		NB_OF_FORK = 4;
+	for(int i = 0; i < NB_OF_FORK; i++)
+		fork();
+
 	char buffer[1024] = {0};
 	// char test[] = "Hello from client\n";
-	const char *requestPost = "Test GET 127.0.0.1:4241/";
+	char *requestPost;
+	if (p == 0)
+	{
+		char *r = "GET / 127.0.0.1:4242\r\n";
+		requestPost = r;
+	}
+	else
+	{
+		char *r = "GET / 127.0.0.1:4241\r\n";
+		requestPost = r;
+	}
 
 	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
 	
@@ -34,15 +61,13 @@ int main(int argc, char **argv)
 		printf("\nConnection Failed \n");
 		return -1;
 	}
-	if (argc == 1){
-		send(socket_fd , requestPost , strlen(requestPost) , 0);
-
-	}
-	else
-		send(socket_fd , argv[1] , strlen(argv[1]) , 0);
-	std::cout << "Client waiting for data..." << std::endl;
+	send(socket_fd , requestPost , strlen(requestPost) , 0);
+	// std::cout << "Client waiting for data..." << std::endl;
 	read( socket_fd , buffer, 1024);
-	std::cout << "Data received ! " << std::endl;
-	printf("%s\n",buffer );
+	if (strlen(buffer) > 80)
+		std::cout << "Data received ! " << std::endl;
+	else
+		std::cout << "Data NOT received ! " << std::endl;
+	// printf("%s\n",buffer );
 	return 0;
 }
