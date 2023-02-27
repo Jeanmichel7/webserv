@@ -42,6 +42,7 @@ void CGI::build(Config &conf, const Request &req,  struct sockaddr_in const &cli
 	env["SERVER_SOFTWARE"] = "WebServ/0.1";
 	env["SERVER_NAME"] = *conf.getName();
 	env["GATEWAY_INTERFACE"] = "CGI/1.1";
+	env["SCRIPT_NAME"] = req.method.path;;
 	
 	// Transformer la map en char ** (excve prend un char **)
 	_env = new char*[env.size() + 1];
