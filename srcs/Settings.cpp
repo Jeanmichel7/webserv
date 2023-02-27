@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/24 14:09:32 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/27 19:49:38 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,7 +147,7 @@ Settings::Settings()
 	this->ext[".zip"] = "application/zip";
 	this->ext[".3gp"] = "video/3gpp";
 	this->ext[".3g2"] = "video/3gpp2";
-	this->ext[".7z"] = "	application/x-7z-compressed";
+	this->ext[".7z"] = "application/x-7z-compressed";
 }
 
 
@@ -203,17 +203,9 @@ void	Settings::build(int ke)
 std::string Settings::date(void)
 {
 	time_t				tmm = time(0);
-	std::string			rdate, s, tmp;
-	std::stringstream	str(asctime(localtime(&tmm)));
-
-	getline(str, rdate, ' ');
-	getline(str, tmp, ' ');
-	getline(str, s, ' ');
-	rdate = "date: " + rdate + " , " + s + " " + tmp;
-	getline(str, tmp, ' ');
-	getline(str, s, '\n');
-	rdate += " " + s + " " + tmp + " GMT";
-	return (rdate);
+	std::ostringstream	r;
+	r << std::put_time(localtime(&tmm), "date: %a, %d %b %G %T GMT\n");
+	return(r.str());
 }
 
 
@@ -225,21 +217,14 @@ std::string Settings::get(Request const &req, struct sockaddr_in const& client_a
 	std::stringstream	n;
 	std::fstream		fd;
 	std::string			tmp;
-	int					value = 0;
 
 	// check methode
 	if (!this->config.getMethod(req.method.path).isget)
 		return (this->method_not_allowed(req));
-	// WTF pk value == 10 ? 
-	if (value == 10)
-	{
-		std::cout << "2\n";
-		fd.open("http/401.html", std::fstream::in | std::fstream::out);
-		std::stringstream t;
-		t << fd.rdbuf();
-		fd.close();
-		return(t.str());
-	}
+	if (req.contain_body)
+		if (!req.body.is_chuncked && !req.header.content_length.empty())
+			if ((int)req.body.brut_body.size() != std::atoi(req.header.content_length.c_str()))
+				return (this->badRequest(req));
 	if (this->config.getFile(req.method.path)->empty())
 	{
 		reponse.append(" 404 Not Found\n");
@@ -273,13 +258,17 @@ std::string Settings::get(Request const &req, struct sockaddr_in const& client_a
 				buffer += tmp + "\n";
 		}
 	}
-	reponse += Settings::date() + "\n";
+	reponse += Settings::date();
 	reponse += "server: " + *this->config.getName() + "\n";
-	n << buffer.size();
+	std::string date = "";
+	int count = 0;
+	reponse += handleCookie(req, date, count);
+	n << buffer.size() + date.size() + std::to_string(count).size() + 17 ;
 	reponse += "Content-Length: " + n.str() + "\n";
 	reponse += "Content-Type: " + this->checkextension(*this->config.getFile(req.method.path)) + "\n";
 	reponse += "Connection: keep-alive\n";
-	reponse += "\n" + buffer;
+	reponse += "\n" + buffer ;
+	reponse += "nb de refres : " + std::to_string(count) + ", " + date + "\n";
 	fd.close();
 	return (reponse);
 }
@@ -295,6 +284,10 @@ std::string Settings::post(Request const &req, struct sockaddr_in const& client_
 	reponse << "HTTP/1.1";
 	if (!this->config.getMethod(req.method.path).ispost)
 		return (this->method_not_allowed(req));
+	if (req.contain_body)
+		if (!req.body.is_chuncked && !req.header.content_length.empty())
+			if ((int)req.body.brut_body.size() != std::atoi(req.header.content_length.c_str()))
+				return (this->badRequest(req));
 	fd.open(this->config.getFile(req.method.path)->c_str(), std::fstream::in);
 	if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
 		rvalue_script = CGI::execute_cgi(this->config, req, client_addr);
@@ -311,13 +304,13 @@ std::string Settings::post(Request const &req, struct sockaddr_in const& client_
 		reponse << " 204 No Content\n";
 	else if (strcmp(rvalue_script.c_str(), "Status: 500") == 0)
 		reponse << "500 Internal Server Error\n";
-	reponse << Settings::date() << "\n";
+	reponse << Settings::date();
 	reponse << "server: " << *this->config.getName() << "\n";
 	reponse << "Content-Length: " << rvalue_script.size();
 	reponse << "\nContent-Type: " << this->checkextension(req.method.path) << "\n";
 	reponse << "Connection: keep-alive\n\n";
 	reponse << rvalue_script;
-	std::cout << rvalue_script << std::endl;
+	// std::cout << rvalue_script << std::endl;
 
 	std::string::size_type pos = 0;
 	if ((pos = rvalue_script.find("content_length")) != std::string::npos)
@@ -352,7 +345,7 @@ std::string Settings::reading(int socket)
 			lengthleft -= o_read;
 		}
 	}
-	std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
+	// std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
 	return (sbuffer.str());
 }
 
@@ -399,6 +392,7 @@ void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const
 		reponse_request = this->badRequest(req);
 	// std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
 	write(socket, reponse_request.c_str(), reponse_request.size());
+	req.printRequest();
 	//send(socket, reponse_request.c_str(), reponse_request.size(), 0);
 }
 
@@ -453,7 +447,7 @@ std::string Settings::folder_gestion(Request const& req)
 		buffer << fd.rdbuf();
 		
 	}
-	reponse << Settings::date() << "\n";
+	reponse << Settings::date();
 	reponse << "server: " << *this->config.getName() << "\n";
 	reponse << "Content-Length: ";
 	reponse << buffer.str().size();
@@ -492,6 +486,38 @@ void	Settings::set_event(int ke, int socket, short filter, short flag)
 		std::cerr << "Could not add client " << socket <<" socket to kqueue" << std::endl;
 }
 
+std::string Settings::handleCookie(const Request &req, std::string &date, int &count) {
+	std::string cookie = "";
+	static map<string, string> sessions_date;
+	static map<string, int> sessions_count;
+
+	Header::t_cookie_it it = req.header.cookies.find("wsid");
+	if (it == req.header.cookies.end()) {
+		string sessionId = yd::generateSessionId();
+		cookie = "Set-Cookie: ";
+		cookie += "wsid=";
+		cookie += sessionId;
+		cookie += "\r\n";
+		
+		sessions_date[sessionId] = this->date();
+		sessions_count[sessionId]++;
+
+		map<string, string>::iterator it2 = sessions_date.begin();
+		while (it2 != sessions_date.end()) {
+			cout << "session: " << it2->first << " " << it2->second << endl;
+			it2++;
+		}
+	} else {
+		date = sessions_date[req.header.cookies.at("wsid")];
+		sessions_date[req.header.cookies.at("wsid")] = this->date();
+		
+		sessions_count[req.header.cookies.at("wsid")]++;
+		count = sessions_count[req.header.cookies.at("wsid")];
+	}
+	
+	cout << "cookie: " << cookie << endl;
+	return cookie;
+}
 
 
 /********************************************/
@@ -531,7 +557,7 @@ std::string Settings::not_found( void )
 	if (file.is_open())
 		contentefile << file.rdbuf();
 	reponse << "HTTP/1.1 404 Not Found\n";
-	reponse << this->date() << "\n";
+	reponse << this->date();
 	reponse << "server: " << *this->config.getName() << "\n";
 	reponse << "Content-Type: text/html\n";
 	if (file.is_open())
@@ -555,7 +581,7 @@ std::string Settings::Unauthorized( void )
 	if (file.is_open())
 		contentefile << file.rdbuf();
 	reponse << "HTTP/1.1 401 Unauthorized\n";
-	reponse << this->date() << "\n";
+	reponse << this->date();
 	reponse << "server: " << *this->config.getName() << "\n";
 	reponse << "Content-Type: text/html\n";
 	if (file.is_open())
@@ -582,7 +608,7 @@ std::string Settings::method_not_allowed(Request const& req)
 		reponse << " GET";
 	reponse << "\nContent-Type: text/plain\n"; 
 
-	reponse << Settings::date() << "\n";
+	reponse << Settings::date();
 	reponse << "server: " << *this->config.getName() + "\n";
 	reponse << "Content-Length: 25\n";
 	reponse << "Connection: keep-alive\n";
@@ -601,7 +627,7 @@ std::string Settings::forbidden_error( void )
 	if (file.is_open())
 		contentefile << file.rdbuf();
 	reponse << "HTTP/1.1 403 Forbidden\n";
-	reponse << this->date() << "\n";
+	reponse << this->date();
 	reponse << "server: " << *this->config.getName() << "\n";
 	reponse << "Content-Type: text/html\n";
 	if (file.is_open())
@@ -621,7 +647,7 @@ std::string Settings::badRequest(Request const& req)
 	std::stringstream reponse;
 	
 	reponse << "HTTP/1.1 400 Bad Request\n";
-	reponse << Settings::date() << "\n";
+	reponse << Settings::date();
 	reponse << "server: " << *this->config.getName() + "\n";
 	reponse << "server: " << "myserv" << "\n";
 	reponse << "Content-Length: 21\n";

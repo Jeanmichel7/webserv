@@ -296,19 +296,35 @@ bool yd::isValidPathFile(std::string const &s)
     return true;
 }
 
-	std::string yd::getExtension(std::string const &path)
+std::string yd::getExtension(std::string const &path)
+{
+	std::string::size_type position = 0;
+	std::string scriptName;
+	if ((position = path.rfind("/")) != std::string::npos)
 	{
-		std::string::size_type position = 0;
-		std::string scriptName;
-		if ((position =path.rfind("/")) != std::string::npos)
-		{
-			scriptName =path.substr(position + 1);
-		}
-		std::string::size_type dotpos;
-		if ((dotpos = scriptName.rfind(".")) != std::string::npos)
-			return (scriptName.substr(dotpos));
-		return ("");
+		scriptName = path.substr(position + 1);
 	}
+	std::string::size_type dotpos;
+	if ((dotpos = scriptName.rfind(".")) != std::string::npos)
+		return (scriptName.substr(dotpos));
+	return ("");
+}
+
+std::string yd::generateSessionId()
+{
+	static int i;
+	if (i == INT_MAX)
+		i = 0;
+	std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	std::string sessionId = "";
+	srand(time(NULL) + i);
+	for (int i = 0; i < 16; i++)
+	{
+		sessionId += chars[rand() % chars.length()];
+	}
+	i++;
+	return sessionId;
+}
 
 // path1 must be location path
 

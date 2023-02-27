@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/23 14:00:29 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/02/27 19:08:10 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,9 +82,7 @@ int main(int argc, char **argv)
 							struct sockaddr_in client_addr;
 							socklen_t client_addr_len = sizeof(client_addr);
 							int socket_client = accept(event[i].ident, (struct sockaddr *)&client_addr, &client_addr_len);
-							
 							clients[socket_client] = client_addr;
-							
 							server.set_event(ke, socket_client, EVFILT_READ, EV_ADD | EV_ENABLE);
 						}
 						else if (event[i].filter == EVFILT_READ)
@@ -103,7 +101,6 @@ int main(int argc, char **argv)
 									str.erase(0, str.find("\r\n") + 2);
 									sbuffer[event[i].ident] += str;
 								}
-
 							}
 							else
 							{
@@ -111,18 +108,10 @@ int main(int argc, char **argv)
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 								sbuffer[event[i].ident] += buffer;
 							}
-
 						}
 					}
 					if (event[i].filter == EVFILT_WRITE)
 					{
-						struct sockaddr_in client_addr = clients[event[i].ident];
-						socklen_t client_addr_len = sizeof(client_addr);
-
-						char client_ip[INET_ADDRSTRLEN];
-						inet_ntop(AF_INET, &(client_addr.sin_addr), client_ip, INET_ADDRSTRLEN);
-						std::cout << "Adresse IP du client : " << client_ip << std::endl;
-						std::cout << "Port du client : " << ntohs(client_addr.sin_port) << std::endl;
 						server.writing(event[i].ident, sbuffer[event[i].ident], clients[event[i].ident]);
 						sbuffer[event[i].ident] = "";
 						server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
@@ -132,10 +121,9 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-catch (const std::exception &e)
-{
-	std::cout << strerror(errno);
-	std::cerr << std::endl
-			  << e.what() << std::endl;
-}
+	catch (const std::exception &e) {
+		std::cout << strerror(errno);
+		std::cerr << std::endl
+				<< e.what() << std::endl;
+	}
 }

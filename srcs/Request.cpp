@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/22 16:59:05 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/27 18:10:00 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,8 +265,9 @@ Header::Header()
 	this->user_agent = user_agent;
 
 	t_accept		accept;
-	t_languages accept_language;
-	t_encodings accept_encoding;
+	t_languages		accept_language;
+	t_encodings		accept_encoding;
+	t_cookie		cookies;
 }
 
 Header::Header(Header const &src)
@@ -806,7 +807,10 @@ bool Header::parseHeader( void ) {
 				this->content_language = value;
 			else if (key == "Content-Location")
 				this->content_location = value;
-
+			else if (key == "Cookie") {
+				if (parseCookies(value))
+					return 1;
+			}
 			if (setAllHeaders(key, value))
 				return 1;
 			// else {
@@ -820,6 +824,33 @@ bool Header::parseHeader( void ) {
 	}
 	return 0;
 }
+
+bool Header::parseCookies(const string &value) {
+	string::size_type pos = 0;
+	string 						str(value);
+	string 						line;
+	string 						key;
+	string 						val;
+
+	this->str_cookie = value;
+	while ((pos = str.find("; ")) != string::npos) {
+		line = str.substr(0, pos);
+		str.erase(0, pos + 2);
+		if ((pos = line.find("=")) != string::npos) {
+			key = line.substr(0, pos);
+			val = line.substr(pos + 1);
+			this->cookies[key] = val;
+		}
+	}
+	if ((pos = str.find("=")) != string::npos) {
+		key = str.substr(0, pos);
+		val = str.substr(pos + 1);
+		this->cookies[key] = val;
+	}
+	return 0;
+}
+
+
 bool Header::setAllHeaders(const string &key, const string &value) {
 
 	t_list_header_it it_all_headers = this->list_headers.begin();
@@ -878,6 +909,8 @@ void Header::reset( void ) {
 	this->content_location = "";
 	this->is_chuncked = false;
 	this->boundary = "";
+	this->list_headers.clear();
+	this->cookies.clear();
 }
 
 
@@ -1182,6 +1215,12 @@ void Request::printRequest()
 	//   cout << "accept_encoding '"<< it_encod->type << "' q=" << it_encod->q << endl;
 	// }
 
+	cout << "str cookies : " << this->header.str_cookie << endl;
+	Header::t_cookie_it it_cookies = this->header.cookies.begin();
+	for (; it_cookies != this->header.cookies.end(); ++it_cookies)
+	{
+		cout << "cookie '" << it_cookies->first << "' : '" << it_cookies->second << "'" << endl;
+	}
 	// cout << "Connection : " << this->header.connection << endl;
 
 	// cout << "content_length '" << this->header.content_length << "'" << endl;

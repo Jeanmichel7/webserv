@@ -41,6 +41,9 @@ class Settings
 		void		set_event(int ke, int socket, short filter, short flag);
 		int 		checkmethod(std::string const& request, Methods const& t);
 		void		writing(int socket, std::string sbuffer, struct sockaddr_in const& client_addr);
+
+
+		std::string handleCookie(const Request & req, std::string &date, int &count);
 		Settings( Config const& base );
 		Settings();
 		~Settings();

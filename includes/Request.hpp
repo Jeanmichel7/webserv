@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/22 18:20:26 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/02/27 19:15:12 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,8 @@ struct Header {
 	typedef vector< t_accept_encoding >::const_iterator 			t_encodings_it;
 	typedef map< const string, string > 							t_list_header;
 	typedef map< const string, string >::const_iterator 			t_list_header_it;
+	typedef map< const string, string >					 			t_cookie;
+	typedef map< const string, string >::const_iterator 			t_cookie_it;
 
 	string 				brut_header;
 	bool 				contain_body;
@@ -92,6 +94,8 @@ struct Header {
 	t_encodings 		accept_encodings;
 	string				str_accept_encodings;
 	bool 				connection;
+	string				str_cookie;
+	t_cookie			cookies;
 
 	string				content_type;
 	string				content_length;
@@ -131,6 +135,7 @@ struct Header {
 	// bool setContentLength(const string &);
 
 	bool parseContentType(const string &);
+	bool parseCookies(const string &value);
 
 	bool setAllHeaders(const string &, const string &);
 	void reset( void );

@@ -42,7 +42,14 @@ void CGI::build(Config &conf, const Request &req,  struct sockaddr_in const &cli
 	env["SERVER_SOFTWARE"] = "WebServ/0.1";
 	env["SERVER_NAME"] = *conf.getName();
 	env["GATEWAY_INTERFACE"] = "CGI/1.1";
-	env["SCRIPT_NAME"] = req.method.path;;
+	env["SCRIPT_NAME"] = req.method.path;
+
+	Header::t_cookie_it it = req.header.cookies.begin();
+	Header::t_cookie_it ite = req.header.cookies.end();
+	std::string cookie;
+	for (; it != ite; it++) { cookie += it->first + "=" + it->second + ";"; }
+	env["HTTP_COOKIE"] = cookie;
+
 	
 	// Transformer la map en char ** (excve prend un char **)
 	_env = new char*[env.size() + 1];

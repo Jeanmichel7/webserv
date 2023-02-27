@@ -31,6 +31,7 @@ namespace yd{
 	std::string intToIP(unsigned int ip);
 	bool compare_strings_ignoring_trailing_slash(const std::string &str1, const std::string &str2);
 	std::string getExtension(std::string const &path);
+	std::string generateSessionId();
 }
 
 class Tokenizer;
