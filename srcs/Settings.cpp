@@ -328,17 +328,32 @@ std::string Settings::post(Request const &req, struct sockaddr_in const& client_
 
 
 
-char *Settings::reading(int socket)
+std::string Settings::reading(int socket)
 {
 	int					o_read = 0;
+	stringstream 		sbuffer;
 	char				buff[4096];
 	std::memset(buff, 0, sizeof(buff));
+	Request req;
 	// usleep(1000);
 	o_read = recv(socket, buff, 4096, 0);
-	if (o_read == -1 || o_read == 0)
-		return ("");
-	std::cout << "\n\nREAD:\n>>" << buff << "<<\n\n";
-	return (buff);
+		if (o_read == -1 || o_read == 0)
+			return ("");
+	sbuffer << buff;
+	req.parseRequest(sbuffer.str());
+	if (req.header.content_length != "") {
+		std::stringstream ss(req.header.content_length);
+		long double lengthleft;
+		ss >> lengthleft;
+		lengthleft -= o_read;
+		while (lengthleft > 0) {
+			o_read = recv(socket, buff, 4096, 0);
+			sbuffer << buff;
+			lengthleft -= o_read;
+		}
+	}
+	std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
+	return (sbuffer.str());
 }
 
 
@@ -352,7 +367,7 @@ void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const
 	std::fstream fd;
 	if (!req.method.path.empty())
 		fd.open(*this->config.getFile(req.method.path));
-	// check the ,ethode
+	// check the methode
 	if (req.parseRequest(sbuffer))
 		reponse_request = this->method_not_allowed(req);
 	// check if is allowed
@@ -382,7 +397,7 @@ void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const
 		reponse_request = this->post(req, client_addr);
 	else
 		reponse_request = this->badRequest(req);
-	std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
+	// std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
 	write(socket, reponse_request.c_str(), reponse_request.size());
 	//send(socket, reponse_request.c_str(), reponse_request.size(), 0);
 }

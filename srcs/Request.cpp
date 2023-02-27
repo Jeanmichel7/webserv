@@ -302,7 +302,6 @@ Header &Header::operator=(Header const &rhs)
 		this->is_chuncked = rhs.is_chuncked;
 		this->boundary = rhs.boundary;
 		this->list_headers = rhs.list_headers;
-
 		this->content_type = rhs.content_type;
 		this->content_length = rhs.content_length;
 		this->content_language = rhs.content_language;

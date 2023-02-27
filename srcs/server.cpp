@@ -16,7 +16,6 @@
 bool reqIsChuncked(std::string buffer) {
 	string str(buffer);
 	str.erase(str.find("\r\n") + 2);
-	cout << "que des hexq : " << str << endl;
 
 	for(size_t i = 0; i < str.length(); i++) {
 		if (!isxdigit(str[i]))

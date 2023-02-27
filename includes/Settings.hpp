@@ -35,7 +35,7 @@ class Settings
 		std::string	Unauthorized( void );
 		int 		check_forbidden(std::string const& path);
 		std::string	method_not_allowed( Request const& req );
-		char		*reading(int socket);
+		std::string reading(int socket);
 		std::string	checkextension(std::string const& path);
 		std::string	folder_gestion(Request const& req);
 		void		set_event(int ke, int socket, short filter, short flag);
