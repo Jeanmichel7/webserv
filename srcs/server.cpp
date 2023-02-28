@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/27 19:08:10 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/28 11:25:22 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,13 +74,17 @@ int main(int argc, char **argv)
 						server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 						clients.erase(event[i].ident);
 						close(event[i].ident);
+						std::cout << std::endl << "Client disconnected \n" << std::endl;
+						std::cout << "CLOSE\n";
 					}
 					else
 					{
 						if (clients.find(event[i].ident) == clients.end())
 						{
+							std::cout << std::endl << "New client connected \n" << std::endl;
 							struct sockaddr_in client_addr;
 							socklen_t client_addr_len = sizeof(client_addr);
+							std::cout << "ACCEPT\n";
 							int socket_client = accept(event[i].ident, (struct sockaddr *)&client_addr, &client_addr_len);
 							clients[socket_client] = client_addr;
 							server.set_event(ke, socket_client, EVFILT_READ, EV_ADD | EV_ENABLE);
@@ -96,17 +100,14 @@ int main(int argc, char **argv)
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 								} 
-								else {
-									string str(buffer);
-									str.erase(0, str.find("\r\n") + 2);
-									sbuffer[event[i].ident] += str;
-								}
+								else
+									buffer.erase(0, buffer.find("\r\n") + 2);
 							}
-							else
+							sbuffer[event[i].ident] += buffer;
+							if (yd::ends_with_rn(sbuffer[event[i].ident]))
 							{
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-								sbuffer[event[i].ident] += buffer;
 							}
 						}
 					}

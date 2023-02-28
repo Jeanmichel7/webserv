@@ -326,6 +326,14 @@ std::string yd::generateSessionId()
 	return sessionId;
 }
 
+bool yd::ends_with_rn(std::string const& str)
+{
+    std::string const delimiter = "\r\n\r\n";
+    size_t const len = delimiter.size();
+
+    return (str.length() >= len && str.rfind(delimiter) == str.length() - len);
+}
+
 // path1 must be location path
 
 	int yd::comparePath(const std::string &path1, const std::string &path2)

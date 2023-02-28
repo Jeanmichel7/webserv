@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/27 19:49:38 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/02/28 11:26:29 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -333,19 +333,19 @@ std::string Settings::reading(int socket)
 		if (o_read == -1 || o_read == 0)
 			return ("");
 	sbuffer << buff;
-	req.parseRequest(sbuffer.str());
-	if (req.header.content_length != "") {
-		std::stringstream ss(req.header.content_length);
-		long double lengthleft;
-		ss >> lengthleft;
-		lengthleft -= o_read;
-		while (lengthleft > 0) {
-			o_read = recv(socket, buff, 4096, 0);
-			sbuffer << buff;
-			lengthleft -= o_read;
-		}
-	}
-	// std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
+	// req.parseRequest(sbuffer.str());
+	// if (req.header.content_length != "") {
+	// 	std::stringstream ss(req.header.content_length);
+	// 	long double lengthleft;
+	// 	ss >> lengthleft;
+	// 	lengthleft -= o_read;
+	// 	while (lengthleft > 0) {
+	// 		o_read = recv(socket, buff, 4096, 0);
+	// 		sbuffer << buff;
+	// 		lengthleft -= o_read;
+	// 	}
+	// }
+	std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
 	return (sbuffer.str());
 }
 
@@ -390,9 +390,9 @@ void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const
 		reponse_request = this->post(req, client_addr);
 	else
 		reponse_request = this->badRequest(req);
-	// std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
+	std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
 	write(socket, reponse_request.c_str(), reponse_request.size());
-	req.printRequest();
+	// req.printRequest();
 	//send(socket, reponse_request.c_str(), reponse_request.size(), 0);
 }
 
