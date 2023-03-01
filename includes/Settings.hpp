@@ -17,7 +17,7 @@
 # include "Config.hpp"
 
 struct Sbuffer {
-	std::string buffer;
+	std::vector<char> buffer;
 	unsigned int readed;
 	time_t time_start;
 };
@@ -40,16 +40,16 @@ class Settings
 		std::string	forbidden_error( void );
 		std::string not_found( void );
 		std::string	Unauthorized( void );
-		int 		check_forbidden(std::string const& path);
-		std::string	method_not_allowed( Request const& req );
+		int 				check_forbidden(std::string const& path);
+		std::string			method_not_allowed( Request const& req );
 		// std::string reading(int socket);
-		std::string reading(int socket, unsigned int &readed, time_t &time_starting);
-		std::string	checkextension(std::string const& path);
-		std::string	folder_gestion(Request const& req);
-		void		set_event(int ke, int socket, short filter, short flag);
-		int 		checkmethod(std::string const& request, Methods const& t);
-		void		writing(int socket, std::string sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read);
-		void		check_timeout(Sbuffer *requests, int ke);
+		std::vector<char> reading(int socket, unsigned int &readed, time_t &time_starting);
+		std::string			checkextension(std::string const& path);
+		std::string			folder_gestion(Request const& req);
+		void						set_event(int ke, int socket, short filter, short flag);
+		bool						checkmethod(Request const& req, Methods const& t);
+		void						writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read);
+		void						check_timeout(Sbuffer *requests, int ke);
 		std::string	timeout( void );
 
 

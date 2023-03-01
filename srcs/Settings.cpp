@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/01 15:52:30 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/01 20:43:19 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -325,31 +325,28 @@ std::string Settings::post(Request const &req, struct sockaddr_in const& client_
 	return (reponse.str());
 }
 
-
-
-std::string Settings::reading(int socket, unsigned int &readed, time_t &time_starting)
+std::vector<char> Settings::reading(int socket, unsigned int &readed, time_t &time_starting)
 {
 	int					o_read = 0;
-	stringstream 		sbuffer;
-	char				buff[4096];
+	std::vector<char>		sbuffer;
+	char				buff[4097];
 	time(&time_starting);
-	std::memset(buff, 0, sizeof(buff));
+	std::memset(buff, 0, 4097);
 	Request req;
 	// usleep(1000);
 	
 	o_read = recv(socket, buff, 4096, 0);
 		if (o_read == -1 || o_read == 0)
-			return ("");
-	sbuffer << buff;
+			return (sbuffer);
+	sbuffer.insert(sbuffer.begin(), &buff[0], &buff[o_read]);
 	readed += o_read;
-	
-	// std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
-	return (sbuffer.str());
+	std::cout << "\n\nREAD:\n>>" << buff << "<<\n\n";
+	return (sbuffer);
 }
 
 
 
-void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read)
+void Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read)
 {
 	std::string reponse_request;
 	Request 	req;
@@ -365,11 +362,7 @@ void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const
 	if (!this->config.selectServ(req.header.host_ip, req.header.port))
 		reponse_request = this->badRequest(req);
 		// select the server
-	if (!sbuffer.empty())
-		valid = this->checkmethod(sbuffer, this->config.getMethod(req.method.path));
-	if (valid == -2)
-		reponse_request = this->method_not_allowed(req);
-	else if (valid == -1)
+	if (!this->checkmethod(req, this->config.getMethod(req.method.path)))
 		reponse_request = this->method_not_allowed(req);
 	else if (req.method.brut_method == "GET /directory/Yeah HTTP/1.1") // A mettre a la main dans le debugger pour passer le GET sur /directory/Yeah je sais pas pk ca doit aller en 404
 	{
@@ -458,22 +451,15 @@ std::string Settings::folder_gestion(Request const& req)
 
 
 
-int Settings::checkmethod(std::string const& request, Methods const& t)
+bool Settings::checkmethod(Request const& req, Methods const& t)
 {
-	std::string	method;
-	
-	for(int i = 0; request.c_str()[i] != ' ' && request.c_str()[i] ; i++)
-		method += request.c_str()[i];
-	if (method == "PUT" || method == "HEAD" || method == "OPTIONS" || method == "TRACE" || method == "CONNECT")
-		return (-1);
-	else if (method == "POST" && !t.ispost)
-		return (-2);
-	else if (method == "GET" && !t.isget)
-		return (-2);
-	else if (method == "DELETE" && !t.isdelete)
-		return (-2);
-	else
-		return (0);
+	if (req.method.isPost && t.ispost)
+		return (true);
+	else if (req.method.isGet && t.isget)
+		return (true);
+	else if (req.method.isDelete && t.isdelete)
+		return (true);
+	return (false);
 }
 
 

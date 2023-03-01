@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/03/01 11:31:27 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/01 19:59:02ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,6 +151,7 @@ struct Body {
 	Body &operator= (Body const& src);
 
 	string 	brut_body;
+	std::vector<char> *vector_body;
 	string	content;
 	// string  concat_body;
 	bool 		is_chuncked;
@@ -184,12 +185,12 @@ struct Request {
 	~Request();
 	Request &operator= (Request const& src);
 
-	bool parseRequest(string brut_request);
+	bool parseRequest(std::vector<char> &req);
 	void printRequest( void );
 	void resetBuffer( void );
 	void reset( void );
 	// bool isFinishedRequest( string const &buff );
-	bool isFinishedRequest( string const &req, unsigned int octet_read);
+	bool isFinishedRequest(std::vector<char> const &req, unsigned int octet_read);
 };
 
 #endif

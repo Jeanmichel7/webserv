@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/01 14:56:25 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/01 20:42:56 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,8 +95,9 @@ int main(int argc, char **argv)
 						}
 						else if (event[i].filter == EVFILT_READ)
 						{
-							std::string buffer;
+							std::vector<char> buffer;
 							buffer = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start);
+							/*
 							if (!reqIsChuncked(buffer))
 							{
 								if (buffer == "0\r\n\r\n")
@@ -107,7 +108,8 @@ int main(int argc, char **argv)
 								else
 									buffer.erase(0, buffer.find("\r\n") + 2);
 							}
-							sbuffer[event[i].ident].buffer += buffer;
+							*/
+							sbuffer[event[i].ident].buffer.insert(sbuffer[event[i].ident].buffer.end(), buffer.begin(), buffer.end());
 
 							// cout << "BUFFER: '" << sbuffer[event[i].ident] << "'" << endl;
 							// if (yd::ends_with_rn(sbuffer[event[i].ident]))
@@ -121,7 +123,7 @@ int main(int argc, char **argv)
 						else if (event[i].filter == EVFILT_WRITE)
 						{
 							server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident], sbuffer[event[i].ident].readed);
-							sbuffer[event[i].ident].buffer = "";
+							sbuffer[event[i].ident].buffer.clear();
 							sbuffer[event[i].ident].readed = 0;
 							server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 							server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);

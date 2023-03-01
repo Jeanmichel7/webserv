@@ -138,7 +138,12 @@ std::string CGI::execute_cgi(Config &config, const Request &req, struct sockaddr
 	{
 		return ("Status: 500\n\r\n\r");
 	}
-	write(data._fd_stdin, req.body.content.c_str(), req.body.content.size());
+	std::vector<char>::iterator start = req.body.vector_body->begin();
+	std::vector<char>::iterator end = req.body.vector_body->end();
+	for (; start != end; start++)
+	{
+		write(data._fd_stdin, &*start, 1);
+	}
 	fseek(data._file_stdin, 0, SEEK_SET);
 	
 	// on cherche l'extension adequate

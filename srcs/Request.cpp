@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/03/01 11:54:29 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/01 20:43:46 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1158,18 +1158,34 @@ bool Request::splitRequest(string req) {
 	return 0;
 }
 
-bool Request::parseRequest(string req) {
+bool Request::parseRequest(std::vector<char> &req) {
 	// cout << "********************* \n" << req << "\n*********************" << endl;
 	// cout << "Request Brut size : " << req.size() << endl;
+	size_t header_size;
+	char sep[4] = {'\r', '\n', '\r', '\n'}; 
+	for (int i = 0; i < req.size() - 3; i++) {
+		if (req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
+			header_size  = i + 4;
+			break;
+		}
+	}
+	std::string header_str = "";
+	for (int i = 0; i < header_size; i++) {
+			header_str.push_back(req[i]);
+		}
+		std::vector<char>::const_iterator end = req.begin() + header_size;
+	req.erase(req.begin(), end);
+	this->body.vector_body = &req;
 
-	if (splitRequest(req) || method.parseMethod() || header.parseHeader()) {
+	if (splitRequest(header_str) || method.parseMethod() || header.parseHeader()) {
 		return 1;
 	}
 	this->body.is_chuncked = this->header.is_chuncked;
 	this->body.boundary = this->header.boundary;
+	/*
 	if (body.parseBody()) {
 		return 1;
-	}
+	}*/
 	return 0;
 }
 
@@ -1260,38 +1276,34 @@ void Request::reset( void ) {
 	this->isFinished = false;
 }
 
-bool Request::isFinishedRequest( string const &req, unsigned int octet_read) {
+bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet_read) {
 
-	string::size_type h_pos;
+	size_t header_size;
 	string::size_type hl_pos;
 	string::size_type b_pos;
+	char sep[4] = {'\r', '\n', '\r', '\n'}; 
+	for (int i = 0; i < octet_read - 3; i++) {
+		if (req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
+			header_size  = i;
+			break;
+		}
+	}
+	std::string header = "";
+	for (int i = 0; i < header_size; i++) {
+			header.push_back(req[i]);
+		}
 
-	string header;
 	string body;
 
 	/* split header */
+	string::size_type h_pos;
 	h_pos = 0;
-	hl_pos = req.find("\r\n\r\n");
 
-	if (hl_pos == string::npos) {
-		header = req;
-		body = "";
-	}
-	else if (hl_pos == req.size() - 4) {
-		header = req;
-		body = "";
-	}
-	else {
-		b_pos = hl_pos + 2;
-		header = req.substr(h_pos, hl_pos);
-		body = req.substr(b_pos);
-	}
-	
 
 	/* get content-length */
 	string::size_type cl_pos = header.find("Content-Length: ");
 	if (cl_pos == string::npos) {
-		if (req.find("\r\n\r\n") == req.length() - 4) {
+		if (header.size() == req.size() - 4) {
 			cout << "no content-length and no body" << endl;
 			return 1;
 		}
@@ -1301,12 +1313,11 @@ bool Request::isFinishedRequest( string const &req, unsigned int octet_read) {
 		int cl = atoi(content_length.c_str());
 		cout << "content length : " << cl << endl;
 		cout << "total read : " << octet_read << endl;
-		cout << "header length : " <<  header.length() << endl;
+		cout << "header length : " <<  header.size() << endl;
 		if (cl == 0)
 			return 1;
 		else if (octet_read - header.length() - 4 == (unsigned int)cl)
 			return 1;
-		
 	}
 	return 0;
 }
