@@ -330,8 +330,20 @@ bool yd::ends_with_rn(std::string const& str)
 {
     std::string const delimiter = "\r\n\r\n";
     size_t const len = delimiter.size();
+	// req.parseRequest(sbuffer.str());
+	// if (req.header.content_length != "") {
+	// 	std::stringstream ss(req.header.content_length);
+	// 	long double lengthleft;
+	// 	ss >> lengthleft;
+	// 	lengthleft -= o_read;
+	// 	while (lengthleft > 0) {
+	// 		o_read = recv(socket, buff, 4096, 0);
+	// 		sbuffer << buff;
+	// 		lengthleft -= o_read;
+	// 	}
+	// }
 
-    return (str.length() >= len && str.rfind(delimiter) == str.length() - len);
+    return (str.length() >= len && str.find(delimiter) == str.length() - len);
 }
 
 // path1 must be location path

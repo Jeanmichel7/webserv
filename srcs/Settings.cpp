@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Settings.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/28 11:26:29 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/01 10:40:38 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -333,18 +333,6 @@ std::string Settings::reading(int socket)
 		if (o_read == -1 || o_read == 0)
 			return ("");
 	sbuffer << buff;
-	// req.parseRequest(sbuffer.str());
-	// if (req.header.content_length != "") {
-	// 	std::stringstream ss(req.header.content_length);
-	// 	long double lengthleft;
-	// 	ss >> lengthleft;
-	// 	lengthleft -= o_read;
-	// 	while (lengthleft > 0) {
-	// 		o_read = recv(socket, buff, 4096, 0);
-	// 		sbuffer << buff;
-	// 		lengthleft -= o_read;
-	// 	}
-	// }
 	std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
 	return (sbuffer.str());
 }
@@ -358,11 +346,11 @@ void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const
 	int valid = -1;
 
 	std::fstream fd;
-	if (!req.method.path.empty())
-		fd.open(*this->config.getFile(req.method.path));
 	// check the methode
 	if (req.parseRequest(sbuffer))
 		reponse_request = this->method_not_allowed(req);
+	if (!req.method.path.empty())
+		fd.open(*this->config.getFile(req.method.path));
 	// check if is allowed
 	if (!this->config.selectServ(req.header.host_ip, req.header.port))
 		reponse_request = this->badRequest(req);
@@ -390,7 +378,7 @@ void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const
 		reponse_request = this->post(req, client_addr);
 	else
 		reponse_request = this->badRequest(req);
-	std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
+	// std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
 	write(socket, reponse_request.c_str(), reponse_request.size());
 	// req.printRequest();
 	//send(socket, reponse_request.c_str(), reponse_request.size(), 0);

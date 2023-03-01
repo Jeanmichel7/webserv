@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/28 11:25:22 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/01 10:38:50 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,9 @@ int main(int argc, char **argv)
 									buffer.erase(0, buffer.find("\r\n") + 2);
 							}
 							sbuffer[event[i].ident] += buffer;
-							if (yd::ends_with_rn(sbuffer[event[i].ident]))
+							// cout << "BUFFER: '" << sbuffer[event[i].ident] << "'" << endl;
+							// if (yd::ends_with_rn(sbuffer[event[i].ident]))
+							if (req.isFinishedRequest(sbuffer[event[i].ident]))
 							{
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);

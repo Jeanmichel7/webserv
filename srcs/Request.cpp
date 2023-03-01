@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/27 18:10:00 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/01 10:45:25 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1065,7 +1065,7 @@ void Body::reset( void ) {
 /* *************************************************** */
 
 /* *************   CONSTRCUTOR   ************* */
-Request::Request() : method(Method()), header(Header()), body(Body()), contain_body(false), socket_client(-1)
+Request::Request() : method(Method()), header(Header()), body(Body()), contain_body(false), socket_client(-1), isFinished(false)
 {
 	for(int i = 0; i < REQ_MAX_SIZE; i++)
 		buffer[i] = 0;
@@ -1077,6 +1077,8 @@ Request::Request(Request const &src){
 	this->header = src.header;
 	this->body = src.body;
 	this->socket_client = src.socket_client;
+	this->contain_body = src.contain_body;
+	this->isFinished = src.isFinished;
 	return ;
 }
 
@@ -1089,6 +1091,9 @@ Request &Request::operator=(Request const &rhs) {
 		this->method = Method(rhs.method);
 		this->header = Header(rhs.header);
 		this->body = Body(rhs.body);
+		this->socket_client = rhs.socket_client;
+		this->contain_body = rhs.contain_body;
+		this->isFinished = rhs.isFinished;
 	}
 	return (*this);
 }
@@ -1252,7 +1257,51 @@ void Request::reset( void ) {
 	this->body.reset();
 	this->contain_body = false;
 	this->resetBuffer();
+	this->isFinished = false;
 }
 
+bool Request::isFinishedRequest( string const &req ) {
+	string::size_type h_pos;
+	string::size_type hl_pos;
+	string::size_type b_pos;
 
+	string header;
+	string body;
+
+	/* split header */
+	h_pos = 0;
+	hl_pos = req.find("\r\n\r\n");
+
+	if (hl_pos == string::npos) {
+		header = req;
+		body = "";
+	}
+	else if (hl_pos == req.size() - 4) {
+		header = req;
+		body = "";
+	}
+	else {
+		b_pos = hl_pos + 2;
+		header = req.substr(h_pos, hl_pos);
+		body = req.substr(b_pos);
+	}
+
+	/* get content-length */
+	string::size_type cl_pos = header.find("Content-Length: ");
+	if (cl_pos == string::npos) {
+		if (req.find("\r\n\r\n") == req.length() - 4)
+			return 1;
+	} else {
+		string::size_type cl_end = header.find("\r\n", cl_pos);
+		string content_length = header.substr(cl_pos + 16, cl_end - cl_pos - 16);
+		int cl = atoi(content_length.c_str());
+		cout << "content-length : " << cl << endl;
+		cout << "body.length() : " << body.length() << endl;
+		if (cl == 0)
+			return 1;
+		else if (body.length() - 2 == (unsigned int)cl)
+			return 1;
+	}
+	return 0;
+}
 
