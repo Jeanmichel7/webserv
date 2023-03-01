@@ -344,6 +344,7 @@ bool yd::ends_with_rn(std::string const& str)
 	// }
 
     return (str.length() >= len && str.find(delimiter) == str.length() - len);
+
 }
 
 // path1 must be location path

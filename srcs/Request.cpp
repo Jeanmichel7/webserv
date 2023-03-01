@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/03/01 10:45:25 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/01 11:54:29 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1260,7 +1260,8 @@ void Request::reset( void ) {
 	this->isFinished = false;
 }
 
-bool Request::isFinishedRequest( string const &req ) {
+bool Request::isFinishedRequest( string const &req, unsigned int octet_read) {
+
 	string::size_type h_pos;
 	string::size_type hl_pos;
 	string::size_type b_pos;
@@ -1285,22 +1286,27 @@ bool Request::isFinishedRequest( string const &req ) {
 		header = req.substr(h_pos, hl_pos);
 		body = req.substr(b_pos);
 	}
+	
 
 	/* get content-length */
 	string::size_type cl_pos = header.find("Content-Length: ");
 	if (cl_pos == string::npos) {
-		if (req.find("\r\n\r\n") == req.length() - 4)
+		if (req.find("\r\n\r\n") == req.length() - 4) {
+			cout << "no content-length and no body" << endl;
 			return 1;
+		}
 	} else {
 		string::size_type cl_end = header.find("\r\n", cl_pos);
 		string content_length = header.substr(cl_pos + 16, cl_end - cl_pos - 16);
 		int cl = atoi(content_length.c_str());
-		cout << "content-length : " << cl << endl;
-		cout << "body.length() : " << body.length() << endl;
+		cout << "content length : " << cl << endl;
+		cout << "total read : " << octet_read << endl;
+		cout << "header length : " <<  header.length() << endl;
 		if (cl == 0)
 			return 1;
-		else if (body.length() - 2 == (unsigned int)cl)
+		else if (octet_read - header.length() - 4 == (unsigned int)cl)
 			return 1;
+		
 	}
 	return 0;
 }

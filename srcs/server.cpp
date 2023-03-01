@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/01 10:38:50 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/01 14:56:25 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,10 @@
 
 bool reqIsChuncked(std::string buffer) {
 	string str(buffer);
-	str.erase(str.find("\r\n") + 2);
+	std::string::size_type pos = str.find("\r\n");
+	if (pos != std::string::npos)
+		str.erase(pos + 2);
+	// str.erase(str.find("\r\n") + 2);
 
 	for(size_t i = 0; i < str.length(); i++) {
 		if (!isxdigit(str[i]))
@@ -50,7 +53,7 @@ int main(int argc, char **argv)
 	{
 		return (0);
 	}
-	struct kevent event[1024];
+	struct kevent event[MAX_REQUESTS];
 	Request req;
 	std::map<int, sockaddr_in> clients;
 	int ke = kqueue();
@@ -59,10 +62,11 @@ int main(int argc, char **argv)
 		if (ke == -1)
 			throw Settings::badCreation();
 		server.build(ke);
-		std::string sbuffer[1024];
+		Sbuffer sbuffer[MAX_REQUESTS];
+		std::memset(sbuffer, 0, sizeof(Sbuffer) * MAX_REQUESTS);
 		while (1)
 		{
-			int nevents = kevent(ke, NULL, 0, event, 1024, NULL);
+			int nevents = kevent(ke, NULL, 0, event, 1024, &server.check_request_timeout);
 			if (nevents > 0)
 			{
 				for (int i = 0; i < nevents; i++)
@@ -92,7 +96,7 @@ int main(int argc, char **argv)
 						else if (event[i].filter == EVFILT_READ)
 						{
 							std::string buffer;
-							buffer = server.reading(event[i].ident);
+							buffer = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start);
 							if (!reqIsChuncked(buffer))
 							{
 								if (buffer == "0\r\n\r\n")
@@ -103,30 +107,36 @@ int main(int argc, char **argv)
 								else
 									buffer.erase(0, buffer.find("\r\n") + 2);
 							}
-							sbuffer[event[i].ident] += buffer;
+							sbuffer[event[i].ident].buffer += buffer;
+
 							// cout << "BUFFER: '" << sbuffer[event[i].ident] << "'" << endl;
 							// if (yd::ends_with_rn(sbuffer[event[i].ident]))
-							if (req.isFinishedRequest(sbuffer[event[i].ident]))
+							if (req.isFinishedRequest(sbuffer[event[i].ident].buffer, sbuffer[event[i].ident].readed))
 							{
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+								cout << "BLABLABLABALABLABALABLBA \n" << sbuffer[event[i].ident].buffer.size() << std::endl;
 							}
 						}
-					}
-					if (event[i].filter == EVFILT_WRITE)
-					{
-						server.writing(event[i].ident, sbuffer[event[i].ident], clients[event[i].ident]);
-						sbuffer[event[i].ident] = "";
-						server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-						server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
+						else if (event[i].filter == EVFILT_WRITE)
+						{
+							server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident], sbuffer[event[i].ident].readed);
+							sbuffer[event[i].ident].buffer = "";
+							sbuffer[event[i].ident].readed = 0;
+							server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+							server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
+						}
 					}
 				}
 			}
+			else
+				server.check_timeout(sbuffer, ke);
 		}
 	}
 	catch (const std::exception &e) {
 		std::cout << strerror(errno);
 		std::cerr << std::endl
 				<< e.what() << std::endl;
+		
 	}
 }

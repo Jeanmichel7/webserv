@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/01 10:40:38 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/01 15:52:30 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 
 Settings::Settings(Config const& base) : config(base)
 {
+	check_request_timeout.tv_sec = 3;
 	this->ext[".aac"] = "audio/aac";
 	this->ext[".avi "] = "video/x-msvideo";
 	this->ext[".bin"] = "application/octet-stream";
@@ -80,11 +81,12 @@ Settings::Settings(Config const& base) : config(base)
 	this->ext[".zip"] = "application/zip";
 	this->ext[".3gp"] = "video/3gpp";
 	this->ext[".3g2"] = "video/3gpp2";
-	this->ext[".7z"] = "	application/x-7z-compressed";
+	this->ext[".7z"] = "application/x-7z-compressed";
 }
 
 Settings::Settings()
 {
+	check_request_timeout.tv_sec = 2;
 	this->ext[".aac"] = "audio/aac";
 	this->ext[".avi "] = "video/x-msvideo";
 	this->ext[".bin"] = "application/octet-stream";
@@ -158,6 +160,7 @@ Settings::~Settings()
 
 
 
+
 void	Settings::build(int ke)
 {
 	static struct kevent	change;
@@ -210,7 +213,7 @@ std::string Settings::date(void)
 
 
 
-std::string Settings::get(Request const &req, struct sockaddr_in const& client_addr)
+std::string Settings::get(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
 {
 	std::string			buffer = "";
 	std::string			reponse = "HTTP/1.1";
@@ -221,10 +224,11 @@ std::string Settings::get(Request const &req, struct sockaddr_in const& client_a
 	// check methode
 	if (!this->config.getMethod(req.method.path).isget)
 		return (this->method_not_allowed(req));
+		/* COMMENTED BECAUSE NEVER BODY IN GET 
 	if (req.contain_body)
 		if (!req.body.is_chuncked && !req.header.content_length.empty())
-			if ((int)req.body.brut_body.size() != std::atoi(req.header.content_length.c_str()))
-				return (this->badRequest(req));
+			if (req. - (size_read - 4) != std::atoi(req.header.content_length.c_str()))
+				return (this->badRequest(req)); */ 
 	if (this->config.getFile(req.method.path)->empty())
 	{
 		reponse.append(" 404 Not Found\n");
@@ -275,7 +279,7 @@ std::string Settings::get(Request const &req, struct sockaddr_in const& client_a
 
 
 
-std::string Settings::post(Request const &req, struct sockaddr_in const& client_addr)
+std::string Settings::post(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
 {
 	std::stringstream reponse;
 	std::string rvalue_script;
@@ -286,8 +290,12 @@ std::string Settings::post(Request const &req, struct sockaddr_in const& client_
 		return (this->method_not_allowed(req));
 	if (req.contain_body)
 		if (!req.body.is_chuncked && !req.header.content_length.empty())
-			if ((int)req.body.brut_body.size() != std::atoi(req.header.content_length.c_str()))
+			if (size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 != std::stoul(req.header.content_length.c_str()))
+			{
+				std::cout << "VALEUR A AVOIR DFBHTNHTNHTNNHT LE HEADER " << size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 << std::endl;
+				std::cout << "VALEUR CONTENT LENGHT " << std::stoul(req.header.content_length.c_str()) << std::endl;
 				return (this->badRequest(req));
+			}
 	fd.open(this->config.getFile(req.method.path)->c_str(), std::fstream::in);
 	if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
 		rvalue_script = CGI::execute_cgi(this->config, req, client_addr);
@@ -298,8 +306,6 @@ std::string Settings::post(Request const &req, struct sockaddr_in const& client_
 			fd.open("http/404.html", O_RDONLY);
 		reponse << " 404 Not Found\n";
 	}
-	
-
 	if (rvalue_script.size() == 0)
 		reponse << " 204 No Content\n";
 	else if (strcmp(rvalue_script.c_str(), "Status: 500") == 0)
@@ -321,25 +327,29 @@ std::string Settings::post(Request const &req, struct sockaddr_in const& client_
 
 
 
-std::string Settings::reading(int socket)
+std::string Settings::reading(int socket, unsigned int &readed, time_t &time_starting)
 {
 	int					o_read = 0;
 	stringstream 		sbuffer;
 	char				buff[4096];
+	time(&time_starting);
 	std::memset(buff, 0, sizeof(buff));
 	Request req;
 	// usleep(1000);
+	
 	o_read = recv(socket, buff, 4096, 0);
 		if (o_read == -1 || o_read == 0)
 			return ("");
 	sbuffer << buff;
-	std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
+	readed += o_read;
+	
+	// std::cout << "\n\nREAD:\n>>" << sbuffer.str() << "<<\n\n";
 	return (sbuffer.str());
 }
 
 
 
-void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const& client_addr)
+void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read)
 {
 	std::string reponse_request;
 	Request 	req;
@@ -373,11 +383,12 @@ void Settings::writing(int socket, std::string sbuffer, struct sockaddr_in const
 	else if (check_forbidden(*this->config.getFile(req.method.path)) && checkextension(*this->config.getFile(req.method.path)).empty())
 		reponse_request = this->not_found();
 	else if (req.method.isGet)
-		reponse_request = this->get(req, client_addr);
+		reponse_request = this->get(req, client_addr, size_read);
 	else if (req.method.isPost || req.method.isDelete)
-		reponse_request = this->post(req, client_addr);
+		reponse_request = this->post(req, client_addr, size_read);
 	else
 		reponse_request = this->badRequest(req);
+		
 	// std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
 	write(socket, reponse_request.c_str(), reponse_request.size());
 	// req.printRequest();
@@ -516,6 +527,25 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 
 
 
+void		Settings::check_timeout(Sbuffer *requests, int ke)
+{
+	time_t actual_time;
+	time(&actual_time);
+	
+	for (int i = 0; i < MAX_REQUESTS; i++)
+	{
+		if (requests[i].readed != 0 && difftime(actual_time, requests[i].time_start) > 30)
+		{
+			std::cout << "DIFF TIME " << difftime(actual_time, requests[i].time_start) << std::endl;
+			this->set_event(ke,i, EVFILT_READ, EV_DELETE);
+			this->set_event(ke,i, EVFILT_WRITE, EV_ADD);
+			std::string rep(this->timeout());
+			write(i, rep.c_str(), rep.size());
+		}
+	}
+}
+
+
 
 int Settings::check_forbidden(std::string const& path)
 {
@@ -588,6 +618,7 @@ std::string Settings::method_not_allowed(Request const& req)
 {
 	std::stringstream reponse;
 	
+	
 	reponse << "HTTP/1.1 405 Method Not Allowed\n";
 	reponse << "Allow:";
 	if (this->config.getMethod(req.method.path).ispost)
@@ -632,19 +663,44 @@ std::string Settings::forbidden_error( void )
 
 std::string Settings::badRequest(Request const& req)
 {
-	std::stringstream reponse;
+	std::stringstream	reponse;
 	
 	reponse << "HTTP/1.1 400 Bad Request\n";
 	reponse << Settings::date();
 	reponse << "server: " << *this->config.getName() + "\n";
-	reponse << "server: " << "myserv" << "\n";
 	reponse << "Content-Length: 21\n";
 	reponse << "Connection: keep-alive\n";
 	reponse << "\nMalformed ";
-	if (this->config.getMethod(req.method.path).isget)
+	if (req.method.isGet)
 		reponse << "GET";
-	else if (this->config.getMethod(req.method.path).ispost)
+	else if (req.method.isPost)
 		reponse << "POST";
 	reponse << " request\n";
+	return (reponse.str());
+}
+
+std::string Settings::timeout( void )
+{
+	std::stringstream	reponse;
+	std::fstream		fd;
+
+	reponse << "HTTP/1.1 408 Timeout\n";
+	reponse << Settings::date();
+	reponse << "server: " << *this->config.getName() + "\n";
+	reponse << "Connection: close\n";
+	if (this->config.getError(408))
+		fd.open(this->config.getError(408)->c_str());
+	if (fd.is_open())
+	{
+		std::stringstream t;
+		t << fd.rdbuf();
+		reponse << "Content-Length: " << t.str().size() << "\n\n";
+		reponse << t.str() << "\n";
+	}
+	else
+	{
+		reponse << "Content-Length: 17\n\n";
+		reponse << "Request Timeout\n";
+	}
 	return (reponse.str());
 }

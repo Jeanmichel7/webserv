@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 13:43:13 by lomasson          #+#    #+#             */
-/*   Updated: 2023/02/24 12:06:31 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/01 16:38:39 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "client.hpp"
 
+/*
 int main(int argc, char **argv)
 {
 	int NB_OF_FORK;
@@ -38,7 +39,7 @@ int main(int argc, char **argv)
 	char *requestPost;
 	if (p == 0)
 	{
-		char *r = "GET / 127.0.0.1:4242\r\n";
+		char *r = "GET / 127.0 .0.1:4242\r\n";
 		requestPost = r;
 	}
 	else
@@ -69,5 +70,38 @@ int main(int argc, char **argv)
 	else
 		std::cout << "Data NOT received ! " << std::endl;
 	// printf("%s\n",buffer );
+	return 0;
+}
+*/
+
+int main(int argc, char **argv)
+{
+
+
+	struct sockaddr_in interface;
+	std::memset(&interface , 0, sizeof(interface));
+	interface.sin_port = htons(4241);
+	char *r = "POST / 127.0 .0.1:4242\r\nContent-Lenght: 5\r\n\r\nHello\r\n";
+	char buffer[1024] = {0};
+	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
+	
+	interface.sin_family = AF_INET;
+	interface.sin_port = htons(4241);
+	if(inet_pton(AF_INET, "127.0.0.1", &interface.sin_addr) <= 0)
+	{
+		printf("\nInvalid address/ Address not supported \n");
+		return -1;
+	}
+	if (connect(socket_fd, (struct sockaddr *)&interface, sizeof(interface)) < 0)
+	{
+		printf("\nConnection Failed \n");
+		return -1;
+	}
+	send(socket_fd , "POST / 127.0 .0.1:4242\r\nContent-Lenght: 5\r\n\r\nHe" , strlen("POST / 127.0 .0.1:4242\r\nContent-Lenght: 5\r\n\r\nHe"), 0);
+	usleep(10000);
+	send(socket_fd , "lo\r\n" , strlen("lo\r\n"), 0);
+	// std::cout << "Client waiting for data..." << std::endl;
+	read( socket_fd , buffer, 1024);
+	printf("%s\n",buffer );
 	return 0;
 }

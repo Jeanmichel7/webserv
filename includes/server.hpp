@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/02/10 13:49:42 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/01 13:33:07 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,9 @@
 # define SERVER_HPP
 
 # define REQ_MAX_SIZE 8192 
+# define MAX_REQUESTS 1024
+
+
 
 # include <sys/socket.h>
 # include <sys/types.h>
@@ -42,8 +45,11 @@
 # include <cstdlib>
 # include <dirent.h>
 
-# include "Settings.hpp"
+
 # include "Request.hpp"
 # include "Config.hpp"
 # include "Cgi.hpp"
+
+
+# include "Settings.hpp"
 #endif

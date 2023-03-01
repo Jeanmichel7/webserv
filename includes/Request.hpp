@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 13:37:00 by jrasser           #+#    #+#             */
-/*   Updated: 2023/03/01 10:05:03 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/01 11:31:27 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,7 +188,8 @@ struct Request {
 	void printRequest( void );
 	void resetBuffer( void );
 	void reset( void );
-	bool isFinishedRequest( string const &buff );
+	// bool isFinishedRequest( string const &buff );
+	bool isFinishedRequest( string const &req, unsigned int octet_read);
 };
 
 #endif

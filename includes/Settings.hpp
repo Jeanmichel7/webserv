@@ -15,6 +15,13 @@
 
 # include "server.hpp"
 # include "Config.hpp"
+
+struct Sbuffer {
+	std::string buffer;
+	unsigned int readed;
+	time_t time_start;
+};
+
 struct Request;
 
 class Settings
@@ -23,10 +30,10 @@ class Settings
 		std::map<std::string, std::string> ext;
 	public:
 		Config		config;
-		int			*list_of_serv_socket;
+		struct timespec check_request_timeout;
 		void		build(int ke);
-		std::string	get( Request const& req,  struct sockaddr_in const& client_addr);
-		std::string	post( Request const& req,  struct sockaddr_in const& client_addr);
+		std::string	get( Request const& req,  struct sockaddr_in const& client_addr, size_t size_read);
+		std::string	post( Request const& req,  struct sockaddr_in const& client_addr, size_t size_read);
 		std::string	del( void );
 		std::string	date( void );
 		std::string	badRequest( Request const& req );
@@ -35,12 +42,16 @@ class Settings
 		std::string	Unauthorized( void );
 		int 		check_forbidden(std::string const& path);
 		std::string	method_not_allowed( Request const& req );
-		std::string reading(int socket);
+		// std::string reading(int socket);
+		std::string reading(int socket, unsigned int &readed, time_t &time_starting);
 		std::string	checkextension(std::string const& path);
 		std::string	folder_gestion(Request const& req);
 		void		set_event(int ke, int socket, short filter, short flag);
 		int 		checkmethod(std::string const& request, Methods const& t);
-		void		writing(int socket, std::string sbuffer, struct sockaddr_in const& client_addr);
+		void		writing(int socket, std::string sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read);
+		void		check_timeout(Sbuffer *requests, int ke);
+		std::string	timeout( void );
+
 
 
 		std::string handleCookie(const Request & req, std::string &date, int &count);
@@ -53,6 +64,7 @@ class Settings
 				return ("Settings::ErrorCreationInterfaceNetwork");
 			}
 		};
+
 };
 
 #endif
