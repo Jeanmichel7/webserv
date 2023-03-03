@@ -24,7 +24,13 @@ int main(int argc, char *argv[], char *envp[]) {
 		printf("<h1 class = \"cgi\" >CGI STDIN </h1>\n");
 		printf("<p class = \"cgi\" >\n");
 		char c;
-		    while ((c = fgetc(stdin)) != EOF) {
+		unsigned int i = 0;
+		    while (1) {
+				c = fgetc(stdin);
+				if (c == EOF)
+					break;
+					 write(2, &c, 1);
+				i++;
         if (c == '\n') {
             printf("<br>\n");  // utilise la balise HTML pour les nouvelles lignes
         } else if (c == '<') {
@@ -33,10 +39,13 @@ int main(int argc, char *argv[], char *envp[]) {
             printf("&gt;");    // utilise la référence HTML pour le caractère '>'
         } else if (c == '&') {
             printf("&amp;");   // utilise la référence HTML pour le caractère '&'
+				}	else if (c == '\0') {
+						printf("&#0;");
         } else {
             putchar(c);
         }
     }
+		printf("\nCARACTERE LU SUR LA STDIN : %d\n", i);
 		printf("\n");
 		printf("</p>\n");
 		printf("<h1 class = \"cgi\" >CGI ENV </h1>\n");
@@ -50,5 +59,6 @@ int main(int argc, char *argv[], char *envp[]) {
 		printf("</ul>\n");
 		printf("</body>\n");
 		printf("</html>\n");
+		printf("\r\n");
     return 0;
 }

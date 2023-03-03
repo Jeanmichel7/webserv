@@ -28,27 +28,31 @@ class Settings
 {
 	private:
 		std::map<std::string, std::string> ext;
+		std::string _header;
+		std::vector<char> _body;
+		std::string _cookie;
+		bool _add_eof;
 	public:
 		Config		config;
 		struct timespec check_request_timeout;
 		void		build(int ke);
-		std::string	get( Request const& req,  struct sockaddr_in const& client_addr, size_t size_read);
-		std::string	post( Request const& req,  struct sockaddr_in const& client_addr, size_t size_read);
-		std::string	del( void );
+		void	get( Request const& req,  struct sockaddr_in const& client_addr, size_t size_read);
+		void	post( Request const& req,  struct sockaddr_in const& client_addr, size_t size_read);
+		void	del( void );
 		std::string	date( void );
-		std::string	badRequest( Request const& req );
-		std::string	forbidden_error( void );
-		std::string not_found( void );
-		std::string	Unauthorized( void );
+		void	badRequest( Request const& req );
+		void	forbidden_error( void );
+		void 	not_found( void );
+		void	Unauthorized( void );
 		int 				check_forbidden(std::string const& path);
-		std::string			method_not_allowed( Request const& req );
+		void		method_not_allowed( Request const& req );
 		// std::string reading(int socket);
-		std::vector<char> reading(int socket, unsigned int &readed, time_t &time_starting);
+		size_t reading(int socket, unsigned int &readed, time_t &time_starting, char *buffer);
 		std::string			checkextension(std::string const& path);
 		std::string			folder_gestion(Request const& req);
 		void						set_event(int ke, int socket, short filter, short flag);
 		bool						checkmethod(Request const& req, Methods const& t);
-		void						writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read);
+		bool						writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read);
 		void						check_timeout(Sbuffer *requests, int ke);
 		std::string	timeout( void );
 

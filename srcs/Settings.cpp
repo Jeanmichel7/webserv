@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/20 11:11:03 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/01 20:43:19 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/02 19:23:28by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 
 Settings::Settings(Config const& base) : config(base)
 {
-	check_request_timeout.tv_sec = 3;
+	check_request_timeout.tv_sec = 1;
 	this->ext[".aac"] = "audio/aac";
 	this->ext[".avi "] = "video/x-msvideo";
 	this->ext[".bin"] = "application/octet-stream";
@@ -86,7 +86,7 @@ Settings::Settings(Config const& base) : config(base)
 
 Settings::Settings()
 {
-	check_request_timeout.tv_sec = 2;
+	check_request_timeout.tv_sec = 1;
 	this->ext[".aac"] = "audio/aac";
 	this->ext[".avi "] = "video/x-msvideo";
 	this->ext[".bin"] = "application/octet-stream";
@@ -213,17 +213,20 @@ std::string Settings::date(void)
 
 
 
-std::string Settings::get(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
+void Settings::get(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
 {
-	std::string			buffer = "";
-	std::string			reponse = "HTTP/1.1";
+	std::string header_script;
 	std::stringstream	n;
 	std::fstream		fd;
 	std::string			tmp;
+	std::string buffer;
 
 	// check methode
 	if (!this->config.getMethod(req.method.path).isget)
-		return (this->method_not_allowed(req));
+	{
+			this->method_not_allowed(req);
+			return;
+	}
 		/* COMMENTED BECAUSE NEVER BODY IN GET 
 	if (req.contain_body)
 		if (!req.body.is_chuncked && !req.header.content_length.empty())
@@ -231,7 +234,7 @@ std::string Settings::get(Request const &req, struct sockaddr_in const& client_a
 				return (this->badRequest(req)); */ 
 	if (this->config.getFile(req.method.path)->empty())
 	{
-		reponse.append(" 404 Not Found\n");
+		_header.append(" 404 Not Found\n");
 		fd.open(this->config.getError(404)->c_str());
 		if (!fd.is_open())
 			fd.open("http/404.html");
@@ -240,8 +243,9 @@ std::string Settings::get(Request const &req, struct sockaddr_in const& client_a
 	{
 		if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
 		{
-			reponse.append(" 200 OK\n");
-			buffer = CGI::execute_cgi(this->config, req, client_addr);
+			_header.append(" 200 OK\n");
+			_body = CGI::execute_cgi(this->config, req, client_addr);
+			yd::extractHeader(header_script, _body);
 		}
 		else
 		{
@@ -250,44 +254,56 @@ std::string Settings::get(Request const &req, struct sockaddr_in const& client_a
 				file++;
 			fd.open(file, std::fstream::in | std::fstream::out);
 			if (fd.is_open())
-				reponse.append(" 200 OK\n");
+				_header.append(" 200 OK\n");
 			else if (!this->checkextension(req.method.path).empty())
 			{
-				reponse.append(" 404 Not Found\n");
+				_header.append(" 404 Not Found\n");
 				fd.open("http/404.html");
 			}
 			else if (!this->config.getDirectoryListing(req.method.path).empty())
-				return (folder_gestion(req));
+			{
+				folder_gestion(req);
+				return;
+			}
 			while (getline(fd, tmp))
 				buffer += tmp + "\n";
 		}
 	}
-	reponse += Settings::date();
-	reponse += "server: " + *this->config.getName() + "\n";
+	_header += Settings::date();
+	_header += "server: " + *this->config.getName() + "\n";
 	std::string date = "";
 	int count = 0;
-	reponse += handleCookie(req, date, count);
-	n << buffer.size() + date.size() + std::to_string(count).size() + 17 ;
-	reponse += "Content-Length: " + n.str() + "\n";
-	reponse += "Content-Type: " + this->checkextension(*this->config.getFile(req.method.path)) + "\n";
-	reponse += "Connection: keep-alive\n";
-	reponse += "\n" + buffer ;
-	reponse += "nb de refres : " + std::to_string(count) + ", " + date + "\n";
+	_header += handleCookie(req, date, count);
+	std::cout << "SIZE DATE " << date.size() << std::endl;
+	n <<  _body.size() + buffer.size() + date.size() + std::to_string(count).size() + 17;
+	_header += "Content-Length: " + n.str() + "\n";
+	_header += "Content-Type: " + this->checkextension(*this->config.getFile(req.method.path)) + "\n" ;
+	_header += "Connection: keep-alive\r\n";
+	_header += "\r\n"  + buffer;
+	_cookie += "nb de refres : " + std::to_string(count) + ", ";
+	if (date.size() > 0)
+		_cookie += date;
+	if (_body.size() == 0)
+		_header += "\n";
+	std::cout << "SIZE DATE " << date.size() << std::endl;
+	std::cout << "VALEUR DATE " << date << std::endl;
 	fd.close();
-	return (reponse);
 }
 
 
 
-std::string Settings::post(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
+void Settings::post(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
 {
-	std::stringstream reponse;
-	std::string rvalue_script;
+	std::stringstream header;
+	std::string header_script;
 	std::fstream fd;
 
-	reponse << "HTTP/1.1";
+	header <<	"HTTP/1.1";
 	if (!this->config.getMethod(req.method.path).ispost)
-		return (this->method_not_allowed(req));
+	{
+		this->method_not_allowed(req);
+		return ;
+	}
 	if (req.contain_body)
 		if (!req.body.is_chuncked && !req.header.content_length.empty())
 			if (size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 != std::stoul(req.header.content_length.c_str()))
@@ -298,38 +314,37 @@ std::string Settings::post(Request const &req, struct sockaddr_in const& client_
 			}
 	fd.open(this->config.getFile(req.method.path)->c_str(), std::fstream::in);
 	if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
-		rvalue_script = CGI::execute_cgi(this->config, req, client_addr);
+	{
+		_body = CGI::execute_cgi(this->config, req, client_addr);
+		yd::extractHeader(header_script, _body);
+	}
 	else if (!fd.is_open())
 	{
 		fd.open(this->config.getError(404)->c_str(), O_RDONLY);
 		if (!fd.is_open())
 			fd.open("http/404.html", O_RDONLY);
-		reponse << " 404 Not Found\n";
+		header << " 404 Not Found\n";
 	}
-	if (rvalue_script.size() == 0)
-		reponse << " 204 No Content\n";
-	else if (strcmp(rvalue_script.c_str(), "Status: 500") == 0)
-		reponse << "500 Internal Server Error\n";
-	reponse << Settings::date();
-	reponse << "server: " << *this->config.getName() << "\n";
-	reponse << "Content-Length: " << rvalue_script.size();
-	reponse << "\nContent-Type: " << this->checkextension(req.method.path) << "\n";
-	reponse << "Connection: keep-alive\n\n";
-	reponse << rvalue_script;
+	if (_body.size() == 0)
+		header << " 204 No Content\n";
+	else if (strcmp(header_script.c_str(), "Status: 500") == 0)
+		header << "500 Internal Server Error\n";
+	header << Settings::date();
+	header << "server: " << *this->config.getName() << "\n";
+	header << "Content-Length: " << _body.size();
+	header << "\nContent-Type: " << this->checkextension(req.method.path) << "\n";
+	header << "Connection: keep-alive\r\n\r\n";
+	this->_header = header.str();
 	// std::cout << rvalue_script << std::endl;
-
 	std::string::size_type pos = 0;
-	if ((pos = rvalue_script.find("content_length")) != std::string::npos)
-		reponse << EOF;
+	if ((pos = header_script.find("content_length")) != std::string::npos)
+		_add_eof = 1;
 	fd.close();
-	return (reponse.str());
 }
 
-std::vector<char> Settings::reading(int socket, unsigned int &readed, time_t &time_starting)
+size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting, char *buff)
 {
-	int					o_read = 0;
-	std::vector<char>		sbuffer;
-	char				buff[4097];
+	size_t				o_read = 0;
 	time(&time_starting);
 	std::memset(buff, 0, 4097);
 	Request req;
@@ -337,33 +352,35 @@ std::vector<char> Settings::reading(int socket, unsigned int &readed, time_t &ti
 	
 	o_read = recv(socket, buff, 4096, 0);
 		if (o_read == -1 || o_read == 0)
-			return (sbuffer);
-	sbuffer.insert(sbuffer.begin(), &buff[0], &buff[o_read]);
+			return(o_read);
 	readed += o_read;
-	std::cout << "\n\nREAD:\n>>" << buff << "<<\n\n";
-	return (sbuffer);
+	return(o_read) ;
 }
 
 
 
-void Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read)
+bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read)
 {
 	std::string reponse_request;
 	Request 	req;
 	int valid = -1;
+	_add_eof = 0;
 
 	std::fstream fd;
+	_header = "HTTP/1.1";
+	_body.clear();
+	_cookie = "";
 	// check the methode
 	if (req.parseRequest(sbuffer))
-		reponse_request = this->method_not_allowed(req);
+		this->method_not_allowed(req);
 	if (!req.method.path.empty())
 		fd.open(*this->config.getFile(req.method.path));
 	// check if is allowed
 	if (!this->config.selectServ(req.header.host_ip, req.header.port))
-		reponse_request = this->badRequest(req);
+		 this->badRequest(req);
 		// select the server
-	if (!this->checkmethod(req, this->config.getMethod(req.method.path)))
-		reponse_request = this->method_not_allowed(req);
+	else if (!this->checkmethod(req, this->config.getMethod(req.method.path)))
+		 this->method_not_allowed(req);
 	else if (req.method.brut_method == "GET /directory/Yeah HTTP/1.1") // A mettre a la main dans le debugger pour passer le GET sur /directory/Yeah je sais pas pk ca doit aller en 404
 	{
 		std::fstream fd;
@@ -374,16 +391,30 @@ void Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 		reponse_request = t.str();
 	}
 	else if (check_forbidden(*this->config.getFile(req.method.path)) && checkextension(*this->config.getFile(req.method.path)).empty())
-		reponse_request = this->not_found();
+		this->not_found();
 	else if (req.method.isGet)
-		reponse_request = this->get(req, client_addr, size_read);
+		this->get(req, client_addr, size_read);
 	else if (req.method.isPost || req.method.isDelete)
-		reponse_request = this->post(req, client_addr, size_read);
+		this->post(req, client_addr, size_read);
 	else
-		reponse_request = this->badRequest(req);
+		this->badRequest(req);
 		
-	// std::cout << std::endl << std::endl << "WRITE : "  << std::endl << reponse_request << std::endl;
-	write(socket, reponse_request.c_str(), reponse_request.size());
+	write(socket, _header.c_str(), _header.size());
+	std::vector<char>::iterator start = _body.begin();
+	size_t size_data = _body.size();
+	std::cout << "SIZE BODY " << size_data << std::endl; 
+	std::cout << "HEADER " << _header.c_str() << std::endl; 
+
+	write(socket, &*start, size_data);
+	if (_add_eof)
+	{
+		stringstream stream;
+		stream << EOF;
+		std::string eof = stream.str();
+		write(socket, eof.c_str(), eof.size());
+	}
+	write(socket, _cookie.c_str(), _cookie.size());
+	return (req.header.connection);
 	// req.printRequest();
 	//send(socket, reponse_request.c_str(), reponse_request.size(), 0);
 }
@@ -446,7 +477,7 @@ std::string Settings::folder_gestion(Request const& req)
 	reponse << "\nContent-Type: text/html\n";
 	reponse << "Connection: keep-alive\n\n";
 	reponse << buffer;
-	return (reponse.str());
+	_header = reponse.str();
 }
 
 
@@ -489,7 +520,7 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 
 		map<string, string>::iterator it2 = sessions_date.begin();
 		while (it2 != sessions_date.end()) {
-			cout << "session: " << it2->first << " " << it2->second << endl;
+			// cout << "session: " << it2->first << " " << it2->second << endl;
 			it2++;
 		}
 	} else {
@@ -500,7 +531,7 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 		count = sessions_count[req.header.cookies.at("wsid")];
 	}
 	
-	cout << "cookie: " << cookie << endl;
+	// cout << "cookie: " << cookie << endl;
 	return cookie;
 }
 
@@ -536,13 +567,10 @@ void		Settings::check_timeout(Sbuffer *requests, int ke)
 int Settings::check_forbidden(std::string const& path)
 {
 	struct stat info;
-	
-	// std::fstream fd;
+
 	int i = 0;
 	if (path.c_str()[0] == '/')
 		i = 1;
-	// fd.open(path.c_str() + i);
-	// if (fd.is_open())
 	if (stat(path.c_str() + i, &info) != 0)
 		return(1);
 	if (S_ISDIR(info.st_mode))
@@ -552,7 +580,7 @@ int Settings::check_forbidden(std::string const& path)
 }
 
 
-std::string Settings::not_found( void )
+void Settings::not_found( void )
 {
 	std::fstream		file("http/404.html");
 	std::stringstream	contentefile;
@@ -571,12 +599,12 @@ std::string Settings::not_found( void )
 	}
 	else
 		reponse << "Content-Length: 0\n\n"; 
-	return (reponse.str());
+	this->_header = reponse.str();
 }
 
 
 
-std::string Settings::Unauthorized( void )
+void Settings::Unauthorized( void )
 {
 	std::fstream		file("http/401.html");
 	std::stringstream	contentefile;
@@ -595,15 +623,14 @@ std::string Settings::Unauthorized( void )
 	}
 	else
 		reponse << "Content-Length: 0\n\n"; 
-	return (reponse.str());
+		this->_header = reponse.str();
 }
 
 
 
-std::string Settings::method_not_allowed(Request const& req)
+void Settings::method_not_allowed(Request const& req)
 {
 	std::stringstream reponse;
-	
 	
 	reponse << "HTTP/1.1 405 Method Not Allowed\n";
 	reponse << "Allow:";
@@ -618,12 +645,14 @@ std::string Settings::method_not_allowed(Request const& req)
 	reponse << "Content-Length: 25\n";
 	reponse << "Connection: keep-alive\n";
 	reponse << "\nMethod Not Allowed (405)\n";
-	return (reponse.str());
+	this->_header = reponse.str();
+
 }
 
 
 
-std::string Settings::forbidden_error( void )
+ void Settings::forbidden_error( void )
+
 {
 	std::fstream		file("http/403.html");
 	std::stringstream	contentefile;
@@ -642,12 +671,12 @@ std::string Settings::forbidden_error( void )
 	}
 	else
 		reponse << "Content-Length: 0\n\n"; 
-	return (reponse.str());
+		this->_header = reponse.str();
 }
 
 
 
-std::string Settings::badRequest(Request const& req)
+void Settings::badRequest(Request const& req)
 {
 	std::stringstream	reponse;
 	
@@ -662,7 +691,7 @@ std::string Settings::badRequest(Request const& req)
 	else if (req.method.isPost)
 		reponse << "POST";
 	reponse << " request\n";
-	return (reponse.str());
+	this->_header = reponse.str();
 }
 
 std::string Settings::timeout( void )
@@ -688,5 +717,5 @@ std::string Settings::timeout( void )
 		reponse << "Content-Length: 17\n\n";
 		reponse << "Request Timeout\n";
 	}
-	return (reponse.str());
+	return(reponse.str());
 }

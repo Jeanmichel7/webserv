@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/23 17:56:22 by jrasser           #+#    #+#             */
-/*   Updated: 2023/03/01 20:43:46 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/02 13:36:50y ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1161,16 +1161,16 @@ bool Request::splitRequest(string req) {
 bool Request::parseRequest(std::vector<char> &req) {
 	// cout << "********************* \n" << req << "\n*********************" << endl;
 	// cout << "Request Brut size : " << req.size() << endl;
-	size_t header_size;
+	size_t header_size = 0;
 	char sep[4] = {'\r', '\n', '\r', '\n'}; 
-	for (int i = 0; i < req.size() - 3; i++) {
+	for (size_t i = 0; i < req.size() - 3; i++) {
 		if (req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
 			header_size  = i + 4;
 			break;
 		}
 	}
 	std::string header_str = "";
-	for (int i = 0; i < header_size; i++) {
+	for (size_t i = 0; i < header_size; i++) {
 			header_str.push_back(req[i]);
 		}
 		std::vector<char>::const_iterator end = req.begin() + header_size;
@@ -1278,18 +1278,18 @@ void Request::reset( void ) {
 
 bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet_read) {
 
-	size_t header_size;
+	size_t header_size = 0;
 	string::size_type hl_pos;
 	string::size_type b_pos;
 	char sep[4] = {'\r', '\n', '\r', '\n'}; 
-	for (int i = 0; i < octet_read - 3; i++) {
+	for (size_t i = 0; i < octet_read - 3; i++) {
 		if (req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
 			header_size  = i;
 			break;
 		}
 	}
 	std::string header = "";
-	for (int i = 0; i < header_size; i++) {
+	for (size_t i = 0; i < header_size; i++) {
 			header.push_back(req[i]);
 		}
 
@@ -1311,9 +1311,11 @@ bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet
 		string::size_type cl_end = header.find("\r\n", cl_pos);
 		string content_length = header.substr(cl_pos + 16, cl_end - cl_pos - 16);
 		int cl = atoi(content_length.c_str());
+		/*
 		cout << "content length : " << cl << endl;
 		cout << "total read : " << octet_read << endl;
 		cout << "header length : " <<  header.size() << endl;
+		*/
 		if (cl == 0)
 			return 1;
 		else if (octet_read - header.length() - 4 == (unsigned int)cl)

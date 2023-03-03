@@ -119,10 +119,10 @@ CGI::~CGI()
 		close(_fd_stdout);
 }
 
-std::string CGI::execute_cgi(Config &config, const Request &req, struct sockaddr_in const &client_addr)
+std::vector<char> CGI::execute_cgi(Config &config, const Request &req, struct sockaddr_in const &client_addr)
 {	//declarer variable
-	std::string body;
 	CGI data;
+	std::vector<char> return_value;
 
 
 	string scriptName;
@@ -136,31 +136,27 @@ std::string CGI::execute_cgi(Config &config, const Request &req, struct sockaddr
 	}
 	catch (std::exception &e)
 	{
-		return ("Status: 500\n\r\n\r");
+		return(error_500());
 	}
 	std::vector<char>::iterator start = req.body.vector_body->begin();
-	std::vector<char>::iterator end = req.body.vector_body->end();
-	for (; start != end; start++)
-	{
-		write(data._fd_stdin, &*start, 1);
-	}
+	size_t size_data = req.body.vector_body->size();
+	write(data._fd_stdin, &*start, size_data);
 	fseek(data._file_stdin, 0, SEEK_SET);
 	
 	// on cherche l'extension adequate
 	string ext = yd::getExtension(req.method.path);
 	if (ext == "")
-		return ("Status: 404\n\r\n\r");
+		return(error_404());
 	// pos = std::strchr(scriptName.c_str(), '.');
 	std::string const *cgi_path_str = config.getCgi(req.method.path, ext);
 	// si pas de cgi_path, on retourne NULL
 	if (cgi_path_str == NULL)
-		return ("Status: 404\n\r\n\r");
-
+		return(error_404());
 	// creer le fork 
 	const char *cgi_path = cgi_path_str->c_str();
 	pid_t pid = fork();
 	if (pid == -1)
-			return ("Status: 500\n\r\n\r");
+			return (error_500());
 	 if (pid == 0)
 	 {
 		// erase stdin and stdout
@@ -178,17 +174,30 @@ std::string CGI::execute_cgi(Config &config, const Request &req, struct sockaddr
 		int rt;
 		waitpid(pid, &rt, 0);
 		if (rt == 1)
-			return ("Status: 500\n\r\n\r");
+			return(error_500());
 		char buffer[1024];
 		// on recupere le contenue du fichier
 	  fseek(data._file_stdout, 0, SEEK_SET);
 		for (int rt = 1023; rt == 1023;)
 		{
 			rt = fread(&buffer, sizeof(char), 1023, data._file_stdout);
-			buffer[rt] = '\0';
-			body += buffer;
+			return_value.insert(return_value.end(), buffer, buffer + rt);
 		}
 	 }
 		// on supprime l'environnement  cree
-		return (body);
+		return (return_value);
 }
+
+		std::vector<char> CGI::error_500()
+		{
+			std::vector<char> return_value;
+			std::string error = "Status: 500\n\r\n\r";
+			return_value.insert(return_value.end(), error.begin(), error.end());
+			return (return_value);
+		}
+		std::vector<char> CGI::error_404(){
+			std::vector<char> return_value;
+			std::string error = "Status: 404\n\r\n\r";
+			return_value.insert(return_value.end(), error.begin(), error.end());
+			return (return_value);
+		}
