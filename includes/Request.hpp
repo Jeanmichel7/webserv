@@ -161,7 +161,7 @@ struct Body {
 	int		socket_client;
 
 	bool 	parseBody( void );
-	bool 	parseTransferEncoding( void );
+	bool 	parseChuncked( void );
 	bool 	parseMultipartBody( void );
 	void	reset( void );
 };
@@ -177,6 +177,7 @@ struct Request {
 	char		buffer[8192];
 	int 		socket_client;
 	bool		isFinished;
+	bool		isChunked;
 	
 	bool splitRequest(string req);
 

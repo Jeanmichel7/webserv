@@ -950,10 +950,11 @@ Body &Body::operator=(Body const &rhs) {
 
 bool Body::parseBody( void ) {
 	// cout << "start parse body " << this->brut_body << endl;
-	if (this->is_chuncked) {
-		if (parseTransferEncoding())
-			return 1;
-	} else if (!this->boundary.empty()) {
+	// if (this->is_chuncked) {
+	// 	if (parseTransferEncoding())
+	// 		return 1;
+	// } else 
+	if (!this->boundary.empty()) {
 		if (parseMultipartBody())
 			return 1;
 	} else
@@ -982,67 +983,67 @@ bool 	Body::parseMultipartBody( void ){
 	return 0;
 }
 
-bool Body::parseTransferEncoding( void ) {
-	// string::size_type pos = 0;
-	string 						str(this->brut_body);
-	string						nb_hexa;
-	// string::size_type size = 0;
-	string 						line;
-	string 						line_concat;
+// bool Body::parseTransferEncoding( void ) {
+// 	// string::size_type pos = 0;
+// 	string 						str(this->brut_body);
+// 	string						nb_hexa;
+// 	// string::size_type size = 0;
+// 	string 						line;
+// 	string 						line_concat;
 
-	cout << "TransferEncoding, body size : " << str.length() << endl;
+// 	cout << "TransferEncoding, body size : " << str.length() << endl;
 
-	this->content = this->brut_body;
-
-
-	// for(string::size_type i = 0; i < str.length() - 1; i++) {
-	// 	if (str[i] == 'A' && str[i + 1] != 'A')
-	// 		cout << "A";
-	// 	else if (str[i] == 'A' && str[i + 1] == 'A') 
-	// 		{}
-	// 	else
-	// 		cout << str[i];
-	// }
-	// cout << str[str.length() - 1] << endl;
+// 	this->content = this->brut_body;
 
 
-	// std::filebuf fb;
- 	// fb.open ("testout2.txt",std::ios::out);
- 	// std::ostream os(&fb);
- 	// os << this->brut_body;
- 	// fb.close();
+// 	// for(string::size_type i = 0; i < str.length() - 1; i++) {
+// 	// 	if (str[i] == 'A' && str[i + 1] != 'A')
+// 	// 		cout << "A";
+// 	// 	else if (str[i] == 'A' && str[i + 1] == 'A') 
+// 	// 		{}
+// 	// 	else
+// 	// 		cout << str[i];
+// 	// }
+// 	// cout << str[str.length() - 1] << endl;
 
-	// cout << "coucou je suis bien la et je dois regarder si je read and dechunck dans parseTransferEncoding() ou dans le server.cpp, et toi quel est ton avis ?" << endl;
-	// if ((pos = str.find("\r\n")) != string::npos)
-	// {
-	// 	nb_hexa = str.substr(0, pos);
-	// 	str.erase(0, pos + 2);
 
-	// 	string::size_type x;
-	// 	std::stringstream ss;
-	// 	std::stringstream ssbody;
-	// 	ss << std::hex << nb_hexa;
-	// 	ss >> x;
-	// 	size = static_cast<string::size_type>(x);
-	// 	char buffer[REQ_MAX_SIZE] = {0};
+// 	// std::filebuf fb;
+//  	// fb.open ("testout2.txt",std::ios::out);
+//  	// std::ostream os(&fb);
+//  	// os << this->brut_body;
+//  	// fb.close();
 
-	// 	// read(this->socket_client, buffer, req.header.);
+// 	// cout << "coucou je suis bien la et je dois regarder si je read and dechunck dans parseTransferEncoding() ou dans le server.cpp, et toi quel est ton avis ?" << endl;
+// 	// if ((pos = str.find("\r\n")) != string::npos)
+// 	// {
+// 	// 	nb_hexa = str.substr(0, pos);
+// 	// 	str.erase(0, pos + 2);
 
-	// 	ssbody << buffer;
+// 	// 	string::size_type x;
+// 	// 	std::stringstream ss;
+// 	// 	std::stringstream ssbody;
+// 	// 	ss << std::hex << nb_hexa;
+// 	// 	ss >> x;
+// 	// 	size = static_cast<string::size_type>(x);
+// 	// 	char buffer[REQ_MAX_SIZE] = {0};
 
-	// 	// cout << "TEST : " << ret.str() << endl;
+// 	// 	// read(this->socket_client, buffer, req.header.);
 
-	// 	// output it as a signed type
-	// 	// cout << "str: " << str	<< endl;
-	// 	// std::cout << "TESTE : "<< size << std::endl;
-	// 	// this->concat_body = ret.str();
-	// }
-	// else {
-	// 	cerr << "Error : Error syntaxe separator \": \" in '" << nb_hexa << "'" << endl;
-	// 	return 1;
-	// }
-	return 0;
-}
+// 	// 	ssbody << buffer;
+
+// 	// 	// cout << "TEST : " << ret.str() << endl;
+
+// 	// 	// output it as a signed type
+// 	// 	// cout << "str: " << str	<< endl;
+// 	// 	// std::cout << "TESTE : "<< size << std::endl;
+// 	// 	// this->concat_body = ret.str();
+// 	// }
+// 	// else {
+// 	// 	cerr << "Error : Error syntaxe separator \": \" in '" << nb_hexa << "'" << endl;
+// 	// 	return 1;
+// 	// }
+// 	return 0;
+// }
 
 void Body::reset( void ) {
 	this->brut_body = "";
@@ -1281,33 +1282,28 @@ bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet
 	size_t header_size = 0;
 	string::size_type hl_pos;
 	string::size_type b_pos;
-	char sep[4] = {'\r', '\n', '\r', '\n'}; 
+	char sep[4] = {'\r', '\n', '\r', '\n'};
 	for (size_t i = 0; i < octet_read - 3; i++) {
 		if (req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
-			header_size  = i;
+			header_size = i;
 			break;
 		}
 	}
 	std::string header = "";
 	for (size_t i = 0; i < header_size; i++) {
-			header.push_back(req[i]);
-		}
+		header.push_back(req[i]);
+	}
 
-	string body;
-
-	/* split header */
-	string::size_type h_pos;
-	h_pos = 0;
-
-
-	/* get content-length */
-	string::size_type cl_pos = header.find("Content-Length: ");
+	string 				body;
+	string::size_type 	h_pos = 0;
+	string::size_type 	cl_pos = header.find("Content-Length: ");
 	if (cl_pos == string::npos) {
 		if (header.size() == req.size() - 4) {
 			cout << "no content-length and no body" << endl;
 			return 1;
 		}
-	} else {
+	}
+	else {
 		string::size_type cl_end = header.find("\r\n", cl_pos);
 		string content_length = header.substr(cl_pos + 16, cl_end - cl_pos - 16);
 		int cl = atoi(content_length.c_str());

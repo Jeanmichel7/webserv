@@ -405,7 +405,7 @@ bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 		fd.open(*this->config.getFile(req.method.path));
 	// check if is allowed
 	if (!this->config.selectServ(req.header.host_ip, req.header.port))
-		 this->badRequest(req);
+		this->badRequest(req);
 		// select the server
 	else if (!this->checkmethod(req, this->config.getMethod(req.method.path)))
 		 this->method_not_allowed(req);
@@ -573,6 +573,18 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 /********************************************/
 
 
+int Settings::checkArgs(int argc, char **argv)
+{
+	if (argc < 2) {
+		std::cerr << RED << "WebServ$> Bad argument: please enter the path of the configuration file." << DEF << std::endl;
+		return (1);
+	}
+	if (argc > 3) {
+		std::cerr << RED << "WebServ$> Bad argument: please enter only the path of the configuration file." << DEF << std::endl;
+		return (1);
+	}
+	return (0);
+}
 
 void		Settings::check_timeout(Sbuffer *requests, int ke)
 {
