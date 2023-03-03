@@ -95,29 +95,19 @@ int main(int argc, char **argv)
 						{
 							char buffer[4097];
 							size_t readed = 0;
-							readed = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, buffer);
-							/*
-							if (!reqIsChuncked(buffer))
-							{
-								if (buffer == "0\r\n\r\n")
-								{
-									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
-									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-								} 
-								els
-									buffer.erase(0, buffer.find("\r\n") + 2);
-							}
-							*/
-							
+							readed = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, buffer);			
 							sbuffer[event[i].ident].buffer.insert(sbuffer[event[i].ident].buffer.end(), buffer, buffer + readed);
-
-							// cout << "BUFFER: '" << sbuffer[event[i].ident] << "'" << endl;
-							// if (yd::ends_with_rn(sbuffer[event[i].ident]))
 							if (req.isFinishedRequest(sbuffer[event[i].ident].buffer, sbuffer[event[i].ident].readed))
 							{
+								std::vector< char >::iterator start = sbuffer[event[i].ident].buffer.begin();
+								std::vector< char >::iterator end = sbuffer[event[i].ident].buffer.end();
+								cout << "BUFFER: " << endl;
+								for (; start != end; start++)
+									std::cout << *start;
+								cout << endl;
+
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-								cout << "BLABLABLABALABLABALABLBA \n" << sbuffer[event[i].ident].buffer.size() << std::endl;
 							}
 						}
 						else if (event[i].filter == EVFILT_WRITE)

@@ -152,14 +152,9 @@ Settings::Settings()
 	this->ext[".7z"] = "application/x-7z-compressed";
 }
 
-
-
 Settings::~Settings()
 {
 }
-
-
-
 
 void	Settings::build(int ke)
 {
@@ -291,27 +286,26 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr, si
 }
 
 
-
 void Settings::post(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
 {
 	std::stringstream header;
 	std::string header_script;
 	std::fstream fd;
 
-	header <<	"HTTP/1.1 ";
+	header << "HTTP/1.1 ";
 	if (!this->config.getMethod(req.method.path).ispost)
 	{
 		this->method_not_allowed(req);
 		return ;
 	}
-	if (req.contain_body)
-		if (!req.body.is_chuncked && !req.header.content_length.empty())
-			if (size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 != std::stoul(req.header.content_length.c_str()))
-			{
-				std::cout << "VALEUR A AVOIR DFBHTNHTNHTNNHT LE HEADER " << size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 << std::endl;
-				std::cout << "VALEUR CONTENT LENGHT " << std::stoul(req.header.content_length.c_str()) << std::endl;
-				return (this->badRequest(req));
-			}
+	// if (req.contain_body)
+	// 	if (!req.body.is_chuncked && !req.header.content_length.empty())
+	// 		if (size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 != std::stoul(req.header.content_length.c_str()))
+	// 		{
+	// 			// std::cout << "VALEUR A AVOIR DFBHTNHTNHTNNHT LE HEADER " << size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 << std::endl;
+	// 			// std::cout << "VALEUR CONTENT LENGHT " << std::stoul(req.header.content_length.c_str()) << std::endl;
+	// 			return (this->badRequest(req));
+	// 		}
 	fd.open(this->config.getFile(req.method.path)->c_str(), std::fstream::in);
 	if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
 	{
@@ -344,6 +338,39 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr, s
 	fd.close();
 }
 
+
+void Settings::del(Request const &req, struct sockaddr_in const& client_addr, size_t size_read) {
+	std::stringstream header;
+
+	if (!this->config.getMethod(req.method.path).isdelete) {
+		this->method_not_allowed(req);
+		return ;
+	}
+	string path_file = this->config.getFile(req.method.path)->c_str();
+	header << "HTTP/1.1 ";
+	std::ifstream infile(path_file);
+	if (infile.good()) {
+		std::cout << "Le fichier existe" << std::endl;
+		if (remove(path_file.c_str()) != 0) {
+			perror("Error deleting file");
+		}
+		else {
+			header << "204 No Content\n" ;
+			puts("File successfully deleted");
+		}
+	}
+	else {
+		header << "404 Not Found\n";
+		// std::cout << "Le fichier n'existe pas" << std::endl;
+	}
+	header << Settings::date();
+	header << "server: " << *this->config.getName() << "\n";
+	header << "Content-Length: " << _body.size() << "\n";
+	header << "Content-Type: " << this->checkextension(req.method.path) << "\n";
+	header << "Connection: keep-alive\r\n\r\n";
+	this->_header = header.str();
+}
+
 size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting, char *buff)
 {
 	size_t				o_read = 0;
@@ -355,11 +382,10 @@ size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting
 	o_read = recv(socket, buff, 4096, 0);
 		if (o_read == -1 || o_read == 0)
 			return(o_read);
+			
 	readed += o_read;
 	return(o_read) ;
 }
-
-
 
 bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read)
 {
@@ -396,8 +422,10 @@ bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 		this->not_found();
 	else if (req.method.isGet)
 		this->get(req, client_addr, size_read);
-	else if (req.method.isPost || req.method.isDelete)
+	else if (req.method.isPost)
 		this->post(req, client_addr, size_read);
+	else if (req.method.isDelete)
+		this->del(req, client_addr, size_read);
 	else
 		this->badRequest(req);
 		
@@ -478,7 +506,7 @@ std::string Settings::folder_gestion(Request const& req)
 	reponse << buffer.str().size();
 	reponse << "\nContent-Type: text/html\n";
 	reponse << "Connection: keep-alive\n\n";
-	reponse << buffer;
+	reponse << buffer.str();
 	_header = reponse.str();
 }
 
@@ -520,11 +548,11 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 		sessions_date[sessionId] = this->date();
 		sessions_count[sessionId]++;
 
-		map<string, string>::iterator it2 = sessions_date.begin();
-		while (it2 != sessions_date.end()) {
-			// cout << "session: " << it2->first << " " << it2->second << endl;
-			it2++;
-		}
+		// map<string, string>::iterator it2 = sessions_date.begin();
+		// while (it2 != sessions_date.end()) {
+		// 	cout << "session: " << it2->first << " " << it2->second << endl;
+		// 	it2++;
+		// }
 	} else {
 		date = sessions_date[req.header.cookies.at("wsid")];
 		sessions_date[req.header.cookies.at("wsid")] = this->date();
@@ -653,8 +681,7 @@ void Settings::method_not_allowed(Request const& req)
 
 
 
- void Settings::forbidden_error( void )
-
+void Settings::forbidden_error( void )
 {
 	std::fstream		file("http/403.html");
 	std::stringstream	contentefile;

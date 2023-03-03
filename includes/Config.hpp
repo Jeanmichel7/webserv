@@ -22,8 +22,6 @@ struct	Methods
 
 
 //this class serv to extracte and create config and serveur object in a file 
-
-
 namespace yd{
 	bool isValidPathDir(std::string const &s);
 	bool isValidPathFile(std::string const &s);

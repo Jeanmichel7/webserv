@@ -36,9 +36,9 @@ class Settings
 		Config		config;
 		struct timespec check_request_timeout;
 		void		build(int ke);
-		void	get( Request const& req,  struct sockaddr_in const& client_addr, size_t size_read);
-		void	post( Request const& req,  struct sockaddr_in const& client_addr, size_t size_read);
-		void	del( void );
+		void	get( Request const &req,  struct sockaddr_in const& client_addr, size_t size_read);
+		void	post( Request const &req,  struct sockaddr_in const& client_addr, size_t size_read);
+		void 	del( Request const &req, struct sockaddr_in const& client_addr, size_t size_read);
 		std::string	date( void );
 		void	badRequest( Request const& req );
 		void	forbidden_error( void );
