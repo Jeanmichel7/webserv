@@ -30,7 +30,6 @@ int main(int argc, char *argv[], char *envp[]) {
 				if (c == EOF)
 					break;
 					 write(2, &c, 1);
-				i++;
         if (c == '\n') {
             printf("<br>\n");  // utilise la balise HTML pour les nouvelles lignes
         } else if (c == '<') {
@@ -44,6 +43,7 @@ int main(int argc, char *argv[], char *envp[]) {
         } else {
             putchar(c);
         }
+				i++;
     }
 		printf("\nCARACTERE LU SUR LA STDIN : %d\n", i);
 		printf("\n");

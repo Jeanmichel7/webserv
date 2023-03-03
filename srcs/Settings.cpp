@@ -243,7 +243,7 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr, si
 	{
 		if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
 		{
-			_header.append(" 200 OK\n");
+			_header.append("200 OK\n");
 			_body = CGI::execute_cgi(this->config, req, client_addr);
 			yd::extractHeader(header_script, _body);
 		}
@@ -254,10 +254,10 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr, si
 				file++;
 			fd.open(file, std::fstream::in | std::fstream::out);
 			if (fd.is_open())
-				_header.append(" 200 OK\n");
+				_header.append("200 OK\n");
 			else if (!this->checkextension(req.method.path).empty())
 			{
-				_header.append(" 404 Not Found\n");
+				_header.append("404 Not Found\n");
 				fd.open("http/404.html");
 			}
 			else if (!this->config.getDirectoryListing(req.method.path).empty())
@@ -298,7 +298,7 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr, s
 	std::string header_script;
 	std::fstream fd;
 
-	header <<	"HTTP/1.1";
+	header <<	"HTTP/1.1 ";
 	if (!this->config.getMethod(req.method.path).ispost)
 	{
 		this->method_not_allowed(req);
@@ -323,12 +323,14 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr, s
 		fd.open(this->config.getError(404)->c_str(), O_RDONLY);
 		if (!fd.is_open())
 			fd.open("http/404.html", O_RDONLY);
-		header << " 404 Not Found\n";
+		header << "404 Not Found\n";
 	}
 	if (_body.size() == 0)
-		header << " 204 No Content\n";
+		header << "204 No Content\n";
 	else if (strcmp(header_script.c_str(), "Status: 500") == 0)
 		header << "500 Internal Server Error\n";
+	else
+		header << "200 OK " << "\n";
 	header << Settings::date();
 	header << "server: " << *this->config.getName() << "\n";
 	header << "Content-Length: " << _body.size();
@@ -367,7 +369,7 @@ bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 	_add_eof = 0;
 
 	std::fstream fd;
-	_header = "HTTP/1.1";
+	_header = "HTTP/1.1 ";
 	_body.clear();
 	_cookie = "";
 	// check the methode
