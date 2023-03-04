@@ -1280,11 +1280,21 @@ void Request::reset( void ) {
 bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet_read) {
 
 	size_t header_size = 0;
-	string::size_type hl_pos;
-	string::size_type b_pos;
+	// string::size_type hl_pos;
+	// string::size_type b_pos;
+
+	// // display buffer total
+	// std::vector<char>::const_iterator start = req.begin();
+	// std::vector<char>::const_iterator end = req.end();
+	// cout << "BUFFER: " << endl;
+	// for (; start != end; start++)
+	// 	std::cout << *start;
+	// cout << endl;
+
 	char sep[4] = {'\r', '\n', '\r', '\n'};
 	for (size_t i = 0; i < octet_read - 3; i++) {
-		if (req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
+		if (req.size()> 3 && req[i] && req[i+1] && req[i+2] && req[i+3]
+		&& req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
 			header_size = i;
 			break;
 		}
@@ -1295,12 +1305,18 @@ bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet
 	}
 
 	string 				body;
-	string::size_type 	h_pos = 0;
+	// string::size_type 	h_pos = 0;
 	string::size_type 	cl_pos = header.find("Content-Length: ");
 	if (cl_pos == string::npos) {
+		cout << "header size : " << header.size() << endl;
+		cout << "req size : " << req.size() << endl;
 		if (header.size() == req.size() - 4) {
 			cout << "no content-length and no body" << endl;
 			return 1;
+		}
+		else {
+			cout << "no content-length but body" << endl;
+			return 0;
 		}
 	}
 	else {

@@ -21,23 +21,12 @@
 <body>
 	<h1> Voici le titre principal </h1>
 
-	<h2> Formulaire test requet post avec encodage multipart/from-data</h2>
-	<form method="post" action="a.out" enctype="multipart/form-data" id="form">
-		<label for="file">Fichier: </label><br />
-		<input type="file" name="file" id="file" /><br />
-		<label for="name2">Nom: </label><br />
-		<input type="text" name="name2" value="Jean" id="name2" /><br />
-		<input type="submit" value="Envoyer" >
+	<h2> GET </h2>
+	<form method="get" action="index2.html" id="form">
+		<input type="submit" value="go to index2.html" >
 	</form>
-	<h2> Formulaire test requet post avec encodage x-www-form-encoded</h2>
-	<form method="post" action="a.out" enctype="x-www-form-encoded">
-		<label for="file">Fichier: </label><br />
-		<input type="file" name="file" id="file" /><br />
-		<label for="name2">Nom: </label><br />
-		<input type="text" name="name2" value="Jean" id="name2" /><br />
-		<input type="submit" value="Envoyer" >
-	</form>
-	<h2> Formulaire test pour requet get avec encodage par defaut </h2>
+
+	<h2>GET with body </h2>
 	<form method="get" action="a.out" id="form">
 		<label for="file">Fichier: </label><br />
 		<input type="file" name="file" id="file" /><br />
@@ -46,19 +35,34 @@
 		<input type="submit" value="Envoyer" >
 	</form>
 
-	<h2> Formulaire test pour requet get avec encodage par defaut </h2>
-	<form method="get" action="index2.html" id="form">
+
+	<h2> POST encodage multipart/from-data</h2>
+	<form method="post" action="a.out" enctype="multipart/form-data" id="form">
+		<label for="file">Fichier: </label><br />
+		<input type="file" name="file" id="file" /><br />
+		<label for="name2">Nom: </label><br />
+		<input type="text" name="name2" value="Jean" id="name2" /><br />
+		<input type="submit" value="Envoyer" >
+	</form>
+	<h2> POST encodage x-www-form-encoded</h2>
+	<form method="post" action="a.out" enctype="x-www-form-encoded">
+		<label for="file">Fichier: </label><br />
+		<input type="file" name="file" id="file" /><br />
+		<label for="name2">Nom: </label><br />
+		<input type="text" name="name2" value="Jean" id="name2" /><br />
 		<input type="submit" value="Envoyer" >
 	</form>
 
-	<h2> Formulaire test pour requet delete </h2>
+
+
+	<h2> DELETE file </h2>
 	<form method="DELETE" action="resources/file1.txt">
 		<p>Êtes-vous sûr de vouloir supprimer le fichier /resource/file1.txt ?</p>
 		<button type="button" id="delRessource">Supprimer</button>
 		<p id="ret_del"></p>
 	</form>
 
-	<h2> Formulaire test pour requet delete inexistant file</h2>
+	<h2> DELETE inexist file</h2>
 	<form method="DELETE" action="/resources/inexistfile.txt">
 		<p>Êtes-vous sûr de vouloir supprimer la ressource inexistfile.txt ?</p>
 		<button type="button" id="delInexistRessource">Supprimer</button>

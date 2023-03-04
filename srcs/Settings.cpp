@@ -15,6 +15,12 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <iostream>
+#include <string>
+#include <istream>
+#include <fstream>
+#include <unistd.h>
+#include <cstdio>
 
 Settings::Settings(Config const& base) : config(base)
 {
@@ -371,27 +377,130 @@ void Settings::del(Request const &req, struct sockaddr_in const& client_addr, si
 	this->_header = header.str();
 }
 
+size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_starting, char *buff)
+{
+	cout << "READING HEADER" << endl;
+	int o_read = 0;
+	time(&time_starting);
+
+	char tmp[2];
+	std::memset(tmp, 0, 2);
+	std::memset(buff, 0, 4097);
+	stringstream sbuffer;
+	// usleep(1000);
+	
+	o_read = recv(socket, tmp, 1, 0);
+	readed ++;
+	if (o_read == -1 || o_read == 0)
+		return(o_read);
+	sbuffer << tmp;
+	while (sbuffer.str().find("\r\n\r\n") == string::npos)
+	{
+		o_read = recv(socket, tmp, 1, 0);
+		readed ++;
+		if (o_read == -1 || o_read == 0)
+			break;
+		sbuffer << tmp;
+	}
+	// cout << "'" << sbuffer.str() << "'" << endl;
+	strcpy(buff, sbuffer.str().c_str());
+	// delete[] buff;
+	return(o_read) ;
+}
+
 size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting, char *buff)
 {
-	size_t				o_read = 0;
+	cout << "READING" << endl;
+	size_t	o_read = 0;
 	time(&time_starting);
 	std::memset(buff, 0, 4097);
-	Request req;
 	// usleep(1000);
 	
 	o_read = recv(socket, buff, 4096, 0);
-		if (o_read == -1 || o_read == 0)
-			return(o_read);
+	if (o_read == (size_t)-1 || o_read == (size_t)0)
+		return(o_read);
 			
 	readed += o_read;
 	return(o_read) ;
 }
 
+char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_starting, char *useless)
+{
+	cout << "READING CHUNCK" << endl;
+	int o_read = 0;
+	time(&time_starting);
+
+	char tmp[2];
+	char tmp_purge[2];
+	std::memset(tmp, 0, 2);
+	std::memset(tmp_purge, 0, 2);
+	stringstream ssize;
+	stringstream sbuffer;
+	// usleep(1000);
+	
+	o_read = recv(socket, tmp, 1, 0);
+	cout << "'" << tmp << "'"  << endl;
+	if (o_read == -1 || o_read == 0)
+		return("");
+	ssize << tmp;
+
+	// purge
+	if (tmp[0] == '\r' || tmp[0] == '\n')
+	{
+		while (tmp[0] == '\r' || tmp[0] == '\n') {
+			o_read = recv(socket, tmp, 1, 0);
+			if (o_read == -1 || o_read == 0)
+				return("");
+			cout << "'" << tmp << "'"  << endl;
+		}
+	}
+
+	while (ssize.str().find("\r\n") == string::npos )
+	{
+		o_read = recv(socket, tmp, 1, 0);
+		// cout <<  "'" << tmp  << "'" << endl;
+		if (o_read == -1 || o_read == 0)
+			break;
+		ssize << tmp;
+	}
+	// cout << "ssize : '" << ssize.str() << "'" << endl;
+	if (ssize.str().empty())
+		return ("");
+
+	string::size_type x;
+	std::stringstream ss;
+	std::stringstream ssbody;
+	ss << std::hex << ssize.str();
+	ss >> x;
+	long size = static_cast<string::size_type>(x);
+	cout << "size : " << size << endl;
+
+	if (size == 0)
+		return ("");
+
+	char *buff = new char[size + 1];
+	std::memset(buff, 0, size + 1);
+
+	o_read = recv(socket, buff, size, 0);
+	readed += o_read;
+	if (o_read == -1 || o_read == 0)
+		return("");
+	sbuffer << buff;
+	cout << "sbuffer : " << sbuffer.str() << endl;
+
+	string tmpbuff = buff;
+	cout << "buff du chunck : '" << tmpbuff << "'" << endl;
+	// cout << "size read : " << readed << endl;
+	// cout << "size buffer : " << strlen(buff) << endl;
+
+	return (buff);
+}
+
+
 bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read)
 {
 	std::string reponse_request;
 	Request 	req;
-	int valid = -1;
 	_add_eof = 0;
 
 	std::fstream fd;

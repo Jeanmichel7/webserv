@@ -20,7 +20,7 @@ struct Sbuffer {
 	std::vector<char> 	buffer;
 	unsigned int 		readed;
 	time_t 				time_start;
-	bool 				is_chunked;
+	bool 				is_chunked = false;
 };
 
 struct Request;
@@ -49,6 +49,8 @@ class Settings
 		int 			check_forbidden(std::string const& path);
 		void			method_not_allowed( Request const& req );
 		size_t 			reading(int socket, unsigned int &readed, time_t &time_starting, char *buffer);
+		size_t 			reading_header(int socket, unsigned int &readed, time_t &time_starting, char *buff);
+		char * 			reading_chunck(int socket, unsigned int &readed, time_t &time_starting, char *buff);
 		std::string		checkextension(std::string const& path);
 		std::string		folder_gestion(Request const& req);
 		void			set_event(int ke, int socket, short filter, short flag);
