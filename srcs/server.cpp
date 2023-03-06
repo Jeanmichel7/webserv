@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/06 23:33:49 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/06 23:38:07 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,8 +187,9 @@ int main(int argc, char **argv)
 									sbuffer[event[i].ident].buffer.clear();
 									sbuffer[event[i].ident].readed = 0;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-									clients.erase(event[i].ident);
-									close(event[i].ident);
+									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
+									// clients.erase(event[i].ident);
+									// close(event[i].ident);
 									sbuffer[event[i].ident].is_413 = false;
 								}
 							}
