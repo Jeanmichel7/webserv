@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/06 22:35:12 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/06 23:06:02 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-									break;
+									continue;
 								}
 								for (unsigned long j = 0; j <  sbuffer[event[i].ident].readed; j++)
 									sbuffer[event[i].ident].buffer.push_back(header_buffer[j]);
@@ -196,6 +196,7 @@ int main(int argc, char **argv)
 
 								// usleep(1000);
 								std::cout << "\nreponse : '" << reponse.str() << "'" << std::endl;
+								usleep(1000000);
 								write(event[i].ident, reponse.str().c_str(), reponse.str().size());
 								sbuffer[event[i].ident].buffer.clear();
 								sbuffer[event[i].ident].readed = 0;

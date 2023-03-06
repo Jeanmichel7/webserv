@@ -573,7 +573,7 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 		else if (tok.getToken() == "off")
 			_directory_listing = false;
 		else
-			throw (FormatError(tok.getToken(), "must be \"on\" or \"off\ "));
+			throw (FormatError(tok.getToken(), "must be \"on\" or \"off\""));
 	}
 
 	void Location::setRoot(Tokenizer &tok)
@@ -730,7 +730,7 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 
 		void Server::setMaxBody(Tokenizer &tok)
 		{
-			if (yd::stoui(tok.getToken().c_str()) < static_cast<unsigned int>(0) || yd::stoui(tok.getToken().c_str()) > static_cast<unsigned int>(4,294,967,295))
+			if (yd::stoui(tok.getToken().c_str()) < static_cast<unsigned int>(0) || yd::stoui(tok.getToken().c_str()) > static_cast<unsigned int>(4294967295))
 				throw (FormatError(tok.getToken(), "maxbody must be positive number and inferior to 4,294,967,295" ));
 			_max_body_size = yd::stoui(tok.getToken().c_str());
 
