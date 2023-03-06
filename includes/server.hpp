@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/03/04 17:53:46 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/06 19:12:42 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,9 @@
 # include <dirent.h>
 
 
-# include "Request.hpp"
 # include "Config.hpp"
 # include "Cgi.hpp"
+# include "Request.hpp"
 
 
 # include "Settings.hpp"

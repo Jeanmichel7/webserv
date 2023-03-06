@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/06 18:08:50 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/06 21:53:20 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,13 @@ int main(int argc, char **argv)
 
 							if (reqIsChuncked(header_buffer) == false && sbuffer[event[i].ident].is_chunked == false && sbuffer[event[i].ident].buffer.size() == 0) {
 								header_readed = server.reading_header(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, header_buffer);
+								if (req.check_header_buffer(header_buffer, server.config)) {
+									sbuffer[event[i].ident].is_413 = true;
+
+									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
+									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+									break;
+								}
 								for (unsigned long j = 0; j <  sbuffer[event[i].ident].readed; j++)
 									sbuffer[event[i].ident].buffer.push_back(header_buffer[j]);
 							}
@@ -159,6 +166,7 @@ int main(int argc, char **argv)
 								}
 							}
 							// display buffer total
+							cout << "BUFFER size : " << sbuffer[event[i].ident].buffer.size() << endl;
 							// std::vector<char>::const_iterator start = sbuffer[event[i].ident].buffer.begin();
 							// std::vector<char>::const_iterator end = sbuffer[event[i].ident].buffer.end();
 							// cout << "BUFFER: '" << endl;
@@ -169,21 +177,54 @@ int main(int argc, char **argv)
 						}
 						else if (event[i].filter == EVFILT_WRITE)
 						{
-							if (!server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident], sbuffer[event[i].ident].readed))
-							{
+
+							if (sbuffer[event[i].ident].is_413) {
+								std::stringstream reponse;
+								std::fstream fd;
+								cout << "on depasse le maxi body size server!!" << endl;
+
+								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+
+								reponse << "HTTP/1.1 413 Payload Too Large\n";
+								reponse << "Content-Type: text/plain\n";
+								// reponse << server.date();
+								// reponse << "server: " << server.config.getName() << "\n";
+								// reponse << "Connection: close\n";
+								reponse << "Content-Length: 21\r\n\r\n";
+								reponse << "Payload Too Large\r\n\r\n";
+								// char tmp_buff[4096];
+								// while (recv(event[i].ident, tmp_buff, 4096, 0) > 0)
+								// 	;
+
+								// usleep(1000);
+								std::cout << "\nreponse : '" << reponse.str() << "'" << std::endl;
+								write(event[i].ident, reponse.str().c_str(), reponse.str().size());
 								sbuffer[event[i].ident].buffer.clear();
 								sbuffer[event[i].ident].readed = 0;
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 								clients.erase(event[i].ident);
 								close(event[i].ident);
-								std::cout << "CLOSE\n";
+								sbuffer[event[i].ident].is_413 = false;
+								// usleep(1000);
 							}
 							else
 							{
-								sbuffer[event[i].ident].buffer.clear();
-								sbuffer[event[i].ident].readed = 0;
-								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-								server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
+								if (!server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident], sbuffer[event[i].ident].readed))
+								{
+									sbuffer[event[i].ident].buffer.clear();
+									sbuffer[event[i].ident].readed = 0;
+									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+									clients.erase(event[i].ident);
+									close(event[i].ident);
+									std::cout << "CLOSE\n";
+								}
+								else
+								{
+									sbuffer[event[i].ident].buffer.clear();
+									sbuffer[event[i].ident].readed = 0;
+									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
+								}
 							}
 						}
 					}

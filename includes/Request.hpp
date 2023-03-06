@@ -16,6 +16,7 @@
 using namespace std;
 
 # include "server.hpp"
+// class Config;
 
 struct Method {
 	string 	brut_method;
@@ -192,6 +193,7 @@ struct Request {
 	void reset( void );
 	// bool isFinishedRequest( string const &buff );
 	bool isFinishedRequest(std::vector<char> const &req, unsigned int octet_read);
+	bool check_header_buffer(string buffer, Config & config);
 };
 
 #endif

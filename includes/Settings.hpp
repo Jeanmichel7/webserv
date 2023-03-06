@@ -21,6 +21,7 @@ struct Sbuffer {
 	unsigned int 		readed;
 	time_t 				time_start;
 	bool 				is_chunked;
+	bool				is_413;
 };
 
 struct Request;
