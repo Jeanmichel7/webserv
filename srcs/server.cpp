@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/06 21:53:20 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/06 22:35:12 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ bool reqIsChuncked(std::string req)
 int main(int argc, char **argv)
 {
 	Settings server;
-	if (server.checkArgs(argc, argv) == 1)
+	if (server.checkArgs(argc) == 1)
 		return (1);
 	try
 	{
@@ -106,12 +106,10 @@ int main(int argc, char **argv)
 							if (sbuffer[event[i].ident].is_chunked == true)
 							{
 								// cout << "On est dans les chuncks" << endl;
-								string::size_type pos;
-								char *useless = NULL;
 								char *chunck_buffer = NULL;
 								// bool is_last_chunck = false;
 								sbuffer[event[i].ident].readed = 0;
-								chunck_buffer = server.reading_chunck(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, useless);
+								chunck_buffer = server.reading_chunck(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start);
 								// cout << "chunck_buffer : '" << chunck_buffer << "'" << endl;
 								
 								if (strlen(chunck_buffer) == 0) {
@@ -209,7 +207,7 @@ int main(int argc, char **argv)
 							}
 							else
 							{
-								if (!server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident], sbuffer[event[i].ident].readed))
+								if (!server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident]))
 								{
 									sbuffer[event[i].ident].buffer.clear();
 									sbuffer[event[i].ident].readed = 0;

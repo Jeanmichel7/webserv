@@ -214,7 +214,7 @@ std::string Settings::date(void)
 
 
 
-void Settings::get(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
+void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 {
 	std::string header_script;
 	std::stringstream	n;
@@ -292,7 +292,7 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr, si
 }
 
 
-void Settings::post(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
+void Settings::post(Request const &req, struct sockaddr_in const& client_addr)
 {
 	std::stringstream header;
 	std::string header_script;
@@ -345,8 +345,9 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr, s
 }
 
 
-void Settings::del(Request const &req, struct sockaddr_in const& client_addr, size_t size_read) {
+void Settings::del(Request const &req, struct sockaddr_in const& client_addr) {
 	std::stringstream header;
+	(void)client_addr;
 
 	if (!this->config.getMethod(req.method.path).isdelete) {
 		this->method_not_allowed(req);
@@ -428,7 +429,7 @@ size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting
 	return(o_read) ;
 }
 
-char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_starting, char *useless)
+char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_starting)
 {
 	cout << "READING CHUNCK" << endl;
 	int o_read = 0;
@@ -445,7 +446,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	o_read = recv(socket, tmp, 1, 0);
 	cout << "tmp[0] : " << "'" << tmp << "'"  << endl;
 	if (o_read == -1 || o_read == 0)
-		return("");
+		return(NULL);
 	ssize << tmp;
 
 	// purge
@@ -453,7 +454,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	{
 		o_read = recv(socket, tmp, 1, 0);
 		if (o_read == -1 || o_read == 0)
-			return("");
+			return(NULL);
 	}
 
 	while (ssize.str().find("\r\n") == string::npos )
@@ -466,7 +467,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	}
 	// cout << "ssize : '" << ssize.str() << "'" << endl;
 	if (ssize.str().empty())
-		return ("");
+		return (NULL);
 
 	string::size_type x;
 	std::stringstream ss;
@@ -476,7 +477,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	long size = static_cast<string::size_type>(x);
 	cout << "size : " << size << endl;
 	if (size == 0)
-		return ("");
+		return (NULL);
 
 	char *buff = new char[size + 1];
 	std::memset(buff, 0, size + 1);
@@ -484,7 +485,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	o_read = recv(socket, buff, size, 0);
 	readed += o_read;
 	if (o_read == -1 || o_read == 0)
-		return("");
+		return(NULL);
 	printf("buff char * : '%s'\n", buff);
 	// sbuffer << buff;
 	// cout << "sbuffer : " << sbuffer.str() << endl;
@@ -498,7 +499,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 }
 
 
-bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read)
+bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr)
 {
 	std::string reponse_request;
 	Request 	req;
@@ -531,11 +532,11 @@ bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 	else if (check_forbidden(*this->config.getFile(req.method.path)) && checkextension(*this->config.getFile(req.method.path)).empty())
 		this->not_found();
 	else if (req.method.isGet)
-		this->get(req, client_addr, size_read);
+		this->get(req, client_addr);
 	else if (req.method.isPost)
-		this->post(req, client_addr, size_read);
+		this->post(req, client_addr);
 	else if (req.method.isDelete)
-		this->del(req, client_addr, size_read);
+		this->del(req, client_addr);
 	else
 		this->badRequest(req);
 		
@@ -581,7 +582,7 @@ std::string	Settings::checkextension(std::string const& path)
 
 
 
-std::string Settings::folder_gestion(Request const& req)
+void Settings::folder_gestion(Request const& req)
 {
 	std::stringstream	reponse;
 	std::stringstream	buffer;
@@ -683,7 +684,7 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 /********************************************/
 
 
-int Settings::checkArgs(int argc, char **argv)
+int Settings::checkArgs(int argc)
 {
 	if (argc < 2) {
 		std::cerr << RED << "WebServ$> Bad argument: please enter the path of the configuration file." << DEF << std::endl;

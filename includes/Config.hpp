@@ -132,7 +132,7 @@ class Config
 		Config &operator=(Config const &other);
 		std::vector<Server> _server;
 		unsigned int getServNumb() const;
-		unsigned int selectFirstServ();
+		void selectFirstServ();
 		void operator++();
 		void operator--();
 

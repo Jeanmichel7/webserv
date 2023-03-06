@@ -37,11 +37,11 @@ class Settings
 	public:
 		Config			config;
 		struct timespec check_request_timeout;
-		int 			checkArgs(int argc, char **argv);
+		int 			checkArgs(int argc);
 		void			build(int ke);
-		void			get( Request const &req,  struct sockaddr_in const& client_addr, size_t size_read);
-		void			post( Request const &req,  struct sockaddr_in const& client_addr, size_t size_read);
-		void 			del( Request const &req, struct sockaddr_in const& client_addr, size_t size_read);
+		void			get( Request const &req,  struct sockaddr_in const& client_addr);
+		void			post( Request const &req,  struct sockaddr_in const& client_addr);
+		void 			del( Request const &req, struct sockaddr_in const& client_addr);
 		std::string		date( void );
 		void			badRequest( Request const& req );
 		void			forbidden_error( void );
@@ -51,12 +51,12 @@ class Settings
 		void			method_not_allowed( Request const& req );
 		size_t 			reading(int socket, unsigned int &readed, time_t &time_starting, char *buffer);
 		size_t 			reading_header(int socket, unsigned int &readed, time_t &time_starting, char *buff);
-		char * 			reading_chunck(int socket, unsigned int &readed, time_t &time_starting, char *buff);
+		char * 			reading_chunck(int socket, unsigned int &readed, time_t &time_starting);
 		std::string		checkextension(std::string const& path);
-		std::string		folder_gestion(Request const& req);
+		void			folder_gestion(Request const& req);
 		void			set_event(int ke, int socket, short filter, short flag);
 		bool			checkmethod(Request const& req, Methods const& t);
-		bool			writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read);
+		bool			writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr);
 		void			check_timeout(Sbuffer *requests, int ke);
 		std::string		timeout( void );
 
