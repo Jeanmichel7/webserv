@@ -1279,8 +1279,6 @@ void Request::reset( void ) {
 bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet_read) {
 
 	size_t header_size = 0;
-	string::size_type hl_pos;
-	string::size_type b_pos;
 	char sep[4] = {'\r', '\n', '\r', '\n'}; 
 	for (size_t i = 0; i < octet_read - 3; i++) {
 		if (req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
@@ -1302,9 +1300,11 @@ bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet
 
 	/* get content-length */
 	string::size_type cl_pos = header.find("Content-Length: ");
-	if (cl_pos == string::npos) {
-		if (header.size() == req.size() - 4) {
-			cout << "no content-length and no body" << endl;
+	if (cl_pos == string::npos) 
+	{
+		if (header.size() == req.size() - 4) 
+		{
+			// cout << "no content-length and no body" << endl;
 			return 1;
 		}
 	} else {

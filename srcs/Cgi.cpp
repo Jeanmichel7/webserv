@@ -21,7 +21,6 @@ void CGI::build(Config &conf, const Request &req,  struct sockaddr_in const &cli
 	//ACQUISITION DES RESSOURCE
 
 	// RECUPERATION DE L'IP CLIENT
-	socklen_t client_addr_len = sizeof(client_addr);
 
 	char client_ip[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(client_addr.sin_addr), client_ip, INET_ADDRSTRLEN);

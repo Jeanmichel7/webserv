@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/03 11:09:20 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/06 13:20:40 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,6 @@ int main(int argc, char **argv)
 						server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 						clients.erase(event[i].ident);
 						close(event[i].ident);
-						std::cout << "CLOSE\n";
 					}
 					else
 					{
@@ -86,10 +85,13 @@ int main(int argc, char **argv)
 						{
 							struct sockaddr_in client_addr;
 							socklen_t client_addr_len = sizeof(client_addr);
-							std::cout << "ACCEPT\n";
 							int socket_client = accept(event[i].ident, (struct sockaddr *)&client_addr, &client_addr_len);
+							// int r = 1;
+							// if (setsockopt(socket_client, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0)
+							// 	std::cout << "nope\n";
 							clients[socket_client] = client_addr;
 							server.set_event(ke, socket_client, EVFILT_READ, EV_ADD | EV_ENABLE);
+							fcntl(socket_client, F_SETFL, O_NONBLOCK);
 						}
 						else if (event[i].filter == EVFILT_READ)
 						{
@@ -99,27 +101,19 @@ int main(int argc, char **argv)
 							sbuffer[event[i].ident].buffer.insert(sbuffer[event[i].ident].buffer.end(), buffer, buffer + readed);
 							if (req.isFinishedRequest(sbuffer[event[i].ident].buffer, sbuffer[event[i].ident].readed))
 							{
-								std::vector< char >::iterator start = sbuffer[event[i].ident].buffer.begin();
-								std::vector< char >::iterator end = sbuffer[event[i].ident].buffer.end();
-								cout << "BUFFER: " << endl;
-								for (; start != end; start++)
-									std::cout << *start;
-								cout << endl;
-
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 							}
 						}
 						else if (event[i].filter == EVFILT_WRITE)
 						{
-							if (!server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident], sbuffer[event[i].ident].readed))
+							if (!server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident]))
 							{
 								sbuffer[event[i].ident].buffer.clear();
 								sbuffer[event[i].ident].readed = 0;
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 								clients.erase(event[i].ident);
 								close(event[i].ident);
-								std::cout << "CLOSE\n";
 							}
 							else
 							{
@@ -133,7 +127,7 @@ int main(int argc, char **argv)
 				}
 			}
 			else
-				server.check_timeout(sbuffer, ke);
+				server.check_timeout(sbuffer, ke, clients);
 		}
 	}
 	catch (const std::exception &e) {

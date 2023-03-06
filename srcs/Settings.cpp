@@ -16,77 +16,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-Settings::Settings(Config const& base) : config(base)
-{
-	check_request_timeout.tv_sec = 1;
-	this->ext[".aac"] = "audio/aac";
-	this->ext[".avi "] = "video/x-msvideo";
-	this->ext[".bin"] = "application/octet-stream";
-	this->ext[".bmp"] = "image/bmp";
-	this->ext[".bz"] = "application/x-bzip";
-	this->ext[".bz2"] = "application/x-bzip2";
-	this->ext[".csh"] = "application/x-csh";
-	this->ext[".css"] = "text/css";
-	this->ext[".csv"] = "text/csv";
-	this->ext[".doc"] = "application/msword";
-	this->ext[".docx "] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-	this->ext[".gif"] = "image/gif";
-	this->ext[".htm"] = "text/html";
-	this->ext[".html"] = "text/html";
-	this->ext[".ico"] = "image/x-icon";
-	this->ext[".jar"] = "application/java-archive";
-	this->ext[".jpeg"] = "image/jpeg";
-	this->ext[".jpg"] = "image/jpeg";
-	this->ext[".js"] = "application/javascript";
-	this->ext[".json"] = "application/json";
-	this->ext[".mid"] = "audio/midi";
-	this->ext[".midi"] = "audio/midi";
-	this->ext[".mpeg"] = "video/mpeg";
-	this->ext[".mp3"] = "audio/mpeg";
-	this->ext[".mp4"] = "video/mp4";
-	this->ext[".odp "] = "application/vnd.oasis.opendocument.presentation";
-	this->ext[".ods"] = "application/vnd.oasis.opendocument.spreadsheet";
-	this->ext[".odt"] = "application/vnd.oasis.opendocument.text";
-	this->ext[".oga"] = "audio/ogg";
-	this->ext[".ogv"] = "video/ogg";
-	this->ext[".ogx"] = "application/ogg";
-	this->ext[".otf"] = "font/otf";
-	this->ext[".png"] = "image/png";
-	this->ext[".pdf"] = "application/pdf";
-	this->ext[".ppt"] = "application/vnd.ms-powerpoint";
-	this->ext[".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-	this->ext[".rar"] = "application/x-rar-compressed";
-	this->ext[".rtf"] = "application/rtf";
-	this->ext[".sh"] = "application/x-sh";
-	this->ext[".svg"] = "image/svg+xml";
-	this->ext[".swf"] = "application/x-shockwave-flash";
-	this->ext[".tar"] = "application/x-tar";
-	this->ext[".tif"] = "image/tiff";
-	this->ext[".tiff"] = "image/tiff";
-	this->ext[".ts"] = "application/typescript";
-	this->ext[".ttf"] = "font/ttf";
-	this->ext[".txt"] = "text/plain";
-	this->ext[".vsd"] = "application/vnd.visio";
-	this->ext[".wav"] = "audio/x-wav";
-	this->ext[".weba"] = "audio/webm";
-	this->ext[".webm"] = "video/webm";
-	this->ext[".webp "] = "image/webp";
-	this->ext[".woff"] = "font/woff";
-	this->ext[".woff2"] = "font/woff2";
-	this->ext[".xhtml"] = "application/xhtml+xml";
-	this->ext[".xls"] = "application/vnd.ms-excel";
-	this->ext[".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-	this->ext[".xml"] = "application/xml";
-	this->ext[".xul"] = "application/vnd.mozilla.xul+xml";
-	this->ext[".zip"] = "application/zip";
-	this->ext[".3gp"] = "video/3gpp";
-	this->ext[".3g2"] = "video/3gpp2";
-	this->ext[".7z"] = "application/x-7z-compressed";
-}
-
 Settings::Settings()
 {
-	check_request_timeout.tv_sec = 1;
+	this->check_request_timeout.tv_sec = 1;
 	this->ext[".aac"] = "audio/aac";
 	this->ext[".avi "] = "video/x-msvideo";
 	this->ext[".bin"] = "application/octet-stream";
@@ -208,7 +140,7 @@ std::string Settings::date(void)
 
 
 
-void Settings::get(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
+void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 {
 	std::string header_script;
 	std::stringstream	n;
@@ -216,17 +148,11 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr, si
 	std::string			tmp;
 	std::string buffer;
 
-	// check methode
 	if (!this->config.getMethod(req.method.path).isget)
 	{
 			this->method_not_allowed(req);
 			return;
 	}
-		/* COMMENTED BECAUSE NEVER BODY IN GET 
-	if (req.contain_body)
-		if (!req.body.is_chuncked && !req.header.content_length.empty())
-			if (req. - (size_read - 4) != std::atoi(req.header.content_length.c_str()))
-				return (this->badRequest(req)); */ 
 	if (this->config.getFile(req.method.path)->empty())
 	{
 		_header.append(" 404 Not Found\n");
@@ -269,7 +195,6 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr, si
 	std::string date = "";
 	int count = 0;
 	_header += handleCookie(req, date, count);
-	std::cout << "SIZE DATE " << date.size() << std::endl;
 	n <<  _body.size() + buffer.size() + date.size() + std::to_string(count).size() + 17;
 	_header += "Content-Length: " + n.str() + "\n";
 	_header += "Content-Type: " + this->checkextension(*this->config.getFile(req.method.path)) + "\n" ;
@@ -280,13 +205,11 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr, si
 		_cookie += date;
 	if (_body.size() == 0)
 		_header += "\n";
-	std::cout << "SIZE DATE " << date.size() << std::endl;
-	std::cout << "VALEUR DATE " << date << std::endl;
 	fd.close();
 }
 
 
-void Settings::post(Request const &req, struct sockaddr_in const& client_addr, size_t size_read)
+void Settings::post(Request const &req, struct sockaddr_in const& client_addr)
 {
 	std::stringstream header;
 	std::string header_script;
@@ -298,14 +221,6 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr, s
 		this->method_not_allowed(req);
 		return ;
 	}
-	// if (req.contain_body)
-	// 	if (!req.body.is_chuncked && !req.header.content_length.empty())
-	// 		if (size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 != std::stoul(req.header.content_length.c_str()))
-	// 		{
-	// 			// std::cout << "VALEUR A AVOIR DFBHTNHTNHTNNHT LE HEADER " << size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 << std::endl;
-	// 			// std::cout << "VALEUR CONTENT LENGHT " << std::stoul(req.header.content_length.c_str()) << std::endl;
-	// 			return (this->badRequest(req));
-	// 		}
 	fd.open(this->config.getFile(req.method.path)->c_str(), std::fstream::in);
 	if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
 	{
@@ -331,7 +246,6 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr, s
 	header << "\nContent-Type: " << this->checkextension(req.method.path) << "\n";
 	header << "Connection: keep-alive\r\n\r\n";
 	this->_header = header.str();
-	// std::cout << rvalue_script << std::endl;
 	std::string::size_type pos = 0;
 	if ((pos = header_script.find("content_length")) != std::string::npos)
 		_add_eof = 1;
@@ -339,7 +253,8 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr, s
 }
 
 
-void Settings::del(Request const &req, struct sockaddr_in const& client_addr, size_t size_read) {
+void Settings::del(Request const &req)
+{
 	std::stringstream header;
 
 	if (!this->config.getMethod(req.method.path).isdelete) {
@@ -361,7 +276,6 @@ void Settings::del(Request const &req, struct sockaddr_in const& client_addr, si
 	}
 	else {
 		header << "404 Not Found\n";
-		// std::cout << "Le fichier n'existe pas" << std::endl;
 	}
 	header << Settings::date();
 	header << "server: " << *this->config.getName() << "\n";
@@ -377,76 +291,53 @@ size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting
 	time(&time_starting);
 	std::memset(buff, 0, 4097);
 	Request req;
-	// usleep(1000);
-	
+
 	o_read = recv(socket, buff, 4096, 0);
-		if (o_read == -1 || o_read == 0)
-			return(o_read);
-			
 	readed += o_read;
-	return(o_read) ;
+	return(o_read);
 }
 
-bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, unsigned int size_read)
+bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr)
 {
-	std::string reponse_request;
 	Request 	req;
-	int valid = -1;
-	_add_eof = 0;
+	this->_add_eof = 0;
 
 	std::fstream fd;
 	_header = "HTTP/1.1 ";
 	_body.clear();
 	_cookie = "";
-	// check the methode
 	if (req.parseRequest(sbuffer))
 		this->method_not_allowed(req);
 	if (!req.method.path.empty())
 		fd.open(*this->config.getFile(req.method.path));
-	// check if is allowed
 	if (!this->config.selectServ(req.header.host_ip, req.header.port))
 		 this->badRequest(req);
-		// select the server
 	else if (!this->checkmethod(req, this->config.getMethod(req.method.path)))
 		 this->method_not_allowed(req);
-	else if (req.method.brut_method == "GET /directory/Yeah HTTP/1.1") // A mettre a la main dans le debugger pour passer le GET sur /directory/Yeah je sais pas pk ca doit aller en 404
-	{
-		std::fstream fd;
-		fd.open("http/401.html", std::fstream::in | std::fstream::out);
-		std::stringstream t;
-		t << fd.rdbuf();
-		fd.close();
-		reponse_request = t.str();
-	}
 	else if (check_forbidden(*this->config.getFile(req.method.path)) && checkextension(*this->config.getFile(req.method.path)).empty())
 		this->not_found();
 	else if (req.method.isGet)
-		this->get(req, client_addr, size_read);
+		this->get(req, client_addr);
 	else if (req.method.isPost)
-		this->post(req, client_addr, size_read);
+		this->post(req, client_addr);
 	else if (req.method.isDelete)
-		this->del(req, client_addr, size_read);
+		this->del(req);
 	else
 		this->badRequest(req);
-		
-	write(socket, _header.c_str(), _header.size());
+	usleep(500);
+	send(socket, _header.c_str(), _header.size(), 0);
 	std::vector<char>::iterator start = _body.begin();
 	size_t size_data = _body.size();
-	std::cout << "SIZE BODY " << size_data << std::endl; 
-	std::cout << "HEADER " << _header.c_str() << std::endl; 
-
-	write(socket, &*start, size_data);
+	send(socket, &*start, size_data, 0);
 	if (_add_eof)
 	{
 		stringstream stream;
 		stream << EOF;
 		std::string eof = stream.str();
-		write(socket, eof.c_str(), eof.size());
+		send(socket, eof.c_str(), eof.size(), 0);
 	}
-	write(socket, _cookie.c_str(), _cookie.size());
+	send(socket, _cookie.c_str(), _cookie.size(), 0);
 	return (req.header.connection);
-	// req.printRequest();
-	//send(socket, reponse_request.c_str(), reponse_request.size(), 0);
 }
 
 std::string	Settings::checkextension(std::string const& path)
@@ -508,6 +399,7 @@ std::string Settings::folder_gestion(Request const& req)
 	reponse << "Connection: keep-alive\n\n";
 	reponse << buffer.str();
 	_header = reponse.str();
+	return (reponse.str());
 }
 
 
@@ -528,8 +420,9 @@ void	Settings::set_event(int ke, int socket, short filter, short flag)
 {
 	struct kevent changeEvent;
 	EV_SET(&changeEvent, socket, filter, flag, 0, 0, nullptr);
-	if (kevent(ke, &changeEvent, 1, nullptr, 0, nullptr) == -1)
+	if (kevent(ke, &changeEvent, 1, nullptr, 0, &this->check_request_timeout) == -1)
 		std::cerr << "Could not add client " << socket <<" socket to kqueue" << std::endl;
+	
 }
 
 std::string Settings::handleCookie(const Request &req, std::string &date, int &count) {
@@ -547,12 +440,6 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 		
 		sessions_date[sessionId] = this->date();
 		sessions_count[sessionId]++;
-
-		// map<string, string>::iterator it2 = sessions_date.begin();
-		// while (it2 != sessions_date.end()) {
-		// 	cout << "session: " << it2->first << " " << it2->second << endl;
-		// 	it2++;
-		// }
 	} else {
 		date = sessions_date[req.header.cookies.at("wsid")];
 		sessions_date[req.header.cookies.at("wsid")] = this->date();
@@ -560,8 +447,6 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 		sessions_count[req.header.cookies.at("wsid")]++;
 		count = sessions_count[req.header.cookies.at("wsid")];
 	}
-	
-	// cout << "cookie: " << cookie << endl;
 	return cookie;
 }
 
@@ -574,20 +459,28 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 
 
 
-void		Settings::check_timeout(Sbuffer *requests, int ke)
+void		Settings::check_timeout(Sbuffer *requests, int ke, std::map<int, sockaddr_in>& clients)
 {
 	time_t actual_time;
 	time(&actual_time);
-	
 	for (int i = 0; i < MAX_REQUESTS; i++)
 	{
-		if (requests[i].readed != 0 && difftime(actual_time, requests[i].time_start) > 30)
+		if (requests[i].readed != 0)
+		{
+			std::cout << "READED : " <<requests[i].readed << std::endl; 
+		}	
+		if (requests[i].readed != 0 && difftime(actual_time, requests[i].time_start) > 2)
 		{
 			std::cout << "DIFF TIME " << difftime(actual_time, requests[i].time_start) << std::endl;
-			this->set_event(ke,i, EVFILT_READ, EV_DELETE);
-			this->set_event(ke,i, EVFILT_WRITE, EV_ADD);
+			usleep(1000);
+			this->set_event(ke, i, EVFILT_READ, EV_DELETE);
+			this->set_event(ke, i, EVFILT_WRITE, EV_ADD);
 			std::string rep(this->timeout());
 			write(i, rep.c_str(), rep.size());
+			this->set_event(ke, i, EVFILT_WRITE, EV_DELETE);
+			clients.erase(i);
+			close(i);
+			std::cout << "CLOSE\n";
 		}
 	}
 }
