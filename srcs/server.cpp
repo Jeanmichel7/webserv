@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/06 23:06:02 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/06 23:33:49 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,7 +90,6 @@ int main(int argc, char **argv)
 								header_readed = server.reading_header(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, header_buffer);
 								if (req.check_header_buffer(header_buffer, server.config)) {
 									sbuffer[event[i].ident].is_413 = true;
-
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 									continue;
@@ -139,20 +138,11 @@ int main(int argc, char **argv)
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 									break;
 								}
-								// sbuffer[event[i].ident].readed = 0;
 								readed = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, buffer);
-								// if (readed == 18446744073709551615)
-								// {
-								// 	cout << "ERROR: readed == 18446744073709551615" << endl;
-								// 	server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
-								// 	server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-								// 	break;
-								// }
 								cout << "readed : " << readed << endl;
 								cout << "read[]sdfdsf" << sbuffer[event[i].ident].readed << endl;
 								cout << "buffer avant : '" << buffer << "'" << endl;
 
-								// sbuffer[event[i].ident].buffer.insert(sbuffer[event[i].ident].buffer.end(), readed, *buffer );
 								for (unsigned long j = 0; j < readed; j++)
 									sbuffer[event[i].ident].buffer.push_back(buffer[j]);
 
@@ -165,46 +155,42 @@ int main(int argc, char **argv)
 							}
 							// display buffer total
 							cout << "BUFFER size : " << sbuffer[event[i].ident].buffer.size() << endl;
-							// std::vector<char>::const_iterator start = sbuffer[event[i].ident].buffer.begin();
-							// std::vector<char>::const_iterator end = sbuffer[event[i].ident].buffer.end();
-							// cout << "BUFFER: '" << endl;
-							// for (; start != end; start++)
-							// 	std::cout << *start;
-							// cout << "'" << endl;
+							std::vector<char>::const_iterator start = sbuffer[event[i].ident].buffer.begin();
+							std::vector<char>::const_iterator end = sbuffer[event[i].ident].buffer.end();
+							cout << "BUFFER: '" << endl;
+							for (; start != end; start++)
+								std::cout << *start;
+							cout << "'" << endl;
 						
 						}
 						else if (event[i].filter == EVFILT_WRITE)
 						{
-
 							if (sbuffer[event[i].ident].is_413) {
 								std::stringstream reponse;
 								std::fstream fd;
 								cout << "on depasse le maxi body size server!!" << endl;
+								
+								char tmp_buff[4097];
+								memset(tmp_buff, 0, 4097);
+								size_t	o_read_p = 0;
+								o_read_p = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, tmp_buff);
 
-								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+								if (o_read_p != 4096) {
+									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 
-								reponse << "HTTP/1.1 413 Payload Too Large\n";
-								reponse << "Content-Type: text/plain\n";
-								// reponse << server.date();
-								// reponse << "server: " << server.config.getName() << "\n";
-								// reponse << "Connection: close\n";
-								reponse << "Content-Length: 21\r\n\r\n";
-								reponse << "Payload Too Large\r\n\r\n";
-								// char tmp_buff[4096];
-								// while (recv(event[i].ident, tmp_buff, 4096, 0) > 0)
-								// 	;
-
-								// usleep(1000);
-								std::cout << "\nreponse : '" << reponse.str() << "'" << std::endl;
-								usleep(1000000);
-								write(event[i].ident, reponse.str().c_str(), reponse.str().size());
-								sbuffer[event[i].ident].buffer.clear();
-								sbuffer[event[i].ident].readed = 0;
-								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-								clients.erase(event[i].ident);
-								close(event[i].ident);
-								sbuffer[event[i].ident].is_413 = false;
-								// usleep(1000);
+									reponse << "HTTP/1.1 413 Payload Too Large\n";
+									reponse << "Content-Type: text/plain\n";
+									reponse << "Content-Length: 21\r\n\r\n";
+									reponse << "Payload Too Large\r\n\r\n";
+									// std::cout << "\nreponse : '" << reponse.str() << "'" << std::endl;
+									write(event[i].ident, reponse.str().c_str(), reponse.str().size());
+									sbuffer[event[i].ident].buffer.clear();
+									sbuffer[event[i].ident].readed = 0;
+									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+									clients.erase(event[i].ident);
+									close(event[i].ident);
+									sbuffer[event[i].ident].is_413 = false;
+								}
 							}
 							else
 							{
