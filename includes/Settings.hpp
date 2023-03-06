@@ -20,7 +20,7 @@ struct Sbuffer {
 	std::vector<char> 	buffer;
 	unsigned int 		readed;
 	time_t 				time_start;
-	bool 				is_chunked = false;
+	bool 				is_chunked;
 };
 
 struct Request;

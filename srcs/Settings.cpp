@@ -396,11 +396,13 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 	sbuffer << tmp;
 	while (sbuffer.str().find("\r\n\r\n") == string::npos)
 	{
+		// cout << "dsgdsfsfds" << endl;
 		o_read = recv(socket, tmp, 1, 0);
 		readed ++;
 		if (o_read == -1 || o_read == 0)
 			break;
 		sbuffer << tmp;
+		// cout << tmp;
 	}
 	// cout << "'" << sbuffer.str() << "'" << endl;
 	strcpy(buff, sbuffer.str().c_str());
@@ -421,6 +423,8 @@ size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting
 		return(o_read);
 			
 	readed += o_read;
+	cout << "sbuffer[event[i].ident].readed : " << readed << endl;
+
 	return(o_read) ;
 }
 

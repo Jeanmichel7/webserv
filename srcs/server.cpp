@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/06 16:14:07 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/06 18:08:50 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 						server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 						clients.erase(event[i].ident);
 						close(event[i].ident);
-						std::cout << "CLOSE\n";
+						std::cout << "CLOSE2\n";
 					}
 					else
 					{
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 							size_t readed = 0;
 							size_t header_readed = 0;
 
-							if (reqIsChuncked(header_buffer) == false && sbuffer[event[i].ident].is_chunked == false) {
+							if (reqIsChuncked(header_buffer) == false && sbuffer[event[i].ident].is_chunked == false && sbuffer[event[i].ident].buffer.size() == 0) {
 								header_readed = server.reading_header(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, header_buffer);
 								for (unsigned long j = 0; j <  sbuffer[event[i].ident].readed; j++)
 									sbuffer[event[i].ident].buffer.push_back(header_buffer[j]);
@@ -127,26 +127,33 @@ int main(int argc, char **argv)
 								// check si il y a un body
 								std::string header(header_buffer);
 								std::string::size_type pos = header.find("Content-Length");
-								if (pos == std::string::npos)
+								if (header.size() > 0 && pos == std::string::npos)
 								{
-									// cout << "NO BODY" << endl;
+									cout << "FINISHED" << endl;
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 									break;
 								}
-								
+								// sbuffer[event[i].ident].readed = 0;
 								readed = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, buffer);
-								// cout << "readed : " << readed << endl;
-								// cout << "read[]sdfdsf" << sbuffer[event[i].ident].readed << endl;
-								// cout << "buffer avant : " << buffer << endl;
+								// if (readed == 18446744073709551615)
+								// {
+								// 	cout << "ERROR: readed == 18446744073709551615" << endl;
+								// 	server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
+								// 	server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+								// 	break;
+								// }
+								cout << "readed : " << readed << endl;
+								cout << "read[]sdfdsf" << sbuffer[event[i].ident].readed << endl;
+								cout << "buffer avant : '" << buffer << "'" << endl;
 
 								// sbuffer[event[i].ident].buffer.insert(sbuffer[event[i].ident].buffer.end(), readed, *buffer );
-								for (unsigned long j = 0; j < sbuffer[event[i].ident].readed; j++)
+								for (unsigned long j = 0; j < readed; j++)
 									sbuffer[event[i].ident].buffer.push_back(buffer[j]);
 
 								if (req.isFinishedRequest(sbuffer[event[i].ident].buffer, sbuffer[event[i].ident].readed))
 								{
-									// cout << "FINISHED" << endl;
+									cout << "FINISHED" << endl;
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 								}
