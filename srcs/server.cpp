@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/06 23:38:07 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/06 23:52:43 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,9 +139,9 @@ int main(int argc, char **argv)
 									break;
 								}
 								readed = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, buffer);
-								cout << "readed : " << readed << endl;
-								cout << "read[]sdfdsf" << sbuffer[event[i].ident].readed << endl;
-								cout << "buffer avant : '" << buffer << "'" << endl;
+								// cout << "readed : " << readed << endl;
+								// cout << "read[]sdfdsf" << sbuffer[event[i].ident].readed << endl;
+								// cout << "buffer avant : '" << buffer << "'" << endl;
 
 								for (unsigned long j = 0; j < readed; j++)
 									sbuffer[event[i].ident].buffer.push_back(buffer[j]);
@@ -176,8 +176,6 @@ int main(int argc, char **argv)
 								o_read_p = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, tmp_buff);
 
 								if (o_read_p != 4096) {
-									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-
 									reponse << "HTTP/1.1 413 Payload Too Large\n";
 									reponse << "Content-Type: text/plain\n";
 									reponse << "Content-Length: 21\r\n\r\n";
