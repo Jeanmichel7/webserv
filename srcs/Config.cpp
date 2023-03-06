@@ -88,7 +88,7 @@
 			}
 		}
 		uint32_t int_ip = final_num;
-		uint32_t int_port = std::stoi(port);
+		uint32_t int_port = yd::stoui(port);
 		for (unsigned int i = 0; i < _server.size(); i++)
 		{
 			if ((uint32_t)_server[i].getIp() == int_ip && (uint32_t)_server[i].getPort() == int_port)
@@ -266,6 +266,18 @@
 //--------------------------------------------------------------------------------------//
 //                                      libft Yann                                      //
 //--------------------------------------------------------------------------------------//
+
+size_t yd::stoui(const std::string &s)
+{
+	size_t rt = 0;
+	for (unsigned int i = 0; i < s.size(); i++)
+	{
+		if (s[i] < '0' || s[i] > '9')
+			return (0);
+		rt = rt * 10 + (s[i] - '0');
+	}
+	return (rt);
+}
 	
 bool yd::isValidPathDir(std::string const &s)
 {
@@ -561,7 +573,7 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 		else if (tok.getToken() == "off")
 			_directory_listing = false;
 		else
-			throw (FormatError(tok.getToken(), "must be \"on\" or \"off\" "));
+			throw (FormatError(tok.getToken(), "must be \"on\" or \"off\ "));
 	}
 
 	void Location::setRoot(Tokenizer &tok)
@@ -699,9 +711,9 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 
 		void Server::setPort(Tokenizer &tok)
 		{
-				if (atoi(tok.getToken().c_str()) <= 0 || atoi(tok.getToken().c_str()) > 65535)
+				if (yd::stoui(tok.getToken().c_str()) <= 0 || yd::stoui(tok.getToken().c_str()) > 65535)
 					throw (FormatError(tok.getToken(), "a number enter 1 and 65535 "));
-				_port = atoi(tok.getToken().c_str());
+				_port = yd::stoui(tok.getToken().c_str());
 		}
 
 		void Server::setServerName(Tokenizer &tok)
@@ -718,9 +730,10 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 
 		void Server::setMaxBody(Tokenizer &tok)
 		{
-			if (atoi(tok.getToken().c_str()) <= 0 || atoi(tok.getToken().c_str()) > 2147483647)
-				throw (FormatError(tok.getToken(), "positif numbers less than  2147483647" ));
-			_max_body_size = atoi(tok.getToken().c_str());
+			if (yd::stoui(tok.getToken().c_str()) < static_cast<unsigned int>(0) || yd::stoui(tok.getToken().c_str()) > static_cast<unsigned int>(4,294,967,295))
+				throw (FormatError(tok.getToken(), "maxbody must be positive number and inferior to 4,294,967,295" ));
+			_max_body_size = yd::stoui(tok.getToken().c_str());
+
 
 		}
 
@@ -763,7 +776,7 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 
 		void Server::setError(Tokenizer &tok)
 		{
-			unsigned int code = atoi(tok.getToken().c_str());
+			unsigned int code = yd::stoui(tok.getToken().c_str());
 			if (code < 100 || code > 600)
 				throw (FormatError(tok.getToken(), "numbers between 100 and 600"));
 			if (_error_pages[code].empty())
@@ -784,7 +797,7 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 	_tokens["error"] = &Server::setError;
 	}
 
-		void (Server::*Server::selectSetter(std::string const &token))(Tokenizer &tok)
+	void (Server::*Server::selectSetter(std::string const &token))(Tokenizer &tok)
 	{
 		std::map<std::string , void (Server::*)(Tokenizer &tok)>::iterator start = _tokens.begin();
 		std::map<std::string , void (Server::*)(Tokenizer &tok)>::iterator end = _tokens.end();

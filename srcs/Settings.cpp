@@ -515,7 +515,7 @@ bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 	if (!req.method.path.empty())
 		fd.open(*this->config.getFile(req.method.path));
 	// check if is allowed
-	if (!this->config.selectServ(req.header.host_ip, req.header.port))
+	if (!this->config.selectServ(req.header.host_ip, req.header.port, req.method.path))
 		this->badRequest(req);
 		// select the server
 	else if (!this->checkmethod(req, this->config.getMethod(req.method.path)))
