@@ -228,11 +228,6 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 			this->method_not_allowed(req);
 			return;
 	}
-		/* COMMENTED BECAUSE NEVER BODY IN GET 
-	if (req.contain_body)
-		if (!req.body.is_chuncked && !req.header.content_length.empty())
-			if (req. - (size_read - 4) != std::atoi(req.header.content_length.c_str()))
-				return (this->badRequest(req)); */ 
 	if (this->config.getFile(req.method.path)->empty())
 	{
 		_header.append(" 404 Not Found\n");
@@ -304,14 +299,6 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr)
 		this->method_not_allowed(req);
 		return ;
 	}
-	// if (req.contain_body)
-	// 	if (!req.body.is_chuncked && !req.header.content_length.empty())
-	// 		if (size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 != std::stoul(req.header.content_length.c_str()))
-	// 		{
-	// 			// std::cout << "VALEUR A AVOIR DFBHTNHTNHTNNHT LE HEADER " << size_read - req.method.brut_method.size() - req.header.brut_header.size() - 4 << std::endl;
-	// 			// std::cout << "VALEUR CONTENT LENGHT " << std::stoul(req.header.content_length.c_str()) << std::endl;
-	// 			return (this->badRequest(req));
-	// 		}
 	fd.open(this->config.getFile(req.method.path)->c_str(), std::fstream::in);
 	if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
 	{
@@ -337,7 +324,6 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr)
 	header << "\nContent-Type: " << this->checkextension(req.method.path) << "\n";
 	header << "Connection: keep-alive\r\n\r\n";
 	this->_header = header.str();
-	// std::cout << rvalue_script << std::endl;
 	std::string::size_type pos = 0;
 	if ((pos = header_script.find("content_length")) != std::string::npos)
 		_add_eof = 1;
@@ -368,7 +354,6 @@ void Settings::del(Request const &req, struct sockaddr_in const& client_addr) {
 	}
 	else {
 		header << "404 Not Found\n";
-		// std::cout << "Le fichier n'existe pas" << std::endl;
 	}
 	header << Settings::date();
 	header << "server: " << *this->config.getName() << "\n";
@@ -388,7 +373,6 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 	std::memset(tmp, 0, 2);
 	std::memset(buff, 0, 4097);
 	stringstream sbuffer;
-	// usleep(1000);
 	
 	o_read = recv(socket, tmp, 1, 0);
 	readed ++;
@@ -397,7 +381,6 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 	sbuffer << tmp;
 	while (sbuffer.str().find("\r\n\r\n") == string::npos)
 	{
-		// cout << "dsgdsfsfds" << endl;
 		o_read = recv(socket, tmp, 1, 0);
 		readed ++;
 		if (o_read == -1 || o_read == 0)
@@ -405,9 +388,7 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 		sbuffer << tmp;
 		// cout << tmp;
 	}
-	// cout << "'" << sbuffer.str() << "'" << endl;
 	strcpy(buff, sbuffer.str().c_str());
-	// delete[] buff;
 	return(o_read) ;
 }
 
@@ -417,12 +398,10 @@ size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting
 	size_t	o_read = 0;
 	time(&time_starting);
 	std::memset(buff, 0, 4097);
-	// usleep(1000);
 	
 	o_read = recv(socket, buff, 4096, 0);
 	if (o_read == (size_t)-1 || o_read == (size_t)0)
 		return(o_read);
-			
 	readed += o_read;
 	cout << "sbuffer[event[i].ident].readed : " << readed << endl;
 
@@ -441,7 +420,6 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	std::memset(tmp_purge, 0, 2);
 	stringstream ssize;
 	stringstream sbuffer;
-	// usleep(1000);
 	
 	o_read = recv(socket, tmp, 1, 0);
 	cout << "tmp[0] : " << "'" << tmp << "'"  << endl;
@@ -460,12 +438,10 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	while (ssize.str().find("\r\n") == string::npos )
 	{
 		o_read = recv(socket, tmp, 1, 0);
-		// cout <<  "'" << tmp  << "'" << endl;
 		if (o_read == -1 || o_read == 0)
 			break;
 		ssize << tmp;
 	}
-	// cout << "ssize : '" << ssize.str() << "'" << endl;
 	if (ssize.str().empty())
 		return (NULL);
 
@@ -487,14 +463,6 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	if (o_read == -1 || o_read == 0)
 		return(NULL);
 	printf("buff char * : '%s'\n", buff);
-	// sbuffer << buff;
-	// cout << "sbuffer : " << sbuffer.str() << endl;
-
-	// string tmpbuff = buff;
-	// cout << "buff du chunck : '" << tmpbuff << "'" << endl;
-	// cout << "size read : " << readed << endl;
-	// cout << "size buffer : " << strlen(buff) << endl;
-
 	return (buff);
 }
 
@@ -557,7 +525,6 @@ bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 	write(socket, _cookie.c_str(), _cookie.size());
 	return (req.header.connection);
 	// req.printRequest();
-	//send(socket, reponse_request.c_str(), reponse_request.size(), 0);
 }
 
 std::string	Settings::checkextension(std::string const& path)
@@ -658,13 +625,8 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 		
 		sessions_date[sessionId] = this->date();
 		sessions_count[sessionId]++;
-
-		// map<string, string>::iterator it2 = sessions_date.begin();
-		// while (it2 != sessions_date.end()) {
-		// 	cout << "session: " << it2->first << " " << it2->second << endl;
-		// 	it2++;
-		// }
-	} else {
+	} 
+	else {
 		date = sessions_date[req.header.cookies.at("wsid")];
 		sessions_date[req.header.cookies.at("wsid")] = this->date();
 		

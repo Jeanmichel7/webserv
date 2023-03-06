@@ -18,9 +18,6 @@ int main(int argc, char *argv[], char *envp[]) {
     while ((bytes_read = read(fd, buffer, BUFFER_SIZE)) > 0) {
         write(STDOUT_FILENO, buffer, bytes_read);
     }
-    /*char *path = NULL;
-    path = getcwd(buffer, 1024);
-    printf("Emplacement courant : %s\n", path);*/
     close(fd);
 		printf("<h1 class = \"cgi\" >CGI STDIN </h1>\n");
 		printf("<p class = \"cgi\" >\n");

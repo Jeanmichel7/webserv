@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/06 23:52:43 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/07 00:49:02 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,22 +97,15 @@ int main(int argc, char **argv)
 								for (unsigned long j = 0; j <  sbuffer[event[i].ident].readed; j++)
 									sbuffer[event[i].ident].buffer.push_back(header_buffer[j]);
 							}
-							// cout << "header_buffer : '" << header_buffer << "'" << endl;
 							if (reqIsChuncked(header_buffer) == true)
 								sbuffer[event[i].ident].is_chunked = true;
-							// cout << "header_buffer : " << header_buffer << endl;
-							// cout << "req is chunked : " << sbuffer[event[i].ident].is_chunked << endl;
 							if (sbuffer[event[i].ident].is_chunked == true)
 							{
-								// cout << "On est dans les chuncks" << endl;
 								char *chunck_buffer = NULL;
-								// bool is_last_chunck = false;
 								sbuffer[event[i].ident].readed = 0;
 								chunck_buffer = server.reading_chunck(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start);
-								// cout << "chunck_buffer : '" << chunck_buffer << "'" << endl;
 								
 								if (strlen(chunck_buffer) == 0) {
-									// cout << "FINISHED chunck request" << endl;
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 									sbuffer[event[i].ident].buffer.push_back('\r');
@@ -139,10 +132,6 @@ int main(int argc, char **argv)
 									break;
 								}
 								readed = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, buffer);
-								// cout << "readed : " << readed << endl;
-								// cout << "read[]sdfdsf" << sbuffer[event[i].ident].readed << endl;
-								// cout << "buffer avant : '" << buffer << "'" << endl;
-
 								for (unsigned long j = 0; j < readed; j++)
 									sbuffer[event[i].ident].buffer.push_back(buffer[j]);
 
@@ -154,13 +143,13 @@ int main(int argc, char **argv)
 								}
 							}
 							// display buffer total
-							cout << "BUFFER size : " << sbuffer[event[i].ident].buffer.size() << endl;
-							std::vector<char>::const_iterator start = sbuffer[event[i].ident].buffer.begin();
-							std::vector<char>::const_iterator end = sbuffer[event[i].ident].buffer.end();
-							cout << "BUFFER: '" << endl;
-							for (; start != end; start++)
-								std::cout << *start;
-							cout << "'" << endl;
+							// cout << "BUFFER size : " << sbuffer[event[i].ident].buffer.size() << endl;
+							// std::vector<char>::const_iterator start = sbuffer[event[i].ident].buffer.begin();
+							// std::vector<char>::const_iterator end = sbuffer[event[i].ident].buffer.end();
+							// cout << "BUFFER: '" << endl;
+							// for (; start != end; start++)
+							// 	std::cout << *start;
+							// cout << "'" << endl;
 						
 						}
 						else if (event[i].filter == EVFILT_WRITE)
@@ -180,14 +169,11 @@ int main(int argc, char **argv)
 									reponse << "Content-Type: text/plain\n";
 									reponse << "Content-Length: 21\r\n\r\n";
 									reponse << "Payload Too Large\r\n\r\n";
-									// std::cout << "\nreponse : '" << reponse.str() << "'" << std::endl;
 									write(event[i].ident, reponse.str().c_str(), reponse.str().size());
 									sbuffer[event[i].ident].buffer.clear();
 									sbuffer[event[i].ident].readed = 0;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
-									// clients.erase(event[i].ident);
-									// close(event[i].ident);
 									sbuffer[event[i].ident].is_413 = false;
 								}
 							}

@@ -16,15 +16,9 @@ CGI::CGI() : _body(), _env(), _arg(), _file_stdin(), _file_stdout(), _fd_stdin()
 
 void CGI::build(Config &conf, const Request &req, struct sockaddr_in const &client_addr)
 {
-	// ACQUISITION DES RESSOURCE
-
-	// RECUPERATION DE L'IP CLIENT
-	// socklen_t client_addr_len = sizeof(client_addr);
-
 	char client_ip[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(client_addr.sin_addr), client_ip, INET_ADDRSTRLEN);
 
-	// preparer les variables environnements
 	std::map<std::string, std::string> env;
 	env["REQUEST_METHOD"] = req.method.type;
 	env["QUERY_STRING"] = req.method.parameters;
@@ -68,12 +62,6 @@ void CGI::build(Config &conf, const Request &req, struct sockaddr_in const &clie
 		++i;
 	}
 	_env[i] = NULL;
-
-	// ouvrir 2 fichiers, un pour entre standard
-	// et un pour la sortie standard
-	/* au debut j'avais fais qu'un fichier sauf que quand le script ecrivait pas sur la sortie standard j'avais
-	 comme retour de mon programme un fichier avec l'entree standard lol, il est possible que le script n'ecrive pas
-	 sur la sortie standard quand par exemple le script lancer par execve n'existe pas, donc execve ne fait rien */
 	_file_stdin = std::tmpfile();
 	_file_stdout = std::tmpfile();
 	if (_file_stdin == NULL || _file_stdout == NULL)
@@ -81,8 +69,6 @@ void CGI::build(Config &conf, const Request &req, struct sockaddr_in const &clie
 	_fd_stdin = fileno(_file_stdin);
 	_fd_stdout = fileno(_file_stdout);
 
-	// creer un arg pour l'envoyer au programme (obligatoire et excve prend un char**)
-	// l'arg est le chemin du fichier
 	size_t length = conf.getFile(req.method.path)->length();
 	this->_arg = new char *[2];
 	if (this->_arg == NULL)
@@ -120,15 +106,11 @@ CGI::~CGI()
 }
 
 std::vector<char> CGI::execute_cgi(Config &config, const Request &req, struct sockaddr_in const &client_addr)
-{ // declarer variable
+{
 	CGI data;
 	std::vector<char> return_value;
 
 	string scriptName;
-
-	// On extrait le nom du script pour ensuite pouvoir checher l'extension adequat
-
-	// On essaye d'allouer les ressources necessaires
 	try
 	{
 		data.build(config, req, client_addr);
@@ -142,28 +124,20 @@ std::vector<char> CGI::execute_cgi(Config &config, const Request &req, struct so
 	write(data._fd_stdin, &*start, size_data);
 	fseek(data._file_stdin, 0, SEEK_SET);
 
-	// on cherche l'extension adequate
 	string ext = yd::getExtension(req.method.path);
 	if (ext == "")
 		return (error_404());
-	// pos = std::strchr(scriptName.c_str(), '.');
 	std::string const *cgi_path_str = config.getCgi(req.method.path, ext);
-	// si pas de cgi_path, on retourne NULL
 	if (cgi_path_str == NULL)
 		return (error_404());
-	// creer le fork
 	const char *cgi_path = cgi_path_str->c_str();
 	pid_t pid = fork();
 	if (pid == -1)
 		return (error_500());
 	if (pid == 0)
 	{
-		// erase stdin and stdout
-		// std::cout << "VALEUR DE data._arg[0] : " << data._arg[0] << std::endl;
 		dup2(data._fd_stdin, 0);
 		dup2(data._fd_stdout, 1);
-		// executer l'interpreteur avec le programme et le nom de l'argument
-		// l'emplacement relatif de l'executable correspond au programme qui utilise execve et pas celui du binaire appele.
 		execve(cgi_path, data._arg, data._env);
 		std::cerr << "\e[0;31mWebServ$> "
 				  << "Execve has crashed "
@@ -171,13 +145,11 @@ std::vector<char> CGI::execute_cgi(Config &config, const Request &req, struct so
 	}
 	else
 	{
-		// on attends le processuce
 		int rt;
 		waitpid(pid, &rt, 0);
 		if (rt == 1)
 			return (error_500());
 		char buffer[1024];
-		// on recupere le contenue du fichier
 		fseek(data._file_stdout, 0, SEEK_SET);
 		for (int rt = 1023; rt == 1023;)
 		{
@@ -185,7 +157,6 @@ std::vector<char> CGI::execute_cgi(Config &config, const Request &req, struct so
 			return_value.insert(return_value.end(), buffer, buffer + rt);
 		}
 	}
-	// on supprime l'environnement  cree
 	return (return_value);
 }
 

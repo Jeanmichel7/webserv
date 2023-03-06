@@ -11,32 +11,27 @@
 using namespace std;
 
 void send_chunked_request(const char* host, int port, const char* path, const char* data, int length) {
-    // create a TCP socket
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         cerr << "Error: socket creation failed" << endl;
         return;
     }
-    // resolve the host name
     struct hostent* he = gethostbyname(host);
     if (he == NULL) {
         cerr << "Error: host name resolution failed" << endl;
         close(sock);
         return;
     }
-    // set up the server address
     struct sockaddr_in server;
     memset(&server, 0, sizeof(server));
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
     server.sin_addr = *((struct in_addr*)he->h_addr);
-    // connect to the server
     if (connect(sock, (struct sockaddr*)&server, sizeof(server)) < 0) {
         cerr << "Error: connection failed" << endl;
         close(sock);
         return;
     }
-    // send the HTTP request
     ostringstream oss;
     oss << "POST " << path << " HTTP/1.1\r\n";
     oss << "Host: " << host << ":" << port << "\r\n";
@@ -44,7 +39,6 @@ void send_chunked_request(const char* host, int port, const char* path, const ch
     oss << "Transfer-Encoding: chunked\r\n";
     oss << "\r\n";
     send(sock, oss.str().c_str(), oss.str().length(), 0);
-    // send the chunks of data
     int offset = 0;
     while (offset < length) {
         int chunk_size = min(8, length - offset); // use 8 bytes per chunk
@@ -55,16 +49,13 @@ void send_chunked_request(const char* host, int port, const char* path, const ch
         send(sock, "\r\n", 2, 0);
         offset += chunk_size;
     }
-    // send the final chunk
     send(sock, "0\r\n\r\n", 5, 0);
-    // read the response
     char buffer[1024];
     int bytes_read = recv(sock, buffer, sizeof(buffer), 0);
     while (bytes_read > 0) {
         cout << string(buffer, bytes_read);
         bytes_read = recv(sock, buffer, sizeof(buffer), 0);
     }
-    // close the socket
     close(sock);
 }
 
@@ -77,46 +68,3 @@ int main() {
     send_chunked_request(host, port, path, data, length);
     return 0;
 }
-
-
-// #include "client.hpp"
-
-// int main(int argc, char **argv)
-// {
-
-
-// 	struct sockaddr_in interface;
-// 	std::memset(&interface , 0, sizeof(interface));
-// 	interface.sin_port = htons(4241);
-// 	char *req = "POST /upload HTTP/1.1\r\n\
-// Host: example.com\r\n\
-// Content-Type: text/plain\r\n\
-// Transfer-Encoding: chunked\r\n\
-// \r\n\
-// 7\r\n\
-// Hello,\r\n\
-// 6\r\n\
-// world!\r\n\
-// 0\r\n";
-// 	char buffer[1024] = {0};
-// 	int	socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
-	
-// 	interface.sin_family = AF_INET;
-// 	interface.sin_port = htons(4241);
-// 	if(inet_pton(AF_INET, "127.0.0.1", &interface.sin_addr) <= 0)
-// 	{
-// 		printf("\nInvalid address/ Address not supported \n");
-// 		return -1;
-// 	}
-// 	if (connect(socket_fd, (struct sockaddr *)&interface, sizeof(interface)) < 0)
-// 	{
-// 		printf("\nConnection Failed \n");
-// 		return -1;
-// 	}
-// 	send(socket_fd ,req , strlen(req), 0);
-// 	// usleep(1000);
-// 	// std::cout << "Client waiting for data..." << std::endl;
-// 	read( socket_fd , buffer, 1024);
-// 	printf("%s\n",buffer );
-// 	return 0;
-// }

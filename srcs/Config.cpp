@@ -38,10 +38,8 @@
 			if (_server[i].getIp() == ip && _server[i].getPort() == port)
 			{
 				if (!first_serv)
-				// par defaut on prend le premier seveur
 				_server_selected = &_server[i];
 				const std::string *server_name = _server[i].getServerName();
-				// si le serveur possede un nom de serveur
 				if ((*server_name).size() > 0)
 				{
 					for (int j = 0; (*server_name)[j] == path[j + 1];  j++)
@@ -60,10 +58,8 @@
 		}
 		return (0);
 	}
-		bool	Config::selectServ(std::string ip, std::string port, std::string path) 
+	bool	Config::selectServ(std::string ip, std::string port, std::string path) 
 	{
-		// std::cout << "VALEUR IP " << ip << std::endl;
-		// std::cout << "VALEUR PORT " << port << std::endl;
 		bool first_serv = 0;
 		unsigned int num = 0;
 		unsigned int final_num = 0;
@@ -94,15 +90,12 @@
 			if ((uint32_t)_server[i].getIp() == int_ip && (uint32_t)_server[i].getPort() == int_port)
 			{
 				if (!first_serv)
-				// par defaut on prend le premier seveur
 				_server_selected = &_server[i];
 				const std::string *server_name = _server[i].getServerName();
-				// si le serveur possede un nom de serveur
 				if ((*server_name).size() > 0)
 				{
 					for (int j = 0; (*server_name)[j] == path[j + 1];  j++)
 					{
-						// si le serveur name et le path correspondent exactement on change le nom de serveur
 						if ((*server_name)[j] == '\0' && (path[j + 1] == '/' || path[j + 1] == '\0'))
 						{
 							_server_selected = &_server[i];
@@ -126,26 +119,19 @@
 			return (NULL);
 		else 
 		{
-			// le buffer commence toujours pas un /
 			_buffer = path;
-			// suppression de la partie location 
 			for (int i = 1 ; path[i];i++)
 			{
 				if (path[i] != loc->_path[i])
 				{
-					// si le chemin n'est pas /
 					if (i > 1)
 						_buffer.erase(0, i);
 					break;
 				}
 			}
-			// ajout de la partie root
 			_buffer = (loc->_root + _buffer);
-			// _buffer.erase(0, 1);
 			if (_buffer.back() == '/')
 				_buffer.pop_back();
-			// std::cout << "VALEUR DE PATH : " << path << std::endl;
-			// std::cout << "VALEUR DE LOC PATH : " << loc->_path << std::endl;
 			if (yd::compare_strings_ignoring_trailing_slash(path,loc->_path))
 				return(&loc->_default_file);
 			else
@@ -300,7 +286,6 @@ bool yd::compare_strings_ignoring_trailing_slash(const std::string &str1, const 
 
 bool yd::isValidPathFile(std::string const &s)
 {
-	    // Vérifier si le chemin contient deux fois "//"
     std::string::size_type pos = s.find("//");
     if (pos != std::string::npos) {
         return false;
@@ -342,21 +327,8 @@ bool yd::ends_with_rn(std::string const& str)
 {
     std::string const delimiter = "\r\n\r\n";
     size_t const len = delimiter.size();
-	// req.parseRequest(sbuffer.str());
-	// if (req.header.content_length != "") {
-	// 	std::stringstream ss(req.header.content_length);
-	// 	long double lengthleft;
-	// 	ss >> lengthleft;
-	// 	lengthleft -= o_read;
-	// 	while (lengthleft > 0) {
-	// 		o_read = recv(socket, buff, 4096, 0);
-	// 		sbuffer << buff;
-	// 		lengthleft -= o_read;
-	// 	}
-	// }
 
     return (str.length() >= len && str.find(delimiter) == str.length() - len);
-
 }
 
 // path1 must be location path
@@ -411,7 +383,6 @@ bool yd::ends_with_rn(std::string const& str)
 			count++;
 			return (count);
 		}
-		//std::cout << static_cast<int>(path1[i]) << std::endl;
 		if ((path1[i - 1] != '/' && path1[i] == '\0') && (path2[i - 1] != '/' && path2[i] == '\0'))
 		{
 			count++;
@@ -450,68 +421,6 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 	req.erase(req.begin(), end);
 }
 
-/*
-		int yd::comparePath(const std::string &path1, const std::string &path2)
-	{
-  	int count = 0;
-		unsigned int i = 1;
-		for (; i < path1.size(); i++)
-		{
-			if (path1[i] != path2[i])
-			{
-					break;
-			}
-			if ((path1[i] == '/' && path2[i] == '/'))
-			{
-				count++;
-			}
-		}
-		if (path1.size() == 1 && path1[0] == '/')
-		{
-			count++;
-			return (count);
-		}
-		if (path1[i] == '/' && path2[i] == '/')
-		{
-			count++;
-			count++;
-			if (path1[i + 1] != '\0')
-				count = 0;
-			return (count);
-		}
-		if ((path1[i - 1] == '/' && path2[i - 1] == '/'))
-		{
-			count++;
-			return(count);
-		}
-		if (path1[i] == '/' && path2[i] == '\0')
-		{
-			count++;
-			count++;
-			if (path1[i + 1] != '\0')
-				count = 0;
-			return (count);
-		}
-		if (path1[i] == '\0' && path2[i] == '/')
-		{
-			count++;
-			count++;
-			return (count);
-		}
-		//std::cout << static_cast<int>(path1[i]) << std::endl;
-		if ((path1[i - 1] != '/' && path1[i] == '\0') && (path2[i - 1] != '/' && path2[i] == '\0'))
-		{
-			count++;
-			count++;
-			return (count);
-		}
-		if (path1.size() >= path2.size() + 1)
-			count = 0;
-		if (path2.size() >= path1.size() + 1)
-			count = 0;
-			return (count);
-	}
-*/
 //--------------------------------------------------------------------------------------//
 //                                       Location                                       //
 //--------------------------------------------------------------------------------------//
@@ -718,11 +627,6 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 
 		void Server::setServerName(Tokenizer &tok)
 		{
-			// for (unsigned int i = 0; i < tok.getToken().length(); i++) 
-			// {
-			// 	if (!isalpha(tok.getToken()[i]) && tok.getToken()[i] != '.') 
-			// 		throw (FormatError(tok.getToken(), "alphanumeric characters"));
-			// }
 			if (tok.getToken().find('/',0) != (unsigned long)-1)
 					throw (FormatError(tok.getToken(), "/ forbiden in server_name"));
 			_server_name = tok.getToken();
@@ -881,12 +785,12 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 		return (_token);
 	}
 
-		const std::string &Tokenizer::getToken()
+	const std::string &Tokenizer::getToken()
 	{
 		return (_token);
 	}
 
-		const std::string &Tokenizer::getTokenBefore()
+	const std::string &Tokenizer::getTokenBefore()
 	{
 		return (_token_before);
 	}
@@ -922,7 +826,7 @@ void yd::extractHeader(std::string &header, std::vector<char> &req)
 				throw std::runtime_error("\e[0;31mWebServ$> File error: couldn't open config file. \e[0m");
 		if (atLeastOneServer == 0)
 				throw (ConfigurationError("Webserv need at least one server configure to working"));
-		}
+	}
 
 	Server	Tokenizer::parsServer()
 	{
