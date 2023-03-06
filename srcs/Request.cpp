@@ -15,6 +15,8 @@
 #include <iostream>
 #include <string>
 
+class Config;
+
 using namespace std;
 
 // #include <iostream>
@@ -736,14 +738,13 @@ bool Header::parseContentLength(const string &value) {
 		}
 	}
 
-	// if length > ?
-
 	this->content_length = value;
 	return 0;
 }
 
-bool Header::parseHeader( void ) {
 
+
+bool Header::parseHeader( void ) {
 	string::size_type pos = 0;
 	string 						str(this->brut_header);
 	string 						line;
@@ -1277,6 +1278,39 @@ void Request::reset( void ) {
 	this->isFinished = false;
 }
 
+bool Request::check_header_buffer(string buffer, Config & config) {
+	Request tmp;
+
+	string::size_type pos = buffer.find("\r\n");
+	tmp.method.brut_method = buffer.substr(0, pos);
+	buffer.erase(0, pos + 2);
+	// cout << "Method : " << tmp.method.brut_method << endl;
+	tmp.method.parseMethod();
+	tmp.header.brut_header = buffer;
+	// cout << "Header : " << tmp.header.brut_header << endl;
+	tmp.header.parseHeader();
+
+	cout << "host : " << tmp.header.host_ip << endl;
+	cout << "port : " << tmp.header.port << endl;
+	cout << "path : " << tmp.method.path << endl;
+
+	config.selectServ(tmp.header.host_ip, tmp.header.port, tmp.method.path);
+	cout << "max size serv : "<< config.getMaxSize() << endl;
+
+	cout << "content length : '" << tmp.header.content_length << "'" << endl;
+	if (tmp.header.content_length == "")
+		return 0;
+
+	unsigned int nb;
+	std::istringstream(tmp.header.content_length) >> nb;
+ 
+	if (nb > config.getMaxSize())
+		return 1;
+
+
+	return 0;
+}
+
 bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet_read) {
 
 	cout << "IS FINISH REQUEST" << endl;
@@ -1334,4 +1368,3 @@ bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet
 	}
 	return 0;
 }
-

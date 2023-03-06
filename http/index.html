@@ -35,7 +35,6 @@
 		<input type="submit" value="Envoyer" >
 	</form>
 
-
 	<h2> POST encodage multipart/from-data</h2>
 	<form method="post" action="a.out" enctype="multipart/form-data" id="form">
 		<label for="file">Fichier: </label><br />
@@ -49,10 +48,18 @@
 	<form method="post" action="a.out" enctype="application/x-www-form-urlencoded">
 		<label for="file">Fichier: </label><br />
 		<input type="file" name="file" id="file" /><br />
+		<input type="submit" value="Envoyer" >
+	</form>
+
+	<h2> POST encodage x-www-form-encoded with other input</h2>
+	<form method="post" action="a.out" enctype="application/x-www-form-urlencoded">
+		<label for="file">Fichier: </label><br />
+		<input type="file" name="file" id="file" /><br />
 		<label for="name2">Nom: </label><br />
 		<input type="text" name="name2" value="Jean" id="name2" /><br />
 		<input type="submit" value="Envoyer" >
 	</form>
+
 
 
 

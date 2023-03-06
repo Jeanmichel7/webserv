@@ -27,7 +27,7 @@
 		return (*this);
 	}
 
-	Config::Config(): _server(), _server_selected(), _buffer(), _pos_server()
+	Config::Config(): _server(), _server_selected(), _pos_server(), _buffer()
 	{
 	}
 	bool	Config::selectServ(const unsigned int ip, const unsigned int port, std::string path) 
@@ -237,7 +237,7 @@
 		return (_server.size());
 	}
 
-	unsigned int Config::selectFirstServ()
+	void Config::selectFirstServ()
 	{
 		_server_selected = &_server[0];
 		_pos_server = 0;
