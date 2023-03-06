@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/04 21:40:19 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/06 16:14:07 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,12 +86,12 @@ int main(int argc, char **argv)
 							size_t readed = 0;
 							size_t header_readed = 0;
 
-							if (reqIsChuncked(header_buffer) == false) {
+							if (reqIsChuncked(header_buffer) == false && sbuffer[event[i].ident].is_chunked == false) {
 								header_readed = server.reading_header(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, header_buffer);
 								for (unsigned long j = 0; j <  sbuffer[event[i].ident].readed; j++)
 									sbuffer[event[i].ident].buffer.push_back(header_buffer[j]);
-
 							}
+							// cout << "header_buffer : '" << header_buffer << "'" << endl;
 							if (reqIsChuncked(header_buffer) == true)
 								sbuffer[event[i].ident].is_chunked = true;
 							// cout << "header_buffer : " << header_buffer << endl;
@@ -99,19 +99,20 @@ int main(int argc, char **argv)
 							if (sbuffer[event[i].ident].is_chunked == true)
 							{
 								// cout << "On est dans les chuncks" << endl;
-								
 								string::size_type pos;
 								char *useless = NULL;
 								char *chunck_buffer = NULL;
 								// bool is_last_chunck = false;
 								sbuffer[event[i].ident].readed = 0;
 								chunck_buffer = server.reading_chunck(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, useless);
-								cout << "chunck_buffer : '" << chunck_buffer << "'" << endl;
+								// cout << "chunck_buffer : '" << chunck_buffer << "'" << endl;
 								
 								if (strlen(chunck_buffer) == 0) {
-									cout << "FINISHED chunck request" << endl;
+									// cout << "FINISHED chunck request" << endl;
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
+									sbuffer[event[i].ident].buffer.push_back('\r');
+									sbuffer[event[i].ident].buffer.push_back('\n');
 									sbuffer[event[i].ident].buffer.push_back('\r');
 									sbuffer[event[i].ident].buffer.push_back('\n');
 									sbuffer[event[i].ident].is_chunked = false;
@@ -120,14 +121,6 @@ int main(int argc, char **argv)
 									for (unsigned long j = 0; j < sbuffer[event[i].ident].readed; j++)
 										sbuffer[event[i].ident].buffer.push_back(chunck_buffer[j]);
 								}
-
-								// display buffer total
-								std::vector<char>::const_iterator start = sbuffer[event[i].ident].buffer.begin();
-								std::vector<char>::const_iterator end = sbuffer[event[i].ident].buffer.end();
-								cout << "BUFFER: '" << endl;
-								for (; start != end; start++)
-									std::cout << *start;
-								cout << "'" << endl;
 							}
 							else
 							{
@@ -136,23 +129,16 @@ int main(int argc, char **argv)
 								std::string::size_type pos = header.find("Content-Length");
 								if (pos == std::string::npos)
 								{
-									cout << "FINISHED" << endl;
+									// cout << "NO BODY" << endl;
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 									break;
 								}
 								
 								readed = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, buffer);
-								if (readed == 18446744073709551615)
-								{
-									cout << "ERROR: readed == 18446744073709551615" << endl;
-									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
-									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-									break;
-								}
-								cout << "readed : " << readed << endl;
-								cout << "read[]sdfdsf" << sbuffer[event[i].ident].readed << endl;
-								cout << "buffer avant : " << buffer << endl;
+								// cout << "readed : " << readed << endl;
+								// cout << "read[]sdfdsf" << sbuffer[event[i].ident].readed << endl;
+								// cout << "buffer avant : " << buffer << endl;
 
 								// sbuffer[event[i].ident].buffer.insert(sbuffer[event[i].ident].buffer.end(), readed, *buffer );
 								for (unsigned long j = 0; j < sbuffer[event[i].ident].readed; j++)
@@ -160,13 +146,18 @@ int main(int argc, char **argv)
 
 								if (req.isFinishedRequest(sbuffer[event[i].ident].buffer, sbuffer[event[i].ident].readed))
 								{
-									cout << "FINISHED" << endl;
+									// cout << "FINISHED" << endl;
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 								}
 							}
-							
-
+							// display buffer total
+							// std::vector<char>::const_iterator start = sbuffer[event[i].ident].buffer.begin();
+							// std::vector<char>::const_iterator end = sbuffer[event[i].ident].buffer.end();
+							// cout << "BUFFER: '" << endl;
+							// for (; start != end; start++)
+							// 	std::cout << *start;
+							// cout << "'" << endl;
 						
 						}
 						else if (event[i].filter == EVFILT_WRITE)

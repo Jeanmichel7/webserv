@@ -439,20 +439,17 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	// usleep(1000);
 	
 	o_read = recv(socket, tmp, 1, 0);
-	cout << "'" << tmp << "'"  << endl;
+	cout << "tmp[0] : " << "'" << tmp << "'"  << endl;
 	if (o_read == -1 || o_read == 0)
 		return("");
 	ssize << tmp;
 
 	// purge
-	if (tmp[0] == '\r' || tmp[0] == '\n')
+	if (tmp[0] == '\r')
 	{
-		while (tmp[0] == '\r' || tmp[0] == '\n') {
-			o_read = recv(socket, tmp, 1, 0);
-			if (o_read == -1 || o_read == 0)
-				return("");
-			cout << "'" << tmp << "'"  << endl;
-		}
+		o_read = recv(socket, tmp, 1, 0);
+		if (o_read == -1 || o_read == 0)
+			return("");
 	}
 
 	while (ssize.str().find("\r\n") == string::npos )
@@ -474,7 +471,6 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	ss >> x;
 	long size = static_cast<string::size_type>(x);
 	cout << "size : " << size << endl;
-
 	if (size == 0)
 		return ("");
 
@@ -485,11 +481,12 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	readed += o_read;
 	if (o_read == -1 || o_read == 0)
 		return("");
-	sbuffer << buff;
-	cout << "sbuffer : " << sbuffer.str() << endl;
+	printf("buff char * : '%s'\n", buff);
+	// sbuffer << buff;
+	// cout << "sbuffer : " << sbuffer.str() << endl;
 
-	string tmpbuff = buff;
-	cout << "buff du chunck : '" << tmpbuff << "'" << endl;
+	// string tmpbuff = buff;
+	// cout << "buff du chunck : '" << tmpbuff << "'" << endl;
 	// cout << "size read : " << readed << endl;
 	// cout << "size buffer : " << strlen(buff) << endl;
 
