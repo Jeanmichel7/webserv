@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/07 11:48:35 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/07 22:49:39 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,7 +182,9 @@ int main(int argc, char **argv)
 							}
 							else
 							{
-								if (!server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident]))
+								bool close_connexion;
+								close_connexion = 0;
+								if (!server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident], close_connexion))
 								{
 									sbuffer[event[i].ident].buffer.clear();
 									sbuffer[event[i].ident].readed = 0;
@@ -193,6 +195,15 @@ int main(int argc, char **argv)
 								}
 								else
 								{
+									if (close_connexion)
+									{
+										sbuffer[event[i].ident].buffer.clear();
+										sbuffer[event[i].ident].readed = 0;
+										server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+										clients.erase(event[i].ident);
+										close(event[i].ident);
+										continue;
+									}
 									sbuffer[event[i].ident].buffer.clear();
 									sbuffer[event[i].ident].readed = 0;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
@@ -214,3 +225,4 @@ int main(int argc, char **argv)
 							<< e.what() << std::endl;
 	}
 }
+

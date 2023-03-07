@@ -153,6 +153,7 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 	std::fstream		fd;
 	std::string			tmp;
 	std::string buffer;
+	bool cgi_executed = false;
 
 	if (!this->config.getMethod(req.method.path).isget)
 	{
@@ -170,9 +171,11 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 	{
 		if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
 		{
+
 			_header.append("200 OK\n");
 			_body = CGI::execute_cgi(this->config, req, client_addr);
 			yd::extractHeader(header_script, _body);
+			cgi_executed = true;
 		}
 		else
 		{
@@ -181,7 +184,9 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 				file++;
 			fd.open(file, std::fstream::in | std::fstream::out);
 			if (fd.is_open())
+			{
 				_header.append("200 OK\n");
+			}
 			else if (!this->checkextension(req.method.path).empty())
 			{
 				_header.append("404 Not Found\n");
@@ -202,15 +207,26 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 	int count = 0;
 	_header += handleCookie(req, date, count);
 	n <<  _body.size() + buffer.size() + date.size() + std::to_string(count).size() + 17;
-	_header += "Content-Length: " + n.str() + "\n";
-	_header += "Content-Type: " + this->checkextension(*this->config.getFile(req.method.path)) + "\n" ;
-	_header += "Connection: keep-alive\r\n";
-	_header += "\r\n"  + buffer;
+	if (!cgi_executed)
+		_header += "Content-Length: " + n.str() + "\n";
+	size_t pos = 0;
+	if ((pos = header_script.find("Content-Type")) == std::string::npos)
+		_header += "Content-Type: " + this->checkextension(*this->config.getFile(req.method.path)) + "\n" ;
+	_header += "Connection: keep-alive";
+	if (header_script.size() > 0)
+		_header += '\n' + header_script;
+	else
+		_header += "\r\n\r\n";
+	_header += buffer;
 	_cookie += "nb de refres : " + std::to_string(count) + ", ";
 	if (date.size() > 0)
 		_cookie += date;
 	if (_body.size() == 0)
 		_header += "\n";
+	if (header_script.find("Content-Length") == std::string::npos)
+		_add_eof = 1;
+	std::cout << "SIZE DATE " << date.size() << std::endl;
+	std::cout << "VALEUR DATE " << date << std::endl;
 	fd.close();
 }
 
@@ -248,12 +264,20 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr)
 		header << "200 OK " << "\n";
 	header << Settings::date();
 	header << "server: " << *this->config.getName() << "\n";
-	header << "Content-Length: " << _body.size();
-	header << "\nContent-Type: " << this->checkextension(req.method.path) << "\n";
-	header << "Connection: keep-alive\r\n\r\n";
-	this->_header = header.str();
+	header << "Content-Length: " << _body.size() << "\n";
 	std::string::size_type pos = 0;
-	if ((pos = header_script.find("content_length")) != std::string::npos)
+	if ((pos = header_script.find("Content-Type")) == std::string::npos)
+		header << "Content-Type: " << this->checkextension(*this->config.getFile(req.method.path)) << "\n" ;
+	header << "Connection: keep-alive";
+	std::cout << "VALEUR HEADER SCRIPT : " << header_script << std::endl;
+	if (header_script.size() > 0)
+		header << '\n' << header_script;
+	else
+		header << "\r\n\r\n";
+	this->_header = header.str();
+	// std::cout << rvalue_script << std::endl;
+	pos = 0;
+	if ((pos = header_script.find("Content-Lenght")) == std::string::npos)
 		_add_eof = 1;
 	fd.close();
 }
@@ -395,7 +419,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 }
 
 
-bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr)
+bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, bool &close_connexion)
 {
 	Request 	req;
 	_add_eof = 0;
@@ -426,20 +450,25 @@ bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 	send(socket, _header.c_str(), _header.size(), 0);
 	std::vector<char>::iterator start = _body.begin();
 	size_t size_data = _body.size();
-	send(socket, &*start, size_data, 0);
+	// std::cout << "SIZE BODY " << size_data << std::endl; 
+	// std::cout << "HEADER " << _header.c_str(); 
+	// std::cout << "DPKDPKQWPKDPQWKD" << std::endl;
+
+	write(socket, &*start, size_data);
+	// usleep(5000000);
+
+	write(socket, _cookie.c_str(), _cookie.size());
 	if (_add_eof)
 	{
-		stringstream stream;
-		stream << EOF;
-		std::string eof = stream.str();
-		send(socket, eof.c_str(), eof.size(), 0);
+		// std::cout << "bonjour" << std::endl;
+		close_connexion = 1;
 	}
-	send(socket, _cookie.c_str(), _cookie.size(), 0);
 	return (req.header.connection);
 }
 
 std::string	Settings::checkextension(std::string const& path)
 {
+	std::cout << "PATH : " << path << std::endl;
 	size_t pos = path.rfind('.');
 	
 	if (pos != path.npos)
@@ -447,10 +476,13 @@ std::string	Settings::checkextension(std::string const& path)
 		std::map<std::string, std::string>::iterator start = this->ext.begin();
 		std::map<std::string, std::string>::iterator end = this->ext.end();
 		std::string extension = path.substr(pos);
+		cout << "extension : " << extension << endl;
 		while(start != end)
 		{
-			if (start->first == extension)
+			if (start->first == extension){
+				cout << "start first : " << start->second << endl;
 				return(start->second);
+			}
 			start++;
 		}
 		return(std::string(""));
@@ -497,7 +529,6 @@ void Settings::folder_gestion(Request const& req)
 	reponse << "Connection: keep-alive\n\n";
 	reponse << buffer.str();
 	_header = reponse.str();
-	return (reponse.str());
 }
 
 

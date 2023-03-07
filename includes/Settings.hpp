@@ -26,37 +26,30 @@ struct Sbuffer {
 
 struct Request;
 
+
 class Settings
 {
 	private:
-		std::map<std::string, std::string>	ext;
-		std::string							_header;
-		std::vector<char>					_body;
-		std::string							_cookie;
-		bool								_add_eof;
-	
+		std::map<std::string, std::string> ext;
+		std::string _header;
+		std::vector<char> _body;
+		std::string _cookie;
+		bool _add_eof;
+	public:
+		Config			config;
+		struct timespec check_request_timeout;
+		int 			checkArgs(int argc);
+		void			build(int ke);
 		void			get( Request const &req,  struct sockaddr_in const& client_addr);
 		void			post( Request const &req,  struct sockaddr_in const& client_addr);
 		void 			del( Request const &req, struct sockaddr_in const& client_addr);
 		std::string		date( void );
 		void			badRequest( Request const& req );
 		void			forbidden_error( void );
-		void			not_found( void );
+		void 			not_found( void );
 		void			Unauthorized( void );
 		int 			check_forbidden(std::string const& path);
 		void			method_not_allowed( Request const& req );
-		std::string		checkextension(std::string const& path);
-		std::string		folder_gestion(Request const& req);
-		bool			checkmethod(Request const& req, Methods const& t);
-		std::string		timeout( void );
-		std::string		handleCookie(const Request & req, std::string &date, int &count);
-		
-	public:
-		Config			config;
-		struct timespec check_request_timeout;
-		int 			checkArgs(int argc);
-		void			build(int ke);
-		
 		size_t 			reading(int socket, unsigned int &readed, time_t &time_starting, char *buffer);
 		size_t 			reading_header(int socket, unsigned int &readed, time_t &time_starting, char *buff);
 		char * 			reading_chunck(int socket, unsigned int &readed, time_t &time_starting);
@@ -64,26 +57,20 @@ class Settings
 		void			folder_gestion(Request const& req);
 		void			set_event(int ke, int socket, short filter, short flag);
 		bool			checkmethod(Request const& req, Methods const& t);
-		bool			writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr);
-		void			check_timeout(Sbuffer *requests, int ke);
+		bool			writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, bool &close_connexion);
+		void			check_timeout(Sbuffer *requests, int ke, std::map<int, sockaddr_in> &clients);
 		std::string		timeout( void );
 
 		std::string handleCookie(const Request & req, std::string &date, int &count);
 		Settings( Config const& base );
 		Settings();
 		~Settings();
-		void	build(int ke);
-		void	set_event(int ke, int socket, short filter, short flag);
-		bool	writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr);
-		size_t	reading(int socket, unsigned int &readed, time_t &time_starting, char *buffer);
-		void	check_timeout(Sbuffer *requests, int ke, std::map<int, sockaddr_in>& clients);
 		class badCreation : public std::exception
 		{
 			virtual const char* what() const throw(){
 				return ("Settings::ErrorCreationInterfaceNetwork");
 			}
 		};
-
 };
 
 #endif
