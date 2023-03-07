@@ -435,17 +435,19 @@ bool yd::ends_with_rn(std::string const& str)
 
 void yd::extractHeader(std::string &header, std::vector<char> &req)
 {
-		char sep[4] = {'\r', '\n', '\r', '\n'}; 
-		size_t header_size = 0;
+
+	char sep[4] = {'\r', '\n', '\r', '\n'}; 
+	size_t header_size = 0;
 	for (size_t i = 0; i < req.size() - 3; i++) {
 		if (req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
-			header_size  = i;
+			header_size  = i + 4;
 			break;
 		}
 	}
 	for (size_t i = 0; i < header_size; i++) {
-			header.push_back(req[i]);
-		}
+		header.push_back(req[i]);
+	}
+	std::cout << "header : " << header << std::endl;
 	std::vector<char>::const_iterator end = req.begin() + header_size;
 	req.erase(req.begin(), end);
 }

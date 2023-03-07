@@ -56,7 +56,7 @@ class Settings
 		void			folder_gestion(Request const& req);
 		void			set_event(int ke, int socket, short filter, short flag);
 		bool			checkmethod(Request const& req, Methods const& t);
-		bool			writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr);
+		bool			writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, bool &close_connexion);
 		void			check_timeout(Sbuffer *requests, int ke);
 		std::string		timeout( void );
 

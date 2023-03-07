@@ -22,74 +22,6 @@
 #include <unistd.h>
 #include <cstdio>
 
-Settings::Settings(Config const& base) : config(base)
-{
-	check_request_timeout.tv_sec = 1;
-	this->ext[".aac"] = "audio/aac";
-	this->ext[".avi "] = "video/x-msvideo";
-	this->ext[".bin"] = "application/octet-stream";
-	this->ext[".bmp"] = "image/bmp";
-	this->ext[".bz"] = "application/x-bzip";
-	this->ext[".bz2"] = "application/x-bzip2";
-	this->ext[".csh"] = "application/x-csh";
-	this->ext[".css"] = "text/css";
-	this->ext[".csv"] = "text/csv";
-	this->ext[".doc"] = "application/msword";
-	this->ext[".docx "] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-	this->ext[".gif"] = "image/gif";
-	this->ext[".htm"] = "text/html";
-	this->ext[".html"] = "text/html";
-	this->ext[".ico"] = "image/x-icon";
-	this->ext[".jar"] = "application/java-archive";
-	this->ext[".jpeg"] = "image/jpeg";
-	this->ext[".jpg"] = "image/jpeg";
-	this->ext[".js"] = "application/javascript";
-	this->ext[".json"] = "application/json";
-	this->ext[".mid"] = "audio/midi";
-	this->ext[".midi"] = "audio/midi";
-	this->ext[".mpeg"] = "video/mpeg";
-	this->ext[".mp3"] = "audio/mpeg";
-	this->ext[".mp4"] = "video/mp4";
-	this->ext[".odp "] = "application/vnd.oasis.opendocument.presentation";
-	this->ext[".ods"] = "application/vnd.oasis.opendocument.spreadsheet";
-	this->ext[".odt"] = "application/vnd.oasis.opendocument.text";
-	this->ext[".oga"] = "audio/ogg";
-	this->ext[".ogv"] = "video/ogg";
-	this->ext[".ogx"] = "application/ogg";
-	this->ext[".otf"] = "font/otf";
-	this->ext[".png"] = "image/png";
-	this->ext[".pdf"] = "application/pdf";
-	this->ext[".ppt"] = "application/vnd.ms-powerpoint";
-	this->ext[".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-	this->ext[".rar"] = "application/x-rar-compressed";
-	this->ext[".rtf"] = "application/rtf";
-	this->ext[".sh"] = "application/x-sh";
-	this->ext[".svg"] = "image/svg+xml";
-	this->ext[".swf"] = "application/x-shockwave-flash";
-	this->ext[".tar"] = "application/x-tar";
-	this->ext[".tif"] = "image/tiff";
-	this->ext[".tiff"] = "image/tiff";
-	this->ext[".ts"] = "application/typescript";
-	this->ext[".ttf"] = "font/ttf";
-	this->ext[".txt"] = "text/plain";
-	this->ext[".vsd"] = "application/vnd.visio";
-	this->ext[".wav"] = "audio/x-wav";
-	this->ext[".weba"] = "audio/webm";
-	this->ext[".webm"] = "video/webm";
-	this->ext[".webp "] = "image/webp";
-	this->ext[".woff"] = "font/woff";
-	this->ext[".woff2"] = "font/woff2";
-	this->ext[".xhtml"] = "application/xhtml+xml";
-	this->ext[".xls"] = "application/vnd.ms-excel";
-	this->ext[".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-	this->ext[".xml"] = "application/xml";
-	this->ext[".xul"] = "application/vnd.mozilla.xul+xml";
-	this->ext[".zip"] = "application/zip";
-	this->ext[".3gp"] = "video/3gpp";
-	this->ext[".3g2"] = "video/3gpp2";
-	this->ext[".7z"] = "application/x-7z-compressed";
-}
-
 Settings::Settings()
 {
 	check_request_timeout.tv_sec = 1;
@@ -221,6 +153,7 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 	std::fstream		fd;
 	std::string			tmp;
 	std::string buffer;
+	bool cgi_executed = false;
 
 	// check methode
 	if (!this->config.getMethod(req.method.path).isget)
@@ -244,9 +177,11 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 	{
 		if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
 		{
+
 			_header.append("200 OK\n");
 			_body = CGI::execute_cgi(this->config, req, client_addr);
 			yd::extractHeader(header_script, _body);
+			cgi_executed = true;
 		}
 		else
 		{
@@ -255,7 +190,9 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 				file++;
 			fd.open(file, std::fstream::in | std::fstream::out);
 			if (fd.is_open())
+			{
 				_header.append("200 OK\n");
+			}
 			else if (!this->checkextension(req.method.path).empty())
 			{
 				_header.append("404 Not Found\n");
@@ -277,15 +214,24 @@ void Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 	_header += handleCookie(req, date, count);
 	std::cout << "SIZE DATE " << date.size() << std::endl;
 	n <<  _body.size() + buffer.size() + date.size() + std::to_string(count).size() + 17;
-	_header += "Content-Length: " + n.str() + "\n";
-	_header += "Content-Type: " + this->checkextension(*this->config.getFile(req.method.path)) + "\n" ;
-	_header += "Connection: keep-alive\r\n";
-	_header += "\r\n"  + buffer;
+	if (!cgi_executed)
+		_header += "Content-Length: " + n.str() + "\n";
+	size_t pos = 0;
+	if ((pos = header_script.find("Content-Type")) == std::string::npos)
+		_header += "Content-Type: " + this->checkextension(*this->config.getFile(req.method.path)) + "\n" ;
+	_header += "Connection: keep-alive";
+	if (header_script.size() > 0)
+		_header += '\n' + header_script;
+	else
+		_header += "\r\n\r\n";
+	_header += buffer;
 	_cookie += "nb de refres : " + std::to_string(count) + ", ";
 	if (date.size() > 0)
 		_cookie += date;
 	if (_body.size() == 0)
 		_header += "\n";
+	if (header_script.find("Content-Length") == std::string::npos)
+		_add_eof = 1;
 	std::cout << "SIZE DATE " << date.size() << std::endl;
 	std::cout << "VALEUR DATE " << date << std::endl;
 	fd.close();
@@ -333,13 +279,20 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr)
 		header << "200 OK " << "\n";
 	header << Settings::date();
 	header << "server: " << *this->config.getName() << "\n";
-	header << "Content-Length: " << _body.size();
-	header << "\nContent-Type: " << this->checkextension(req.method.path) << "\n";
-	header << "Connection: keep-alive\r\n\r\n";
+	header << "Content-Length: " << _body.size() << "\n";
+	std::string::size_type pos = 0;
+	if ((pos = header_script.find("Content-Type")) == std::string::npos)
+		header << "Content-Type: " << this->checkextension(*this->config.getFile(req.method.path)) << "\n" ;
+	header << "Connection: keep-alive";
+	std::cout << "VALEUR HEADER SCRIPT : " << header_script << std::endl;
+	if (header_script.size() > 0)
+		header << '\n' << header_script;
+	else
+		header << "\r\n\r\n";
 	this->_header = header.str();
 	// std::cout << rvalue_script << std::endl;
-	std::string::size_type pos = 0;
-	if ((pos = header_script.find("content_length")) != std::string::npos)
+	pos = 0;
+	if ((pos = header_script.find("Content-Lenght")) == std::string::npos)
 		_add_eof = 1;
 	fd.close();
 }
@@ -499,7 +452,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 }
 
 
-bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr)
+bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr, bool &close_connexion)
 {
 	std::string reponse_request;
 	Request 	req;
@@ -544,17 +497,18 @@ bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 	std::vector<char>::iterator start = _body.begin();
 	size_t size_data = _body.size();
 	std::cout << "SIZE BODY " << size_data << std::endl; 
-	std::cout << "HEADER " << _header.c_str() << std::endl; 
+	std::cout << "HEADER " << _header.c_str(); 
+	std::cout << "DPKDPKQWPKDPQWKD" << std::endl;
 
 	write(socket, &*start, size_data);
+	// usleep(5000000);
+
+	write(socket, _cookie.c_str(), _cookie.size());
 	if (_add_eof)
 	{
-		stringstream stream;
-		stream << EOF;
-		std::string eof = stream.str();
-		write(socket, eof.c_str(), eof.size());
+		std::cout << "bonjour" << std::endl;
+		close_connexion = 1;
 	}
-	write(socket, _cookie.c_str(), _cookie.size());
 	return (req.header.connection);
 	// req.printRequest();
 	//send(socket, reponse_request.c_str(), reponse_request.size(), 0);
@@ -562,6 +516,7 @@ bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 
 std::string	Settings::checkextension(std::string const& path)
 {
+	std::cout << "PATH : " << path << std::endl;
 	size_t pos = path.rfind('.');
 	
 	if (pos != path.npos)
@@ -569,10 +524,13 @@ std::string	Settings::checkextension(std::string const& path)
 		std::map<std::string, std::string>::iterator start = this->ext.begin();
 		std::map<std::string, std::string>::iterator end = this->ext.end();
 		std::string extension = path.substr(pos);
+		cout << "extension : " << extension << endl;
 		while(start != end)
 		{
-			if (start->first == extension)
+			if (start->first == extension){
+				cout << "start first : " << start->second << endl;
 				return(start->second);
+			}
 			start++;
 		}
 		return(std::string(""));
