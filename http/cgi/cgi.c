@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 #define BUFFER_SIZE 16384
 
@@ -17,13 +18,10 @@ int main(int argc, char *argv[], char *envp[]) {
     while ((bytes_read = read(fd, buffer, BUFFER_SIZE)) > 0) {
         write(STDOUT_FILENO, buffer, bytes_read);
     }
-    /*char *path = NULL;
-    path = getcwd(buffer, 1024);
-    printf("Emplacement courant : %s\n", path);*/
     close(fd);
 		printf("<h1 class = \"cgi\" >CGI STDIN </h1>\n");
 		printf("<p class = \"cgi\" >\n");
-		char c;
+		int c;
 		unsigned int i = 0;
 		    while (1) {
 				c = fgetc(stdin);

@@ -15,6 +15,12 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <iostream>
+#include <string>
+#include <istream>
+#include <fstream>
+#include <unistd.h>
+#include <cstdio>
 
 Settings::Settings()
 {
@@ -253,9 +259,9 @@ void Settings::post(Request const &req, struct sockaddr_in const& client_addr)
 }
 
 
-void Settings::del(Request const &req)
-{
+void Settings::del(Request const &req, struct sockaddr_in const& client_addr) {
 	std::stringstream header;
+	(void)client_addr;
 
 	if (!this->config.getMethod(req.method.path).isdelete) {
 		this->method_not_allowed(req);
@@ -285,22 +291,114 @@ void Settings::del(Request const &req)
 	this->_header = header.str();
 }
 
+size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_starting, char *buff)
+{
+	cout << "READING HEADER" << endl;
+	int o_read = 0;
+	time(&time_starting);
+
+	char tmp[2];
+	std::memset(tmp, 0, 2);
+	std::memset(buff, 0, 4097);
+	stringstream sbuffer;
+	
+	o_read = recv(socket, tmp, 1, 0);
+	readed ++;
+	if (o_read == -1 || o_read == 0)
+		return(o_read);
+	sbuffer << tmp;
+	while (sbuffer.str().find("\r\n\r\n") == string::npos)
+	{
+		o_read = recv(socket, tmp, 1, 0);
+		readed ++;
+		if (o_read == -1 || o_read == 0)
+			break;
+		sbuffer << tmp;
+		// cout << tmp;
+	}
+	strcpy(buff, sbuffer.str().c_str());
+	return(o_read) ;
+}
+
 size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting, char *buff)
 {
-	size_t				o_read = 0;
+	cout << "READING" << endl;
+	size_t	o_read = 0;
 	time(&time_starting);
 	std::memset(buff, 0, 4097);
-	Request req;
-
+	
 	o_read = recv(socket, buff, 4096, 0);
+	if (o_read == (size_t)-1 || o_read == (size_t)0)
+		return(o_read);
 	readed += o_read;
-	return(o_read);
+	cout << "sbuffer[event[i].ident].readed : " << readed << endl;
+
+	return(o_read) ;
 }
+
+char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_starting)
+{
+	cout << "READING CHUNCK" << endl;
+	int o_read = 0;
+	time(&time_starting);
+
+	char tmp[2];
+	char tmp_purge[2];
+	std::memset(tmp, 0, 2);
+	std::memset(tmp_purge, 0, 2);
+	stringstream ssize;
+	stringstream sbuffer;
+	
+	o_read = recv(socket, tmp, 1, 0);
+	cout << "tmp[0] : " << "'" << tmp << "'"  << endl;
+	if (o_read == -1 || o_read == 0)
+		return(NULL);
+	ssize << tmp;
+
+	// purge
+	if (tmp[0] == '\r')
+	{
+		o_read = recv(socket, tmp, 1, 0);
+		if (o_read == -1 || o_read == 0)
+			return(NULL);
+	}
+
+	while (ssize.str().find("\r\n") == string::npos )
+	{
+		o_read = recv(socket, tmp, 1, 0);
+		if (o_read == -1 || o_read == 0)
+			break;
+		ssize << tmp;
+	}
+	if (ssize.str().empty())
+		return (NULL);
+
+	string::size_type x;
+	std::stringstream ss;
+	std::stringstream ssbody;
+	ss << std::hex << ssize.str();
+	ss >> x;
+	long size = static_cast<string::size_type>(x);
+	cout << "size : " << size << endl;
+	if (size == 0)
+		return (NULL);
+
+	char *buff = new char[size + 1];
+	std::memset(buff, 0, size + 1);
+
+	o_read = recv(socket, buff, size, 0);
+	readed += o_read;
+	if (o_read == -1 || o_read == 0)
+		return(NULL);
+	printf("buff char * : '%s'\n", buff);
+	return (buff);
+}
+
 
 bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr)
 {
 	Request 	req;
-	this->_add_eof = 0;
+	_add_eof = 0;
 
 	std::fstream fd;
 	_header = "HTTP/1.1 ";
@@ -321,7 +419,7 @@ bool Settings::writing(int socket, std::vector<char> &sbuffer, struct sockaddr_i
 	else if (req.method.isPost)
 		this->post(req, client_addr);
 	else if (req.method.isDelete)
-		this->del(req);
+		this->del(req, client_addr);
 	else
 		this->badRequest(req);
 	usleep(500);
@@ -362,7 +460,7 @@ std::string	Settings::checkextension(std::string const& path)
 
 
 
-std::string Settings::folder_gestion(Request const& req)
+void Settings::folder_gestion(Request const& req)
 {
 	std::stringstream	reponse;
 	std::stringstream	buffer;
@@ -440,7 +538,8 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 		
 		sessions_date[sessionId] = this->date();
 		sessions_count[sessionId]++;
-	} else {
+	} 
+	else {
 		date = sessions_date[req.header.cookies.at("wsid")];
 		sessions_date[req.header.cookies.at("wsid")] = this->date();
 		
@@ -458,6 +557,18 @@ std::string Settings::handleCookie(const Request &req, std::string &date, int &c
 /********************************************/
 
 
+int Settings::checkArgs(int argc)
+{
+	if (argc < 2) {
+		std::cerr << RED << "WebServ$> Bad argument: please enter the path of the configuration file." << DEF << std::endl;
+		return (1);
+	}
+	if (argc > 3) {
+		std::cerr << RED << "WebServ$> Bad argument: please enter only the path of the configuration file." << DEF << std::endl;
+		return (1);
+	}
+	return (0);
+}
 
 void		Settings::check_timeout(Sbuffer *requests, int ke, std::map<int, sockaddr_in>& clients)
 {

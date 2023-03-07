@@ -15,60 +15,9 @@
 #include <iostream>
 #include <string>
 
+class Config;
+
 using namespace std;
-
-// #include <iostream>
-
-/*
-La taille maximale d'une URI (Uniform Resource Identifier) est de 2048 caractères selon la spécification 
-de la norme HTTP/1.1.
-La taille maximale des en-têtes de requête est de 8192 octets, selon la même spécification.
-La taille maximale du corps de la requête dépend des capacités du serveur, mais généralement elle est de 8 Mo 
-pour Apache et de 2 Mo pour IIS.
-Il est important de noter qu'il est possible de configurer ces limites en fonction de vos besoins spécifiques 
-en utilisant les paramètres de configuration appropriés de votre serveur.
-*/
-
-/*
-Pour être considérée comme valide, une requête HTTP 1.1 doit respecter les règles définies dans 
-la spécification HTTP 1.1 du RFC 7230 à 7235. Les principales exigences sont les suivantes:
-
-La méthode de la requête (GET, POST, etc.) doit être valide et correctement spécifiée.
-L'URI de la ressource demandée doit être valide et correctement formatée.
-Les en-têtes de la requête doit être valide et correctement formaté.
-Le corps de la requête doit être valide s'il est présent.
-Le format général de la requête doit respecter la syntaxe HTTP standard.
-
-Il est important de noter que ces exigences ne garantissent pas que la requête sera 
-traitée avec succès par le serveur, il est nécessaire de respecter les règles de la spécification 
-HTTP pour que la requête soit considérée comme valide.
-
-	//check uri size max 2048 char
-	//check header size max 8192 octets
-	//check body size max 8Mo
-*/
-
-	/*
-			Vérifiez que la première ligne contient la méthode HTTP correcte (GET, POST, PUT, DELETE, etc.), l'URI de la ressource cible et la version HTTP utilisée (HTTP/1.1).
-			Vérifiez que l'en-tête Host est présent et contient le nom d'hôte du serveur cible.
-	Vérifiez que les autres en-têtes de la requête sont présents et valides (par exemple, Content-Type pour les requêtes avec un corps, Content-Length pour les requêtes avec un corps, Authorization pour les requêtes nécessitant une authentification, etc.).
-	Vérifiez que le corps de la requête est valide et contient les informations appropriées pour la requête (si présent).
-		Vérifiez que les retours à la ligne (\r\n) sont utilisés pour séparer les en-têtes
-			et pour indiquer la fin de la requête (\r\n à la fin de la requête).
-			Vérifiez que la longueur de la requête est conforme aux limites spécifiées par le protocole HTTP (généralement 8190 octets ou moins).
-	Vérifiez que les valeurs des en-têtes ne dépassent pas les limites spécifiées par le protocole HTTP (généralement 8190 octets ou moins).
-	Vérifiez que les URI de la requête sont encodés de manière appropriée, en utilisant les codes d'échappement pour les caractères spéciaux tels que les espaces et les caractères non ASCII.
-	Vérifiez que les valeurs des en-têtes sont encodées de manière appropriée, en utilisant les codes d'échappement pour les caractères spéciaux tels que les espaces et les caractères non ASCII.
-	Vérifiez que la requête est conforme aux règles de sécurité établies pour l'application ou le service utilisé, par exemple en vérifiant que l'authentification est valide et que les autorisations appropriées ont été accordées pour l'accès à la ressource demandée.
-	Vérifiez que la requête contient les informations de contrôle de la version nécessaire (If-Match, If-None-Match, If-Modified-Since, If-Unmodified-Since) pour les méthodes PUT et DELETE qui nécessitent une condition d'écriture.
-	*/
-
-
-
-
-
-
-
 
 /* *************************************************** */
 /*                                                     */
@@ -340,10 +289,6 @@ bool Header::checkHeaderKey(const string &key) {
 
 bool Header::checkHeaderValue(const string &value) {
 
-	// if (value.empty()) {
-	// 	cerr << "Error : value is empty" << endl;
-	// 	return 1;
-	// }
   for (string::const_iterator it = value.begin(); it != value.end(); ++it) {
     if (!isprint(*it) && *it != '\t' && *it != ' ') {
 			cerr << "Error : value '" << value << "' is not valid: value can't have '"<< *it << "'" << endl;
@@ -380,12 +325,6 @@ bool Header::checkSyntaxeTag(const string &host, const string &tag) {
 		cerr << "Error : host '" << host << "' is not valid: tag can't have '--'" << endl;
 		return 1;
 	}
-	// for(string::const_iterator it = tag.begin(); it != tag.end(); ++it) {
-	// 	if (!isalnum(*it) && *it != '-'){
-			// cerr << "Error : host '" << host << "' is not valid: tag can't have '"<< *it << "'" << endl;
-			// return (true);
-		// }
-	// }
 	return 0;
 } 
 
@@ -408,10 +347,7 @@ bool Header::checkHostValue(const string &host ) {
 			return 1;
 		}
 	}
-	// cout << "contain body : " << contain_body << endl;
-	/* check tags */
 	str = host;
-	// cout << "test : " << str << endl;
 
 	if ((pos2 = str.find(":")) != string::npos){
 		this->host_ip = str.substr(0, pos2);
@@ -434,7 +370,6 @@ bool Header::checkHostValue(const string &host ) {
 }
 
 bool Header::parseUserAgent(const string &user_agent ) {
-	// retour a la ligne ?
 
 	string::size_type pos = 0;
 	string::size_type subpos = 0;
@@ -453,7 +388,6 @@ bool Header::parseUserAgent(const string &user_agent ) {
 	}
 	while(((pos = str.find(" ")) != string::npos || (pos = str.find("	")) != string::npos)) {
 		line = str.substr(0, pos);
-		// cerr << "line : " << line << endl;
 
 		if (index == 0) {
 			this->user_agent["product"] = line.substr(0, line.find("/"));
@@ -475,7 +409,6 @@ bool Header::parseUserAgent(const string &user_agent ) {
 			line = tmp_line.substr(pos + 1, subpos - 1);
 			while((pos = line.find("; ")) != string::npos) {
 				subline = line.substr(0, pos);
-				// cerr << "subline : '" << subline << "'" << endl;
 
 				if (index == 0) {
 					if (index_info == 0) 
@@ -488,7 +421,6 @@ bool Header::parseUserAgent(const string &user_agent ) {
 				line.erase(0, pos + 2);
 				index_info++;
 			}
-			// cerr << "subline fin : '" << line << "'" << endl;
 			if (index == 0)
 				this->user_agent["osVersion"] = line;
 			else {
@@ -501,7 +433,6 @@ bool Header::parseUserAgent(const string &user_agent ) {
 		str.erase(0, pos + 1);
 		index++;
 	}
-	// cerr << "line fin : " << str << endl << endl << endl << endl;
 	this->user_agent["browser"] = str.substr(0, str.find("/"));
 	this->user_agent["browserVersion"] = str.substr(str.find("/") + 1);
 	this->str_user_agent = user_agent;
@@ -516,7 +447,6 @@ bool Header::parseUserAgent(const string &user_agent ) {
 bool Header::checkSyntaxeAccept(const string &line) {
 	string::size_type pos = 0;
 
-	//  non imprimable et char de controle
 	for(string::size_type i = 0; i < line.size(); i++) {
 		if (line[i] < 32 || line[i] > 126) {
 			cerr << "Error : accept '" << line << "' is not valid: non imprimable char" << endl;
@@ -524,7 +454,6 @@ bool Header::checkSyntaxeAccept(const string &line) {
 		}
 	}
 
-	// 1 seul slash
 	if ((pos = line.find("/")) == string::npos) {
 		cerr << "Error : accept '" << line << "' is not valid: no slash" << endl;
 		return 1;
@@ -642,7 +571,6 @@ bool Header::parseAcceptLanguage(const string &value) {
 	string 						str(value);
 	string 						line;
 
-	// trim space
 	for(string::size_type i = 0; i < str.size(); i++) {
 		if ((pos = str.find(", ")) != string::npos)
 			str.erase(pos + 1, 1);
@@ -702,7 +630,6 @@ bool Header::parseAcceptEncodings(const string &value) {
 	string 						str(value);
 	string 						line;
 
-	// trim space
 	for(string::size_type i = 0; i < str.size(); i++) {
 		if ((pos = str.find(", ")) != string::npos)
 			str.erase(pos + 1, 1);
@@ -736,14 +663,13 @@ bool Header::parseContentLength(const string &value) {
 		}
 	}
 
-	// if length > ?
-
 	this->content_length = value;
 	return 0;
 }
 
-bool Header::parseHeader( void ) {
 
+
+bool Header::parseHeader( void ) {
 	string::size_type pos = 0;
 	string 						str(this->brut_header);
 	string 						line;
@@ -784,7 +710,7 @@ bool Header::parseHeader( void ) {
 			else if (key == "Connection") {
 				if (value == "keep-alive")
 					this->connection = true;
-			} //"Content-Length" ou "Transfer-Encoding".
+			}
 			else if (key == "Content-Length") {
 				if (parseContentLength(value))
 					return 1;
@@ -813,14 +739,7 @@ bool Header::parseHeader( void ) {
 			}
 			if (setAllHeaders(key, value))
 				return 1;
-			// else {
-			// 	cerr << "Header '" << key << "' non implemente" << endl;
-			// }
 		}
-		// else {
-		// 	cerr << "Error : Error syntaxe separator \": \" in '" << line << "'" << endl;
-		// 	return 1;
-		// }
 	}
 	return 0;
 }
@@ -871,14 +790,12 @@ bool Header::parseContentType(const string &value) {
 	string 						str(value);
 	string 						line;
 
-	// cout << "parseContentType : " << value << endl;
 	if (str == "") {
 		this->content_type = "*";
 		return 0;
 	}
 	if ((pos = str.find("boundary=")) != string::npos) {
 		str.erase(0, pos + 9);
-		// this->is_chuncked = true;
 		this->boundary = str;
 	}
 	this->content_type = value;
@@ -922,7 +839,6 @@ void Header::reset( void ) {
 
 /* *************   CONSTRCUTOR   ************* */
 
-// Body::Body() : brut_body(), content(""), concat_body(""), is_chuncked(false) {
 Body::Body() : brut_body(), content(""), is_chuncked(false), socket_client(-1) {
 	return ;
 }
@@ -941,7 +857,6 @@ Body &Body::operator=(Body const &rhs) {
 		this->brut_body = rhs.brut_body;
 		this->content = rhs.content;
 		this->is_chuncked = rhs.is_chuncked;
-		// this->concat_body = rhs.concat_body;
 	}
 	return (*this);
 }
@@ -949,11 +864,7 @@ Body &Body::operator=(Body const &rhs) {
 /* *************   FUNCTION   ************* */
 
 bool Body::parseBody( void ) {
-	// cout << "start parse body " << this->brut_body << endl;
-	if (this->is_chuncked) {
-		if (parseTransferEncoding())
-			return 1;
-	} else if (!this->boundary.empty()) {
+	if (!this->boundary.empty()) {
 		if (parseMultipartBody())
 			return 1;
 	} else
@@ -962,92 +873,17 @@ bool Body::parseBody( void ) {
 }
 
 bool 	Body::parseMultipartBody( void ){
-	// string::size_type 	pos_in_line = 0;
 	string 				str(this->brut_body);
 	string 				line;
 	std::stringstream 	body_parsed;
 
-	// cout << "parseMultipartBody : " << this->brut_body << endl;
-	// while ((pos = str.find("\r\n")) != string::npos) {
-	// 	pos_in_line += pos + 2; 
-	// 	line = str.substr(0, pos);
-	// 	if (line != "--" + this->boundary && line != "--" + this->boundary + "--")
-	// 		body_parsed << line << "\r\n";
-	// 	else
-	// 		body_parsed << "\r\n";
-	// 	str.erase(0, pos + 2);
-	// }
-	// this->content = body_parsed.str();
 	this->content = this->brut_body;
-	return 0;
-}
-
-bool Body::parseTransferEncoding( void ) {
-	// string::size_type pos = 0;
-	string 						str(this->brut_body);
-	string						nb_hexa;
-	// string::size_type size = 0;
-	string 						line;
-	string 						line_concat;
-
-	cout << "TransferEncoding, body size : " << str.length() << endl;
-
-	this->content = this->brut_body;
-
-
-	// for(string::size_type i = 0; i < str.length() - 1; i++) {
-	// 	if (str[i] == 'A' && str[i + 1] != 'A')
-	// 		cout << "A";
-	// 	else if (str[i] == 'A' && str[i + 1] == 'A') 
-	// 		{}
-	// 	else
-	// 		cout << str[i];
-	// }
-	// cout << str[str.length() - 1] << endl;
-
-
-	// std::filebuf fb;
- 	// fb.open ("testout2.txt",std::ios::out);
- 	// std::ostream os(&fb);
- 	// os << this->brut_body;
- 	// fb.close();
-
-	// cout << "coucou je suis bien la et je dois regarder si je read and dechunck dans parseTransferEncoding() ou dans le server.cpp, et toi quel est ton avis ?" << endl;
-	// if ((pos = str.find("\r\n")) != string::npos)
-	// {
-	// 	nb_hexa = str.substr(0, pos);
-	// 	str.erase(0, pos + 2);
-
-	// 	string::size_type x;
-	// 	std::stringstream ss;
-	// 	std::stringstream ssbody;
-	// 	ss << std::hex << nb_hexa;
-	// 	ss >> x;
-	// 	size = static_cast<string::size_type>(x);
-	// 	char buffer[REQ_MAX_SIZE] = {0};
-
-	// 	// read(this->socket_client, buffer, req.header.);
-
-	// 	ssbody << buffer;
-
-	// 	// cout << "TEST : " << ret.str() << endl;
-
-	// 	// output it as a signed type
-	// 	// cout << "str: " << str	<< endl;
-	// 	// std::cout << "TESTE : "<< size << std::endl;
-	// 	// this->concat_body = ret.str();
-	// }
-	// else {
-	// 	cerr << "Error : Error syntaxe separator \": \" in '" << nb_hexa << "'" << endl;
-	// 	return 1;
-	// }
 	return 0;
 }
 
 void Body::reset( void ) {
 	this->brut_body = "";
 	this->content = "";
-	// this->concat_body = "";
 	this->is_chuncked = false;
 	this->boundary = "";
 }
@@ -1108,20 +944,10 @@ bool Request::splitRequest(string req) {
 	string::size_type b_pos;
 	string::size_type bl_pos;
 
-	// cout << "size request : " << req.size() << endl;
-	// if (req.size() > 8200) {
-	// 	cerr << "Error : request size is too big" << endl;
-	// 	return 1;
-	// }
 	if (req.size() == 0) {
 		cerr << "Error : request is empty" << endl;
 		return 1;
 	}
-	// if (req.substr(req.size() - 2, 2) != "\r\n") {
-	// 	cerr << "Error : the end of the request do not include a line break" << endl;
-	// 	return 1;
-	// }
-
 
 	/* split request method */
 	ml_pos = req.find("\r\n");
@@ -1154,13 +980,10 @@ bool Request::splitRequest(string req) {
 		this->contain_body = true;
 		this->header.contain_body = true;
 	}
-	// cout << "split ok : " << this->body.brut_body << endl;
 	return 0;
 }
 
 bool Request::parseRequest(std::vector<char> &req) {
-	// cout << "********************* \n" << req << "\n*********************" << endl;
-	// cout << "Request Brut size : " << req.size() << endl;
 	size_t header_size = 0;
 	char sep[4] = {'\r', '\n', '\r', '\n'}; 
 	for (size_t i = 0; i < req.size() - 3; i++) {
@@ -1182,10 +1005,6 @@ bool Request::parseRequest(std::vector<char> &req) {
 	}
 	this->body.is_chuncked = this->header.is_chuncked;
 	this->body.boundary = this->header.boundary;
-	/*
-	if (body.parseBody()) {
-		return 1;
-	}*/
 	return 0;
 }
 
@@ -1195,46 +1014,46 @@ void Request::printRequest()
 	cout << "Header brut : \n"
 		 << this->method.brut_method << endl
 		 << this->header.brut_header << endl;
-	//   cout << this->method.isGet << endl;
-	//   cout << this->method.isPost << endl;
-	//   cout << this->method.isDelete << endl;
+	  cout << this->method.isGet << endl;
+	  cout << this->method.isPost << endl;
+	  cout << this->method.isDelete << endl;
 
-	//   cout << "url '" << this->method.url << "'" << endl;
-	//   cout << "path '" << this->method.path << "'" << endl;
-	//   cout << "params '" << this->method.parameters << "'" << endl;
-	//   cout << "anchor '" << this->method.anchor <<  "'" << endl;
-	//   cout << "protocle '" << this->method.protocole << "'" << endl;
-	//   cout << "port '" << this->header.port << "'" << endl;
-	//   cout << "host '" << this->header.host << "'" << endl;
+	  cout << "url '" << this->method.url << "'" << endl;
+	  cout << "path '" << this->method.path << "'" << endl;
+	  cout << "params '" << this->method.parameters << "'" << endl;
+	  cout << "anchor '" << this->method.anchor <<  "'" << endl;
+	  cout << "protocle '" << this->method.protocole << "'" << endl;
+	  cout << "port '" << this->header.port << "'" << endl;
+	  cout << "host '" << this->header.host << "'" << endl;
 
-	// cout << "useragent '" << this->header.str_user_agent << "'" << endl;
-	// Header::t_user_agent_it it = this->header.user_agent.begin();
-	// for(; it != this->header.user_agent.end(); ++it) {
-	//   cout << "User-Agent "<< it->first << " : " << it->second << endl;
-	// }
+	cout << "useragent '" << this->header.str_user_agent << "'" << endl;
+	Header::t_user_agent_it it = this->header.user_agent.begin();
+	for(; it != this->header.user_agent.end(); ++it) {
+	  cout << "User-Agent "<< it->first << " : " << it->second << endl;
+	}
 
-	// cout << "str_accept '" << this->header.str_accepts << "'" << endl;
-	// Header::t_accepts_it it_accept = this->header.accepts.begin();
-	// while (it_accept != this->header.accepts.end()) {
-	//   cout << "accept '" << it_accept->type << "/"
-	//   << it_accept->subtype << "' "
-	//   << "q="<< it_accept->q << endl;
-	//   it_accept++;
-	// }
+	cout << "str_accept '" << this->header.str_accepts << "'" << endl;
+	Header::t_accepts_it it_accept = this->header.accepts.begin();
+	while (it_accept != this->header.accepts.end()) {
+	  cout << "accept '" << it_accept->type << "/"
+	  << it_accept->subtype << "' "
+	  << "q="<< it_accept->q << endl;
+	  it_accept++;
+	}
 
-	// cout << "str_accept_language '" << this->header.str_accept_languages << "'" << endl;
-	// Header::t_languages_it it_lang = this->header.accept_languages.begin();
-	// for(; it_lang != this->header.accept_languages.end(); ++it_lang) {
-	//   cout << "accept_language "<< it_lang->lang
-	//   << (it_lang->spec != "" ? "-" : "") << it_lang->spec
-	//   << " q=" << it_lang->q << endl;
-	// }
+	cout << "str_accept_language '" << this->header.str_accept_languages << "'" << endl;
+	Header::t_languages_it it_lang = this->header.accept_languages.begin();
+	for(; it_lang != this->header.accept_languages.end(); ++it_lang) {
+	  cout << "accept_language "<< it_lang->lang
+	  << (it_lang->spec != "" ? "-" : "") << it_lang->spec
+	  << " q=" << it_lang->q << endl;
+	}
 
-	// cout << "str_accept_encoding '" << this->header.str_accept_encodings << "'" << endl << endl;
-	// Header::t_encodings_it it_encod = this->header.accept_encodings.begin();
-	// for(; it_encod != this->header.accept_encodings.end(); ++it_encod) {
-	//   cout << "accept_encoding '"<< it_encod->type << "' q=" << it_encod->q << endl;
-	// }
+	cout << "str_accept_encoding '" << this->header.str_accept_encodings << "'" << endl << endl;
+	Header::t_encodings_it it_encod = this->header.accept_encodings.begin();
+	for(; it_encod != this->header.accept_encodings.end(); ++it_encod) {
+	  cout << "accept_encoding '"<< it_encod->type << "' q=" << it_encod->q << endl;
+	}
 
 	cout << "str cookies : " << this->header.str_cookie << endl;
 	Header::t_cookie_it it_cookies = this->header.cookies.begin();
@@ -1242,13 +1061,13 @@ void Request::printRequest()
 	{
 		cout << "cookie '" << it_cookies->first << "' : '" << it_cookies->second << "'" << endl;
 	}
-	// cout << "Connection : " << this->header.connection << endl;
+	cout << "Connection : " << this->header.connection << endl;
 
-	// cout << "content_length '" << this->header.content_length << "'" << endl;
-	// cout << "content_type '" << this->header.content_type << "'" << endl;
-	// cout << "content_encoding '" << this->header.content_encoding << "'" << endl;
-	// cout << "content_language '" << this->header.content_language << "'" << endl;
-	// cout << "content_location '" << this->header.content_location << "'" << endl  << endl;
+	cout << "content_length '" << this->header.content_length << "'" << endl;
+	cout << "content_type '" << this->header.content_type << "'" << endl;
+	cout << "content_encoding '" << this->header.content_encoding << "'" << endl;
+	cout << "content_language '" << this->header.content_language << "'" << endl;
+	cout << "content_location '" << this->header.content_location << "'" << endl  << endl;
 
 	cout << "All Header : " << endl;
 	Header::t_list_header_it it_all_headers = this->header.list_headers.begin();
@@ -1257,7 +1076,7 @@ void Request::printRequest()
 		cout << it_all_headers->first << " : " << it_all_headers->second << endl;
 	}
 
-	// this->contain_body ? cout << "body\n" << "'" << this->body.content << "'" << endl : cout << "no body" << endl;
+	this->contain_body ? cout << "body\n" << "'" << this->body.content << "'" << endl : cout << "no body" << endl;
 	cout << "\n\nrequete " << (this->header.is_valid ? "valid" : "invalid") << endl;
 }
 
@@ -1276,46 +1095,61 @@ void Request::reset( void ) {
 	this->isFinished = false;
 }
 
+bool Request::check_header_buffer(string buffer, Config & config) {
+	Request tmp;
+
+	string::size_type pos = buffer.find("\r\n");
+	tmp.method.brut_method = buffer.substr(0, pos);
+	buffer.erase(0, pos + 2);
+	tmp.method.parseMethod();
+	tmp.header.brut_header = buffer;
+	tmp.header.parseHeader();
+
+	config.selectServ(tmp.header.host_ip, tmp.header.port, tmp.method.path);
+	if (tmp.header.content_length == "")
+		return 0;
+
+	unsigned int nb;
+	std::istringstream(tmp.header.content_length) >> nb;
+ 
+	if (nb > config.getMaxSize())
+		return 1;
+	return 0;
+}
+
 bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet_read) {
 
+	cout << "IS FINISH REQUEST" << endl;
 	size_t header_size = 0;
 	char sep[4] = {'\r', '\n', '\r', '\n'}; 
 	for (size_t i = 0; i < octet_read - 3; i++) {
-		if (req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
-			header_size  = i;
+		if (req.size()> 3 && req[i] && req[i+1] && req[i+2] && req[i+3]
+		&& req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
+			header_size = i;
 			break;
 		}
 	}
 	std::string header = "";
 	for (size_t i = 0; i < header_size; i++) {
-			header.push_back(req[i]);
-		}
-
-	string body;
-
-	/* split header */
-	string::size_type h_pos;
-	h_pos = 0;
-
+		header.push_back(req[i]);
+	}
 
 	/* get content-length */
 	string::size_type cl_pos = header.find("Content-Length: ");
 	if (cl_pos == string::npos) 
 	{
 		if (header.size() == req.size() - 4) 
-		{
-			// cout << "no content-length and no body" << endl;
 			return 1;
-		}
-	} else {
+		else
+			return 0;
+	}
+	else {
 		string::size_type cl_end = header.find("\r\n", cl_pos);
 		string content_length = header.substr(cl_pos + 16, cl_end - cl_pos - 16);
 		int cl = atoi(content_length.c_str());
-		/*
 		cout << "content length : " << cl << endl;
 		cout << "total read : " << octet_read << endl;
 		cout << "header length : " <<  header.size() << endl;
-		*/
 		if (cl == 0)
 			return 1;
 		else if (octet_read - header.length() - 4 == (unsigned int)cl)
@@ -1323,4 +1157,3 @@ bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet
 	}
 	return 0;
 }
-

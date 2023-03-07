@@ -17,9 +17,11 @@
 # include "Config.hpp"
 
 struct Sbuffer {
-	std::vector<char> buffer;
-	unsigned int readed;
-	time_t time_start;
+	std::vector<char> 	buffer;
+	unsigned int 		readed;
+	time_t 				time_start;
+	bool 				is_chunked;
+	bool				is_413;
 };
 
 struct Request;
@@ -35,7 +37,7 @@ class Settings
 	
 		void			get( Request const &req,  struct sockaddr_in const& client_addr);
 		void			post( Request const &req,  struct sockaddr_in const& client_addr);
-		void			del( Request const &req);
+		void 			del( Request const &req, struct sockaddr_in const& client_addr);
 		std::string		date( void );
 		void			badRequest( Request const& req );
 		void			forbidden_error( void );
@@ -50,9 +52,24 @@ class Settings
 		std::string		handleCookie(const Request & req, std::string &date, int &count);
 		
 	public:
-		Config				config;
-		struct timespec		check_request_timeout;
+		Config			config;
+		struct timespec check_request_timeout;
+		int 			checkArgs(int argc);
+		void			build(int ke);
+		
+		size_t 			reading(int socket, unsigned int &readed, time_t &time_starting, char *buffer);
+		size_t 			reading_header(int socket, unsigned int &readed, time_t &time_starting, char *buff);
+		char * 			reading_chunck(int socket, unsigned int &readed, time_t &time_starting);
+		std::string		checkextension(std::string const& path);
+		void			folder_gestion(Request const& req);
+		void			set_event(int ke, int socket, short filter, short flag);
+		bool			checkmethod(Request const& req, Methods const& t);
+		bool			writing(int socket, std::vector<char> &sbuffer, struct sockaddr_in const& client_addr);
+		void			check_timeout(Sbuffer *requests, int ke);
+		std::string		timeout( void );
 
+		std::string handleCookie(const Request & req, std::string &date, int &count);
+		Settings( Config const& base );
 		Settings();
 		~Settings();
 		void	build(int ke);

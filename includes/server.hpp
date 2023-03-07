@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/03/06 13:33:06 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/07 10:14:56 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,9 @@
 # include <dirent.h>
 
 
-# include "Request.hpp"
 # include "Config.hpp"
 # include "Cgi.hpp"
+# include "Request.hpp"
 
 
 # include "Settings.hpp"

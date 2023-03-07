@@ -16,6 +16,7 @@
 using namespace std;
 
 # include "server.hpp"
+// class Config;
 
 struct Method {
 	string 	brut_method;
@@ -161,7 +162,7 @@ struct Body {
 	int		socket_client;
 
 	bool 	parseBody( void );
-	bool 	parseTransferEncoding( void );
+	bool 	parseChuncked( void );
 	bool 	parseMultipartBody( void );
 	void	reset( void );
 };
@@ -177,6 +178,7 @@ struct Request {
 	char		buffer[8192];
 	int 		socket_client;
 	bool		isFinished;
+	bool		isChunked;
 	
 	bool splitRequest(string req);
 
@@ -191,6 +193,7 @@ struct Request {
 	void reset( void );
 	// bool isFinishedRequest( string const &buff );
 	bool isFinishedRequest(std::vector<char> const &req, unsigned int octet_read);
+	bool check_header_buffer(string buffer, Config & config);
 };
 
 #endif
