@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/09 17:11:33 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/10 00:31:04 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,10 +40,10 @@ int main(int argc, char **argv)
 		return (0);
 	}
 
-	struct kevent event[MAX_REQUESTS];
-	Request req;
-	std::map<int, sockaddr_in> clients;
-	int ke = kqueue();
+	struct kevent 							event[MAX_REQUESTS];
+	Request 										req;
+	std::map<int, sockaddr_in> 	clients;
+	int 												ke = kqueue();
 	try
 	{
 		if (ke == -1)
@@ -81,75 +81,10 @@ int main(int argc, char **argv)
 							fcntl(socket_client, F_SETFL, O_NONBLOCK);
 						}
 						else if (event[i].filter == EVFILT_READ)
-						{
-							char buffer[4097];
-							char header_buffer[4097];
-							memset(buffer, 0, 4097);
-							memset(header_buffer, 0, 4097);
-							size_t readed = 0;
-							size_t header_readed = 0;
-
-							if (!reqIsChuncked(header_buffer) && sbuffer[event[i].ident].is_chunked == false && sbuffer[event[i].ident]._buffer.size() == 0) {
-								header_readed = server.reading_header(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, header_buffer);
-								if (req.check_header_buffer(header_buffer, server.config)) {
-									sbuffer[event[i].ident].status_code = 413;
-									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
-									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-									continue;
-								}
-								for (unsigned long j = 0; j <  sbuffer[event[i].ident].readed; j++)
-									sbuffer[event[i].ident]._buffer.push_back(header_buffer[j]);
-							}
-							if (reqIsChuncked(header_buffer) == true)
-								sbuffer[event[i].ident].is_chunked = true;
-							if (sbuffer[event[i].ident].is_chunked == true)
-							{
-								char *chunck_buffer = NULL;
-								sbuffer[event[i].ident].readed = 0;
-								chunck_buffer = server.reading_chunck(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start);
-								
-								if (strlen(chunck_buffer) == 0) {
-									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
-									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-									sbuffer[event[i].ident]._buffer.push_back('\r');
-									sbuffer[event[i].ident]._buffer.push_back('\n');
-									sbuffer[event[i].ident]._buffer.push_back('\r');
-									sbuffer[event[i].ident]._buffer.push_back('\n');
-									sbuffer[event[i].ident].is_chunked = false;
-								}
-								else
-								{
-									for (unsigned long j = 0; j < sbuffer[event[i].ident].readed; j++)
-										sbuffer[event[i].ident]._buffer.push_back(chunck_buffer[j]);
-								}
-							}
-							else
-							{
-								// check si il y a un body
-								std::string header(header_buffer);
-								std::string::size_type pos = header.find("Content-Length");
-								if (header.size() > 0 && pos == std::string::npos)
-								{
-									cout << "FINISHED" << std::endl;
-									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
-									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-									break;
-								}
-								readed = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, buffer);
-								for (unsigned long j = 0; j < readed; j++)
-									sbuffer[event[i].ident]._buffer.push_back(buffer[j]);
-
-								if (req.isFinishedRequest(sbuffer[event[i].ident]._buffer, sbuffer[event[i].ident].readed))
-								{
-									cout << "FINISHED" << std::endl;
-									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
-									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-								}
-							}
-						}
+							server.reading_request(sbuffer[event[i].ident], server, ke, event[i].ident, req);
 						else if (event[i].filter == EVFILT_WRITE)
 						{
-								std::cout << sbuffer[event[i].ident]._buffer.size() << std::endl;
+								// std::cout << sbuffer[event[i].ident]._buffer.size() << std::endl;
 								if (sbuffer[event[i].ident].status_code == 413)
 									server.gestion_413(sbuffer[event[i].ident], event[i].ident);
 								else if (!sbuffer[event[i].ident]._request_parsed)

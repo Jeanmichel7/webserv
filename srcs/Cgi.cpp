@@ -137,8 +137,8 @@ void CGI::handleProcessResponse(Sbuffer &client)
 		rc = waitpid(client._pid, &rt, WNOHANG);
 		if (rc == 0) {
 			return ;
-        } else if (rc == client._pid && client._cgi_data._cgi_process_body_ready == false) {
-            if (rt == 1) {
+		} else if (rc == client._pid && client._cgi_data._cgi_process_body_ready == false) {
+			if (rt == 1) {
 				client._buffer =  error_500(); 
 				client._body_ready = true; }
 			else {
@@ -148,10 +148,10 @@ void CGI::handleProcessResponse(Sbuffer &client)
 				client._cgi_data._cgi_process_body_ready = true;
 				fseek(client._cgi_data._file_stdout, 0, SEEK_SET);
 			}
-        } else {
+		} else {
 			client._buffer =  error_500(); 
 			client._body_ready = true; }
-    }
+	}
 	if (client._cgi_data._cgi_process_body_ready == true) 
 	{
 		int rt = 0;
@@ -199,11 +199,8 @@ std::vector<char> CGI::launchProcess(Sbuffer &client,  Config &config, struct so
 				  << "Execve has crashed "
 				  << "\e[0m" << std::endl;
 	}
-	if (pid != 0)
-	{
-		client._pid = pid;
-		return (empty_vector);
-	}
+	client._pid = pid;
+	return (empty_vector);
 }
 
 std::vector<char> CGI::error_500()

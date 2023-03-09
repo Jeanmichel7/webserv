@@ -770,10 +770,10 @@ bool Header::setAllHeaders(const string &key, const string &value) {
 	for (; it_all_headers != this->list_headers.end(); ++it_all_headers)
 	{
 		// std::cout << key << " == ?" << it_all_headers->first << std::endl;
-		// if (it_all_headers->first == key) {
-		// 	cerr << "Error : Header '" << key << "' already exist" << std::endl;
-		// 	return 1;
-		// }
+		if (it_all_headers->first == key) {
+			cerr << "Error : Header '" << key << "' already exist" << std::endl;
+			return 1;
+		}
 	}
 	this->list_headers[key] = value;
 	return 0;
@@ -881,9 +881,6 @@ void Body::reset( void ) {
 	this->is_chuncked = false;
 	this->boundary = "";
 }
-
-
-
 
 
 

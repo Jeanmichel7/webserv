@@ -529,7 +529,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 }
 
 
-bool Settings::writeResponse(Sbuffer &client, int socket)
+void Settings::writeResponse(Sbuffer &client, int socket)
 {
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
@@ -541,10 +541,7 @@ bool Settings::writeResponse(Sbuffer &client, int socket)
 	if (client._total_sent < size_data) 
 	{
 		int sent = send(socket, &*start + client._total_sent, size_data - client._total_sent, 0);
-		if (sent == -1) 
-        	return (-1);
-		else 
-			client._total_sent += sent; 
+		client._total_sent += sent; 
     }
 	if (client._total_sent == size_data)
 	{
@@ -553,7 +550,7 @@ bool Settings::writeResponse(Sbuffer &client, int socket)
 	}
 }
 
-bool Settings::parseRequest(Sbuffer &client)
+void Settings::parseRequest(Sbuffer &client)
 {
 	std::fstream fd;
 	client._body_ready = 1;
@@ -851,4 +848,87 @@ std::string Settings::timeout( void )
 		reponse << "Request Timeout\n";
 	}
 	return(reponse.str());
+}
+
+
+bool Settings::reqIsChuncked(std::string req)
+{
+	std::string::size_type pos = req.find("Transfer-Encoding: chunked");
+	if (pos != std::string::npos)
+		return (true);
+	return (false);
+}
+
+void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintptr_t ident, Request &req)
+{
+	char buffer[4097];
+	char header_buffer[4097];
+	memset(buffer, 0, 4097);
+	memset(header_buffer, 0, 4097);
+	size_t readed = 0;
+	size_t header_readed = 0;
+
+	if (!this->reqIsChuncked(header_buffer) && sbuffer.is_chunked == false && sbuffer._buffer.size() == 0)
+	{
+		header_readed = server.reading_header(ident, sbuffer.readed, sbuffer.time_start, header_buffer);
+		if (req.check_header_buffer(header_buffer, server.config))
+		{
+			sbuffer.status_code = 413;
+			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
+			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD);
+			// continue;
+		}
+		for (unsigned long j = 0; j < sbuffer.readed; j++)
+			sbuffer._buffer.push_back(header_buffer[j]);
+	}
+	if (reqIsChuncked(header_buffer) == true)
+		sbuffer.is_chunked = true;
+
+	if (sbuffer.is_chunked == true)
+	{
+		char *chunck_buffer = NULL;
+		sbuffer.readed = 0;
+		chunck_buffer = server.reading_chunck(ident, sbuffer.readed, sbuffer.time_start);
+
+		if (strlen(chunck_buffer) == 0)
+		{
+			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
+			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD);
+			sbuffer._buffer.push_back('\r');
+			sbuffer._buffer.push_back('\n');
+			sbuffer._buffer.push_back('\r');
+			sbuffer._buffer.push_back('\n');
+			sbuffer.is_chunked = false;
+		}
+		else
+		{
+			for (unsigned long j = 0; j < sbuffer.readed; j++)
+				sbuffer._buffer.push_back(chunck_buffer[j]);
+		}
+	}
+	else
+	{
+		// check si il y a un body
+		std::string header(header_buffer);
+		std::string::size_type pos = header.find("Content-Length");
+		if (header.size() > 0 && pos == std::string::npos)
+		{
+			cout << "FINISHED" << std::endl;
+			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
+			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD);
+			// break;
+		}
+		else {
+			readed = server.reading(ident, sbuffer.readed, sbuffer.time_start, buffer);
+			for (unsigned long j = 0; j < readed; j++)
+				sbuffer._buffer.push_back(buffer[j]);
+
+			if (req.isFinishedRequest(sbuffer._buffer, sbuffer.readed))
+			{
+				cout << "FINISHED" << std::endl;
+				server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
+				server.set_event(ke, ident, EVFILT_WRITE, EV_ADD);
+			}
+		}
+	}
 }

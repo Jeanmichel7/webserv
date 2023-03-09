@@ -74,8 +74,8 @@ class Settings
 		void			folder_gestion(Sbuffer &client);
 		void			set_event(int ke, int socket, short filter, short flag);
 		bool			checkmethod(Request const& req, Methods const& t);
-		bool			parseRequest(Sbuffer &client);
-		bool 			writeResponse(Sbuffer &client, int socket);
+		void			parseRequest(Sbuffer &client);
+		void 			writeResponse(Sbuffer &client, int socket);
 		void			generate_cookie(Sbuffer &client, struct sockaddr_in const& client_addr);
 		void			gestion_413(Sbuffer &client, int socket);
 		void			check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<int, sockaddr_in> &clients);
@@ -83,6 +83,9 @@ class Settings
 
 		void			generate_body(Sbuffer &client, struct sockaddr_in const& client_addr);
 		void			generate_header(Sbuffer &client);
+
+		bool 			reqIsChuncked(std::string req);
+		void 			reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintptr_t ident, Request &req);
 
 		std::string handleCookie(Sbuffer &client);
 		Settings( Config const& base );
