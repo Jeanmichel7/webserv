@@ -195,15 +195,6 @@ int main(int argc, char **argv)
 								}
 								else
 								{
-									if (close_connexion)
-									{
-										sbuffer[event[i].ident].buffer.clear();
-										sbuffer[event[i].ident].readed = 0;
-										server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-										clients.erase(event[i].ident);
-										close(event[i].ident);
-										continue;
-									}
 									sbuffer[event[i].ident].buffer.clear();
 									sbuffer[event[i].ident].readed = 0;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);

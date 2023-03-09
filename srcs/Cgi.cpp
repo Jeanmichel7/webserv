@@ -12,7 +12,7 @@
 
 #include "Cgi.hpp"
 
-CGI::CGI() : _body(), _env(), _arg(), _file_stdin(), _file_stdout(), _fd_stdin(), _fd_stdout() {}
+CGI::CGI() : _body(), _env(), _arg(), _file_stdin(), _file_stdout(), _fd_stdin(), _fd_stdout(), _cgi_process_body_ready() {}
 
 void CGI::build(Config &conf, const Request &req, struct sockaddr_in const &client_addr)
 {
@@ -105,29 +105,78 @@ CGI::~CGI()
 		close(_fd_stdout);
 }
 
-std::vector<char> CGI::execute_cgi(Config &config, const Request &req, struct sockaddr_in const &client_addr)
+void CGI::execute_cgi(Config &config, Sbuffer &client, struct sockaddr_in const &client_addr)
 {
-	CGI data;
-	std::vector<char> return_value;
+		if (client._cgi_process_launched == false)
+		{
+			client._buffer = CGI::launchProcess(client, config, client_addr);
+			if (client._buffer.size() > 0)
+				client._body_ready = true;
+		}
+		else 
+		{
+			CGI::handleProcessResponse(client);
+		}
+		if (client._body_ready = true)
+		{
+			client._cgi_data.~CGI();
+		}
+}
 
+void CGI::handleProcessResponse(Sbuffer &client)
+{
+	if (client._cgi_data._cgi_process_body_ready == false)
+	{
+		int rt = 0;
+		int rc = 0;
+		rc = waitpid(client._pid, &rt, WNOHANG);
+		if (rc == 0) {
+			return ;
+        } else if (rc == client._pid) {
+            if (rt == 1) {
+				client._buffer =  error_500(); 
+				client._body_ready = true; }
+			else {
+				std::fseek(client._cgi_data._file_stdout, 0, SEEK_END);
+				long fileSize = std::ftell(client._cgi_data._file_stdout);
+				client._buffer.reserve(fileSize);
+				client._cgi_data._cgi_process_body_ready == true;
+				fseek(client._cgi_data._file_stdout, 0, SEEK_SET);
+			}
+			return;
+        } else {
+			client._buffer =  error_500(); 
+			client._body_ready = true; }
+    }
+	else 
+	{
+		int rt = 0;
+		rt = fread(&*client._buffer.end(), sizeof(char), 32668, client._cgi_data._file_stdout);
+		if (rt == 0)
+			client._body_ready = true;
+	}
+}
+
+std::vector<char> CGI::launchProcess(Sbuffer &client,  Config &config, struct sockaddr_in const &client_addr)
+{
 	string scriptName;
 	try
 	{
-		data.build(config, req, client_addr);
+		client._cgi_data.build(config, client._req, client_addr);
 	}
 	catch (std::exception &e)
 	{
 		return (error_500());
 	}
-	std::vector<char>::iterator start = req.body.vector_body->begin();
-	size_t size_data = req.body.vector_body->size();
-	write(data._fd_stdin, &*start, size_data);
-	fseek(data._file_stdin, 0, SEEK_SET);
+	std::vector<char>::iterator start = client._buffer.begin();
+	size_t size_data = client._buffer.size();
+	write(client._cgi_data._fd_stdin, &*start, size_data);
+	fseek(client._cgi_data._file_stdin, 0, SEEK_SET);
 
-	string ext = yd::getExtension(req.method.path);
+	string ext = yd::getExtension(client._req.method.path);
 	if (ext == "")
 		return (error_404());
-	std::string const *cgi_path_str = config.getCgi(req.method.path, ext);
+	std::string const *cgi_path_str = config.getCgi(client._req.method.path, ext);
 	if (cgi_path_str == NULL)
 		return (error_404());
 	const char *cgi_path = cgi_path_str->c_str();
@@ -136,28 +185,13 @@ std::vector<char> CGI::execute_cgi(Config &config, const Request &req, struct so
 		return (error_500());
 	if (pid == 0)
 	{
-		dup2(data._fd_stdin, 0);
-		dup2(data._fd_stdout, 1);
-		execve(cgi_path, data._arg, data._env);
+		dup2(client._cgi_data._fd_stdin, 0);
+		dup2(client._cgi_data._fd_stdout, 1);
+		execve(cgi_path, client._cgi_data._arg, client._cgi_data._env);
 		std::cerr << "\e[0;31mWebServ$> "
 				  << "Execve has crashed "
 				  << "\e[0m" << std::endl;
 	}
-	else
-	{
-		int rt;
-		waitpid(pid, &rt, 0);
-		if (rt == 1)
-			return (error_500());
-		char buffer[1024];
-		fseek(data._file_stdout, 0, SEEK_SET);
-		for (int rt = 1023; rt == 1023;)
-		{
-			rt = fread(&buffer, sizeof(char), 1023, data._file_stdout);
-			return_value.insert(return_value.end(), buffer, buffer + rt);
-		}
-	}
-	return (return_value);
 }
 
 std::vector<char> CGI::error_500()

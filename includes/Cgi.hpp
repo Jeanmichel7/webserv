@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Cgi.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/28 09:47:09 by ydumaine          #+#    #+#             */
-/*   Updated: 2023/03/02 19:16:24 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/09 13:23:15 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,9 @@ class CGI
 	public :
 		CGI();
 		void build(Config &conf, const Request &req, struct sockaddr_in const &client_addr);
-		static std::vector<char> execute_cgi(Config &config, Request const &req, struct sockaddr_in const &client_addr);
+		static void execute_cgi(Config &config, Sbuffer &client, struct sockaddr_in const &client_addr);
+		static std::vector<char> launchProcess(Sbuffer &client,  Config &config, struct sockaddr_in const &client_addr);
+		static void handleProcessResponse(Sbuffer &client);
 		static std::vector<char> error_500();
 		static std::vector<char> error_404();
 		~CGI();
@@ -44,6 +46,7 @@ class CGI
 		std::FILE *_file_stdout;
 		int _fd_stdin;
 		int _fd_stdout;
+		bool _cgi_process_body_ready;
 };
 
 #endif
