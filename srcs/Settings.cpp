@@ -168,7 +168,7 @@ void Settings::generate_header(Sbuffer &client)
 		header << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path)) << "\n";
 	header << handleCookie(client);
 	if (client.header_script.find("Content-Length") == std::string::npos && !client._cgi_process_launched)
-		header << "Content-Lenght: " << (client._buffer.size() + client._body_cookie.size()) << "\n";
+		header << "Content-Length: " << (client._buffer.size() + client._body_cookie.size()) << "\n";
 	if (client.header_script.find("Content-Length") == std::string::npos && client._cgi_process_launched)
  		client._add_eof = 1;
 	if (client.header_script.size() > 0)
