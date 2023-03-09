@@ -890,7 +890,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 		sbuffer.readed = 0;
 		chunck_buffer = server.reading_chunck(ident, sbuffer.readed, sbuffer.time_start);
 
-		if (strlen(chunck_buffer) == 0)
+		if (chunck_buffer == NULL)
 		{
 			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
 			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD);
