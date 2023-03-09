@@ -24,10 +24,11 @@
 #include <cstdio>
 #include <algorithm>
 #include <stdio.h>
-#include "Config.hpp"
-#include "Request.hpp"
 
 
+struct Sbuffer;
+class Config;
+struct Request;
 class CGI
 {
 	public :

@@ -13,16 +13,17 @@
 #ifndef SETTINGS_HPP
 # define SETTINGS_HPP
 
-# include "server.hpp"
-# include "Config.hpp"
+#include "server.hpp"
+
 # define ERROR_BRUT_FOLDER "http/"
+
 struct Sbuffer {
+	Sbuffer();
 	Request				_req; 
 	unsigned int 		readed;
 	time_t 				time_start;
 
 	bool 				is_chunked;
-	bool				is_413;
 	int					status_code;
 	bool				_add_eof;
 
@@ -30,12 +31,14 @@ struct Sbuffer {
 	int					_pid;
 
 	std::vector<char> 	_buffer;
-	std::string 		_header;
-	std::string 		_cookie;
-	
+	std::string 		_body_cookie;
+	std::string			_header;
+	std::string			header_script; 
+
 	bool				_request_parsed;
 	bool				_cgi_process_launched;
 	bool				_body_ready;
+	bool				_header_ready;
 	bool				_header_sent;
 	bool				_response_sent;
 	
@@ -60,7 +63,7 @@ class Settings
 		int 			checkArgs(int argc);
 		void			build(int ke);
 		std::string		createHeader( Request const &req,  struct sockaddr_in const& client_addr);
-		void			del(Sbuffer &client)
+		void			del(Sbuffer &client);
 		std::string		date( void );
 		std::string		badRequest( Request const& req );
 		std::string		forbidden_error( void );
@@ -78,13 +81,14 @@ class Settings
 		bool			parseRequest(Sbuffer &client);
 		bool 			writeResponse(Sbuffer &client, int socket);
 		void			generate_cookie(Sbuffer &client, struct sockaddr_in const& client_addr);
-		
-		void			check_timeout(Sbuffer *requests, int ke, std::map<int, sockaddr_in> &clients);
+		void			gestion_413(Sbuffer &client, int socket);
+		void			check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<int, sockaddr_in> &clients);
 		std::string		timeout( void );
 
 		void			generate_body(Sbuffer &client, struct sockaddr_in const& client_addr);
+		void			generate_header(Sbuffer &client);
 
-		std::string handleCookie(const Request & req, std::string &date, int &count);
+		std::string handleCookie(Sbuffer &client);
 		Settings( Config const& base );
 		Settings();
 		~Settings();

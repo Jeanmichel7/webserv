@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "Cgi.hpp"
+#include "Config.hpp"
+#include "Settings.hpp"
 
 CGI::CGI() : _body(), _env(), _arg(), _file_stdin(), _file_stdout(), _fd_stdin(), _fd_stdout(), _cgi_process_body_ready() {}
 
@@ -117,7 +119,7 @@ void CGI::execute_cgi(Config &config, Sbuffer &client, struct sockaddr_in const 
 		{
 			CGI::handleProcessResponse(client);
 		}
-		if (client._body_ready = true)
+		if (client._body_ready)
 		{
 			client._cgi_data.~CGI();
 		}
@@ -140,7 +142,7 @@ void CGI::handleProcessResponse(Sbuffer &client)
 				std::fseek(client._cgi_data._file_stdout, 0, SEEK_END);
 				long fileSize = std::ftell(client._cgi_data._file_stdout);
 				client._buffer.reserve(fileSize);
-				client._cgi_data._cgi_process_body_ready == true;
+				client._cgi_data._cgi_process_body_ready = true;
 				fseek(client._cgi_data._file_stdout, 0, SEEK_SET);
 			}
 			return;

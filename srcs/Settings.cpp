@@ -88,17 +88,24 @@ Settings::Settings()
 	this->ext[".3gp"] = "video/3gpp";
 	this->ext[".3g2"] = "video/3gpp2";
 	this->ext[".7z"] = "application/x-7z-compressed";
-	this->error[200] = "OK";
-	this->error[204] = "No Content";
-	this->error[400] = "Bad Request";
-	this->error[401] = "Unauthorized";
-	this->error[403] = "Forbidden";
-	this->error[404] = "Not Found";
-	this->error[500] = "Internal Server Error";
+	this->error[200] = "200 OK";
+	this->error[204] = "204 No Content";
+	this->error[400] = "400 Bad Request";
+	this->error[401] = "401 Unauthorized";
+	this->error[403] = "403 Forbidden";
+	this->error[404] = "404 Not Found";
+	this->error[413] = "413 Payload Too Large";
+	this->error[500] = "500 Internal Server Error";
 }
 
 Settings::~Settings()
 {
+}
+
+Sbuffer::Sbuffer() : _req(), readed(), time_start(), is_chunked(), status_code(), _add_eof(),_cgi_data(), _pid(), _request_parsed(), 
+_cgi_process_launched(), _body_ready(), _header_sent(), _response_sent(), _total_sent()
+{
+
 }
 
 void	Settings::build(int ke)
@@ -151,14 +158,51 @@ std::string Settings::date(void)
 	return(r.str());
 }
 
-std::string Settings::generate_header()
+void Settings::generate_header(Sbuffer &client)
 {
+	std::stringstream header;
 
+	header << "HTTP/1.1 " << this->error[client.status_code] + "\n";
+	header << this->date() << "\n";
+	
+	if (client.header_script.find("Content-Type") == std::string::npos)
+		header << "Content-Type: " << this->checkextension(client._req.method.path);
+	header << handleCookie(client) << "\n";
+	if (client.header_script.find("Content-Length") != std::string::npos)
+		header << "Content-Lenght: " << (client._buffer.size() + client._body_cookie.size()) << "\n";
+	if (client.header_script.find("Content-Length") == std::string::npos && client._cgi_process_launched)
+ 		client._add_eof = 1;
+	if (client.header_script.size() > 0)
+		header << '\n' << client.header_script;
+ 	else
+ 		header << "\r\n\r\n";
+	//MEMO ICI
 }
 
-std::string Settings::generate_cookie(Sbuffer &client, struct sockaddr_in const& client_addr)
-{
-
+std::string Settings::handleCookie(Sbuffer &client) {
+	std::string header_cookie = "";
+	
+	static map<string, string> sessions_date;
+	static map<string, int> sessions_count;
+	
+	Header::t_cookie_it it = client._req.header.cookies.find("wsid");
+	if (it == client._req.header.cookies.end()) {
+		string sessionId = yd::generateSessionId();
+		header_cookie = "Set-Cookie: wsid=";
+		header_cookie += sessionId;
+		header_cookie += "\r\n";
+		
+		sessions_date[sessionId] = this->date();
+		sessions_count[sessionId]++;
+	} 
+	else {
+		client._body_cookie = sessions_date[client._req.header.cookies.at("wsid")];
+		sessions_date[client._req.header.cookies.at("wsid")] = this->date();
+		
+		sessions_count[client._req.header.cookies.at("wsid")]++;
+		client._body_cookie += sessions_count[client._req.header.cookies.at("wsid")];
+	}
+	return (header_cookie);
 }
 
 void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_addr)
@@ -171,10 +215,10 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 		CGI::execute_cgi(this->config, client, client_addr);
 		if (client._body_ready == false )
 			return ;
-		yd::extractHeader(header_script, _body);
+		yd::extractHeader(client.header_script, _body);
 		if (_body.size() == 0)
 			client.status_code = 204;
-		else if (strcmp(header_script.c_str(), "Status: 500") == 0)
+		else if (strcmp(client.header_script.c_str(), "Status: 500") == 0)
 			client.status_code = 500;
 	}
 	else
@@ -212,6 +256,15 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 	}
 	
 }
+
+void	Settings::gestion_413(Sbuffer &client, int socket)
+{
+	char tmp_buff[4097];
+	size_t o_read_p = read(socket, tmp_buff, 4097);
+	if (o_read_p == 0)
+		client._request_parsed = 1;
+}
+
 // std::string Settings::get(Request const &req, struct sockaddr_in const& client_addr)
 // {
 
@@ -295,16 +348,6 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 // 	fd.close();
 // }
 
-void Settings::recoverBody()
-{
-		if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
-		{
-			_body = CGI::execute_cgi(this->config, req, client_addr);
-			yd::extractHeader(_header_script, _body);
-		}
-		else
-}
-
 // void Settings::post(Request const &req, struct sockaddr_in const& client_addr)
 // {
 // 	std::stringstream header;
@@ -380,14 +423,12 @@ void Settings::del(Sbuffer &client)
 		}
 	}
 	else
-	{
 		client.status_code = 404;
-	}
 }
 
 size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_starting, char *buff)
 {
-	cout << "READING HEADER" << endl;
+	cout << "READING HEADER" << std::endl;
 	int o_read = 0;
 	time(&time_starting);
 
@@ -408,7 +449,7 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 		if (o_read == -1 || o_read == 0)
 			break;
 		sbuffer << tmp;
-		// cout << tmp;
+		// std::cout << tmp;
 	}
 	strcpy(buff, sbuffer.str().c_str());
 	return(o_read) ;
@@ -416,7 +457,7 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 
 size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting, char *buff)
 {
-	cout << "READING" << endl;
+	cout << "READING" << std::endl;
 	size_t	o_read = 0;
 	time(&time_starting);
 	std::memset(buff, 0, 4097);
@@ -430,7 +471,7 @@ size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting
 
 char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_starting)
 {
-	cout << "READING CHUNCK" << endl;
+	cout << "READING CHUNCK" << std::endl;
 	int o_read = 0;
 	time(&time_starting);
 
@@ -442,7 +483,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	stringstream sbuffer;
 	
 	o_read = recv(socket, tmp, 1, 0);
-	cout << "tmp[0] : " << "'" << tmp << "'"  << endl;
+	cout << "tmp[0] : " << "'" << tmp << "'"  << std::endl;
 	if (o_read == -1 || o_read == 0)
 		return(NULL);
 	ssize << tmp;
@@ -471,7 +512,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	ss << std::hex << ssize.str();
 	ss >> x;
 	long size = static_cast<string::size_type>(x);
-	cout << "size : " << size << endl;
+	cout << "size : " << size << std::endl;
 	if (size == 0)
 		return (NULL);
 
@@ -498,7 +539,7 @@ bool Settings::writeResponse(Sbuffer &client, int socket)
 	}
 	if (client._total_sent < size_data) 
 	{
-		int sent = send(socket, &*start + client.total_sent, size_data - client.total_sent, 0);
+		int sent = send(socket, &*start + client._total_sent, size_data - client._total_sent, 0);
 		if (sent == -1) 
         	return (-1);
 		else 
@@ -506,7 +547,7 @@ bool Settings::writeResponse(Sbuffer &client, int socket)
     }
 
 	if (client._total_sent == size_data)
-		write(socket, client._cookie.c_str(), client._cookie.size());
+		write(socket, client._body_cookie.c_str(), client._body_cookie.size());
 	if (_add_eof)
 		return (-1);
 	return (client._req.header.connection);
@@ -554,11 +595,11 @@ std::string	Settings::checkextension(std::string const& path)
 		std::map<std::string, std::string>::iterator start = this->ext.begin();
 		std::map<std::string, std::string>::iterator end = this->ext.end();
 		std::string extension = path.substr(pos);
-		cout << "extension : " << extension << endl;
+		cout << "extension : " << extension << std::endl;
 		while(start != end)
 		{
 			if (start->first == extension){
-				cout << "start first : " << start->second << endl;
+				cout << "start first : " << start->second << std::endl;
 				return(start->second);
 			}
 			start++;
@@ -615,31 +656,7 @@ void	Settings::set_event(int ke, int socket, short filter, short flag)
 	
 }
 
-std::string Settings::handleCookie(const Request &req, std::string &date, int &count) {
-	std::string cookie = "";
-	static map<string, string> sessions_date;
-	static map<string, int> sessions_count;
 
-	Header::t_cookie_it it = req.header.cookies.find("wsid");
-	if (it == req.header.cookies.end()) {
-		string sessionId = yd::generateSessionId();
-		cookie = "Set-Cookie: ";
-		cookie += "wsid=";
-		cookie += sessionId;
-		cookie += "\r\n";
-		
-		sessions_date[sessionId] = this->date();
-		sessions_count[sessionId]++;
-	} 
-	else {
-		date = sessions_date[req.header.cookies.at("wsid")];
-		sessions_date[req.header.cookies.at("wsid")] = this->date();
-		
-		sessions_count[req.header.cookies.at("wsid")]++;
-		count = sessions_count[req.header.cookies.at("wsid")];
-	}
-	return cookie;
-}
 
 
 /********************************************/
@@ -662,19 +679,15 @@ int Settings::checkArgs(int argc)
 	return (0);
 }
 
-void		Settings::check_timeout(Sbuffer *requests, int ke, std::map<int, sockaddr_in>& clients)
+void		Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<int, sockaddr_in>& clients)
 {
 	time_t actual_time;
 	time(&actual_time);
-	for (int i = 0; i < MAX_REQUESTS; i++)
+	std::map<int, Sbuffer> ::iterator start = requests.begin();
+	for (int i = 0; start != requests.end(); start++)
 	{
-		if (requests[i].readed != 0)
+		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2)
 		{
-			std::cout << "READED : " <<requests[i].readed << std::endl; 
-		}	
-		if (requests[i].readed != 0 && difftime(actual_time, requests[i].time_start) > 2)
-		{
-			std::cout << "DIFF TIME " << difftime(actual_time, requests[i].time_start) << std::endl;
 			usleep(1000);
 			this->set_event(ke, i, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, i, EVFILT_WRITE, EV_ADD);
@@ -683,7 +696,6 @@ void		Settings::check_timeout(Sbuffer *requests, int ke, std::map<int, sockaddr_
 			this->set_event(ke, i, EVFILT_WRITE, EV_DELETE);
 			clients.erase(i);
 			close(i);
-			std::cout << "CLOSE\n";
 		}
 	}
 }

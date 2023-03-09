@@ -13,6 +13,7 @@
 #define DEF "\e[0m" 
 
 
+
 struct	Methods
 {
 	bool	isget;

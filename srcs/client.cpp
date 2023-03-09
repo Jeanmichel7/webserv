@@ -26,12 +26,12 @@ using namespace std;
 void send_chunked_request(const char* host, int port, const char* path, const char* data, int length) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
-        cerr << "Error: socket creation failed" << endl;
+        cerr << "Error: socket creation failed" << std::endl;
         return;
     }
     struct hostent* he = gethostbyname(host);
     if (he == NULL) {
-        cerr << "Error: host name resolution failed" << endl;
+        cerr << "Error: host name resolution failed" << std::endl;
         close(sock);
         return;
     }
@@ -41,7 +41,7 @@ void send_chunked_request(const char* host, int port, const char* path, const ch
     server.sin_port = htons(port);
     server.sin_addr = *((struct in_addr*)he->h_addr);
     if (connect(sock, (struct sockaddr*)&server, sizeof(server)) < 0) {
-        cerr << "Error: connection failed" << endl;
+        cerr << "Error: connection failed" << std::endl;
         close(sock);
         return;
     }
@@ -66,7 +66,7 @@ void send_chunked_request(const char* host, int port, const char* path, const ch
     char buffer[1024];
     int bytes_read = recv(sock, buffer, sizeof(buffer), 0);
     while (bytes_read > 0) {
-        cout << string(buffer, bytes_read);
+        std::cout << string(buffer, bytes_read);
         bytes_read = recv(sock, buffer, sizeof(buffer), 0);
     }
     close(sock);

@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/07 22:49:39 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/09 17:07:12 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
+#include "Settings.hpp"
 
 bool reqIsChuncked(std::string req)
 {
@@ -48,8 +49,7 @@ int main(int argc, char **argv)
 		if (ke == -1)
 			throw Settings::badCreation();
 		server.build(ke);
-		Sbuffer sbuffer[MAX_REQUESTS];
-		std::memset(sbuffer, 0, sizeof(Sbuffer) * MAX_REQUESTS);
+		std::map<int, Sbuffer> sbuffer;
 		while (1)
 		{
 			int nevents = kevent(ke, NULL, 0, event, MAX_REQUESTS, &server.check_request_timeout);
@@ -89,16 +89,16 @@ int main(int argc, char **argv)
 							size_t readed = 0;
 							size_t header_readed = 0;
 
-							if (reqIsChuncked(header_buffer) == false && sbuffer[event[i].ident].is_chunked == false && sbuffer[event[i].ident].buffer.size() == 0) {
+							if (!reqIsChuncked(header_buffer) && sbuffer[event[i].ident].is_chunked == false && sbuffer[event[i].ident]._buffer.size() == 0) {
 								header_readed = server.reading_header(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, header_buffer);
 								if (req.check_header_buffer(header_buffer, server.config)) {
-									sbuffer[event[i].ident].is_413 = true;
+									sbuffer[event[i].ident].status_code = 413;
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 									continue;
 								}
 								for (unsigned long j = 0; j <  sbuffer[event[i].ident].readed; j++)
-									sbuffer[event[i].ident].buffer.push_back(header_buffer[j]);
+									sbuffer[event[i].ident]._buffer.push_back(header_buffer[j]);
 							}
 							if (reqIsChuncked(header_buffer) == true)
 								sbuffer[event[i].ident].is_chunked = true;
@@ -111,15 +111,16 @@ int main(int argc, char **argv)
 								if (strlen(chunck_buffer) == 0) {
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
-									sbuffer[event[i].ident].buffer.push_back('\r');
-									sbuffer[event[i].ident].buffer.push_back('\n');
-									sbuffer[event[i].ident].buffer.push_back('\r');
-									sbuffer[event[i].ident].buffer.push_back('\n');
+									sbuffer[event[i].ident]._buffer.push_back('\r');
+									sbuffer[event[i].ident]._buffer.push_back('\n');
+									sbuffer[event[i].ident]._buffer.push_back('\r');
+									sbuffer[event[i].ident]._buffer.push_back('\n');
 									sbuffer[event[i].ident].is_chunked = false;
 								}
-								else {
+								else
+								{
 									for (unsigned long j = 0; j < sbuffer[event[i].ident].readed; j++)
-										sbuffer[event[i].ident].buffer.push_back(chunck_buffer[j]);
+										sbuffer[event[i].ident]._buffer.push_back(chunck_buffer[j]);
 								}
 							}
 							else
@@ -129,74 +130,46 @@ int main(int argc, char **argv)
 								std::string::size_type pos = header.find("Content-Length");
 								if (header.size() > 0 && pos == std::string::npos)
 								{
-									cout << "FINISHED" << endl;
+									cout << "FINISHED" << std::endl;
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 									break;
 								}
 								readed = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, buffer);
 								for (unsigned long j = 0; j < readed; j++)
-									sbuffer[event[i].ident].buffer.push_back(buffer[j]);
+									sbuffer[event[i].ident]._buffer.push_back(buffer[j]);
 
-								if (req.isFinishedRequest(sbuffer[event[i].ident].buffer, sbuffer[event[i].ident].readed))
+								if (req.isFinishedRequest(sbuffer[event[i].ident]._buffer, sbuffer[event[i].ident].readed))
 								{
-									cout << "FINISHED" << endl;
+									cout << "FINISHED" << std::endl;
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 								}
 							}
-							// display buffer total
-							// cout << "BUFFER size : " << sbuffer[event[i].ident].buffer.size() << endl;
-							// std::vector<char>::const_iterator start = sbuffer[event[i].ident].buffer.begin();
-							// std::vector<char>::const_iterator end = sbuffer[event[i].ident].buffer.end();
-							// cout << "BUFFER: '" << endl;
-							// for (; start != end; start++)
-							// 	std::cout << *start;
-							// cout << "'" << endl;
 						
 						}
 						else if (event[i].filter == EVFILT_WRITE)
 						{
-							if (sbuffer[event[i].ident].is_413) {
-								std::stringstream reponse;
-								std::fstream fd;
-								cout << "on depasse le maxi body size server!!" << endl;
-								
-								char tmp_buff[4097];
-								memset(tmp_buff, 0, 4097);
-								size_t	o_read_p = 0;
-								o_read_p = server.reading(event[i].ident, sbuffer[event[i].ident].readed, sbuffer[event[i].ident].time_start, tmp_buff);
-
-								if (o_read_p != 4096) {
-									reponse << "HTTP/1.1 413 Payload Too Large\n";
-									reponse << "Content-Type: text/plain\n";
-									reponse << "Content-Length: 21\r\n\r\n";
-									reponse << "Payload Too Large\r\n\r\n";
-									write(event[i].ident, reponse.str().c_str(), reponse.str().size());
-									sbuffer[event[i].ident].buffer.clear();
-									sbuffer[event[i].ident].readed = 0;
-									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
-									sbuffer[event[i].ident].is_413 = false;
-								}
-							}
-							else
-							{
-								bool close_connexion;
-								close_connexion = 0;
-								if (!server.writing(event[i].ident, sbuffer[event[i].ident].buffer, clients[event[i].ident], close_connexion))
+								std::cout << sbuffer[event[i].ident]._buffer.size() << std::endl;
+								if (sbuffer[event[i].ident].status_code == 413)
+									server.gestion_413(sbuffer[event[i].ident], event[i].ident);
+								else if (!sbuffer[event[i].ident]._request_parsed)
+									server.parseRequest(sbuffer[event[i].ident]);
+								else if (!sbuffer[event[i].ident]._body_ready)
+									server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
+								else if (!sbuffer[event[i].ident]._header_ready)
+									server.generate_header(sbuffer[event[i].ident]);
+								else if (!sbuffer[event[i].ident]._header_sent || !sbuffer[event[i].ident]._response_sent)
+									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
+								else if (!sbuffer[event[i].ident]._add_eof)
 								{
-									sbuffer[event[i].ident].buffer.clear();
-									sbuffer[event[i].ident].readed = 0;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									clients.erase(event[i].ident);
 									close(event[i].ident);
-									std::cout << "CLOSE\n";
+									continue ;
 								}
 								else
 								{
-									sbuffer[event[i].ident].buffer.clear();
-									sbuffer[event[i].ident].readed = 0;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
 								}
@@ -204,7 +177,6 @@ int main(int argc, char **argv)
 						}
 					}
 				}
-			}
 			else
 				server.check_timeout(sbuffer, ke, clients);
 		}

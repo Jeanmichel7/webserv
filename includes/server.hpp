@@ -16,8 +16,6 @@
 # define REQ_MAX_SIZE 8192 
 # define MAX_REQUESTS 1024
 
-
-
 # include <sys/socket.h>
 # include <sys/types.h>
 # include <netinet/ip.h>
@@ -45,11 +43,10 @@
 # include <cstdlib>
 # include <dirent.h>
 
-
+# include "Request.hpp"
 # include "Config.hpp"
 # include "Cgi.hpp"
-# include "Request.hpp"
-
 
 # include "Settings.hpp"
+
 #endif

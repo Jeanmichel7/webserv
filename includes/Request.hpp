@@ -16,7 +16,11 @@
 using namespace std;
 
 # include "server.hpp"
-// class Config;
+
+class Config;
+
+
+
 
 struct Method {
 	string 	brut_method;

@@ -11,13 +11,7 @@
 /* ************************************************************************** */
 
 #include "server.hpp"
-
-#include <iostream>
-#include <string>
-
-class Config;
-
-using namespace std;
+#include "Config.hpp"
 
 /* *************************************************** */
 /*                                                     */
@@ -111,7 +105,7 @@ bool Method::checkType( void ) {
 		this->isDelete = true;
 	}
 	else {
-		cerr << "Error : request method is not valid" << endl;
+		cerr << "Error : request method is not valid" << std::endl;
 		return 1;
 	}
 	return 0;
@@ -145,7 +139,7 @@ bool Method::checkUri( void ) {
 
 bool Method::checkProtocole( void ) {
 	if (this->protocole != "HTTP/1.1") {
-		cerr << "Error : HTTP version " << this->protocole << " is not valid" << endl;
+		cerr << "Error : HTTP version " << this->protocole << " is not valid" << std::endl;
 		return 1;
 	}
 	return 0;
@@ -271,16 +265,16 @@ bool Header::checkHeaderKey(const string &key) {
 	string 	str(key);
 
 	if (key.empty()) {
-		cerr << "Error : key is empty" << endl;
+		cerr << "Error : key is empty" << std::endl;
 		return 1;
 	}
 	if (!isalpha(key[0])) {
-		cerr << "Error : key '" << key << "' is not valid: Header's key must start with a letter" << endl;
+		cerr << "Error : key '" << key << "' is not valid: Header's key must start with a letter" << std::endl;
 		return 1;
 	}
 	for(string::iterator it = str.begin(); it != str.end(); it++) {
 		if (!isalnum(*it) && *it != '-'){
-			cerr << "Error : key '" << str << "' is not valid: Header's key can't have '"<< *it << "'" << endl;
+			cerr << "Error : key '" << str << "' is not valid: Header's key can't have '"<< *it << "'" << std::endl;
 			return (true);
 		}
 	}
@@ -291,18 +285,18 @@ bool Header::checkHeaderValue(const string &value) {
 
   for (string::const_iterator it = value.begin(); it != value.end(); ++it) {
     if (!isprint(*it) && *it != '\t' && *it != ' ') {
-			cerr << "Error : value '" << value << "' is not valid: value can't have '"<< *it << "'" << endl;
+			cerr << "Error : value '" << value << "' is not valid: value can't have '"<< *it << "'" << std::endl;
       return 1;
 		}
   }
   for (string::const_iterator it = value.begin(); it != value.end(); ++it) {
     if (iscntrl(*it)){
-			cerr << "Error : value '" << value << "' is not valid: value can't have '"<< *it << "'" << endl;
+			cerr << "Error : value '" << value << "' is not valid: value can't have '"<< *it << "'" << std::endl;
 			return 1;
 		}
   }
   if (!value.empty() && (value[0] == ' ' || value[0] == '\t' || value[value.size() - 1] == ' ' || value[value.size() - 1] == '\t')) {
-		cerr << "Error : value '" << value << "' is not valid: value can't start or end with ' ' or '\t'" << endl;
+		cerr << "Error : value '" << value << "' is not valid: value can't start or end with ' ' or '\t'" << std::endl;
 		return 1;
 	}
 	return 0;
@@ -310,19 +304,19 @@ bool Header::checkHeaderValue(const string &value) {
 
 bool Header::checkSyntaxeTag(const string &host, const string &tag) {
 	if (tag.size() > 63) {
-		cerr << "Error : host '" << host << "' is not valid: > 63 char per tag" << endl;
+		cerr << "Error : host '" << host << "' is not valid: > 63 char per tag" << std::endl;
 		return 1;
 	}
 	if (tag.empty()) {
-		cerr << "Error : host '" << host << "' is not valid: tag is empty" << endl;
+		cerr << "Error : host '" << host << "' is not valid: tag is empty" << std::endl;
 		return 1;
 	}
 	if (tag[0] == '-' || tag[tag.size() - 1] == '-') {
-		cerr << "Error : host '" << host << "' is not valid: tag can start or end with '-'" << endl;
+		cerr << "Error : host '" << host << "' is not valid: tag can start or end with '-'" << std::endl;
 		return 1;
 	}
 	if (tag.find("--") != string::npos) {
-		cerr << "Error : host '" << host << "' is not valid: tag can't have '--'" << endl;
+		cerr << "Error : host '" << host << "' is not valid: tag can't have '--'" << std::endl;
 		return 1;
 	}
 	return 0;
@@ -336,14 +330,14 @@ bool Header::checkHostValue(const string &host ) {
 	string::size_type pos2 = 0;
 
 	if (str.empty()) {
-		cerr << "Error : host is empty" << endl;
+		cerr << "Error : host is empty" << std::endl;
 		return 1;
 	}
 	while ((pos = str.find(".")) != string::npos) {
 		str.erase(0, pos + 1);
 		nbTag++;
 		if (nbTag > 127) {
-			cerr << "Error : host '" << host << "' is not valid: > 127 Tags" << endl;
+			cerr << "Error : host '" << host << "' is not valid: > 127 Tags" << std::endl;
 			return 1;
 		}
 	}
@@ -383,7 +377,7 @@ bool Header::parseUserAgent(const string &user_agent ) {
 	int index_info = 0;
 
 	if (str.size() > 512) {
-		cerr << "Error : user_agent '" << user_agent << "' is not valid: > 512 char, don't want to be DDoS" << endl;
+		cerr << "Error : user_agent '" << user_agent << "' is not valid: > 512 char, don't want to be DDoS" << std::endl;
 		return 1;
 	}
 	while(((pos = str.find(" ")) != string::npos || (pos = str.find("	")) != string::npos)) {
@@ -403,7 +397,7 @@ bool Header::parseUserAgent(const string &user_agent ) {
 
 		if ((pos = (tmp_line.find("("))) != string::npos) {
 			if ((subpos = tmp_line.find(")")) == string::npos) {
-				cerr << "Error: bracket no close" << endl;
+				cerr << "Error: bracket no close" << std::endl;
 			}
 			index_info = 0;
 			line = tmp_line.substr(pos + 1, subpos - 1);
@@ -449,17 +443,17 @@ bool Header::checkSyntaxeAccept(const string &line) {
 
 	for(string::size_type i = 0; i < line.size(); i++) {
 		if (line[i] < 32 || line[i] > 126) {
-			cerr << "Error : accept '" << line << "' is not valid: non imprimable char" << endl;
+			cerr << "Error : accept '" << line << "' is not valid: non imprimable char" << std::endl;
 			return 1;
 		}
 	}
 
 	if ((pos = line.find("/")) == string::npos) {
-		cerr << "Error : accept '" << line << "' is not valid: no slash" << endl;
+		cerr << "Error : accept '" << line << "' is not valid: no slash" << std::endl;
 		return 1;
 	}
 	if ((pos = line.find("/")) != line.rfind("/")) {
-		cerr << "Error : accept '" << line << "' is not valid: more than one slash" << endl;
+		cerr << "Error : accept '" << line << "' is not valid: more than one slash" << std::endl;
 		return 1;
 	}
 	return 0;
@@ -658,7 +652,7 @@ bool Header::parseAcceptEncodings(const string &value) {
 bool Header::parseContentLength(const string &value) {
 	for(string::size_type i = 0; i < value.size(); i++) {
 		if (!isdigit(value[i])) {
-			cerr << "Error : Content-Length must be a number" << endl;
+			cerr << "Error : Content-Length must be a number" << std::endl;
 			return 1;
 		}
 	}
@@ -678,7 +672,7 @@ bool Header::parseHeader( void ) {
 
 	while ((pos = str.find("\r\n")) != string::npos) {
 		line = str.substr(0, pos);
-		// cout << "line : " << line << endl;
+		// std::cout << "line : " << line << std::endl;
 		str.erase(0, pos + 2);
 
 		if ((pos = line.find(": ")) != string::npos) {
@@ -775,9 +769,9 @@ bool Header::setAllHeaders(const string &key, const string &value) {
 	t_list_header_it it_all_headers = this->list_headers.begin();
 	for (; it_all_headers != this->list_headers.end(); ++it_all_headers)
 	{
-		// cout << key << " == ?" << it_all_headers->first << endl;
+		// std::cout << key << " == ?" << it_all_headers->first << std::endl;
 		// if (it_all_headers->first == key) {
-		// 	cerr << "Error : Header '" << key << "' already exist" << endl;
+		// 	cerr << "Error : Header '" << key << "' already exist" << std::endl;
 		// 	return 1;
 		// }
 	}
@@ -945,7 +939,7 @@ bool Request::splitRequest(string req) {
 	string::size_type bl_pos;
 
 	if (req.size() == 0) {
-		cerr << "Error : request is empty" << endl;
+		cerr << "Error : request is empty" << std::endl;
 		return 1;
 	}
 
@@ -959,7 +953,7 @@ bool Request::splitRequest(string req) {
 
 	if (hl_pos == string::npos) {
 		if(req.find("POST") == 0) {
-			cerr << "Error : header is not valid, miss empty new line beetween headers and body" << endl;
+			cerr << "Error : header is not valid, miss empty new line beetween headers and body" << std::endl;
 			return 1;
 		}
 		this->body.brut_body = "";
@@ -1012,72 +1006,72 @@ void Request::printRequest()
 {
 
 	cout << "Header brut : \n"
-		 << this->method.brut_method << endl
-		 << this->header.brut_header << endl;
-	  cout << this->method.isGet << endl;
-	  cout << this->method.isPost << endl;
-	  cout << this->method.isDelete << endl;
+		 << this->method.brut_method << std::endl
+		 << this->header.brut_header << std::endl;
+	  std::cout << this->method.isGet << std::endl;
+	  std::cout << this->method.isPost << std::endl;
+	  std::cout << this->method.isDelete << std::endl;
 
-	  cout << "url '" << this->method.url << "'" << endl;
-	  cout << "path '" << this->method.path << "'" << endl;
-	  cout << "params '" << this->method.parameters << "'" << endl;
-	  cout << "anchor '" << this->method.anchor <<  "'" << endl;
-	  cout << "protocle '" << this->method.protocole << "'" << endl;
-	  cout << "port '" << this->header.port << "'" << endl;
-	  cout << "host '" << this->header.host << "'" << endl;
+	  std::cout << "url '" << this->method.url << "'" << std::endl;
+	  std::cout << "path '" << this->method.path << "'" << std::endl;
+	  std::cout << "params '" << this->method.parameters << "'" << std::endl;
+	  std::cout << "anchor '" << this->method.anchor <<  "'" << std::endl;
+	  std::cout << "protocle '" << this->method.protocole << "'" << std::endl;
+	  std::cout << "port '" << this->header.port << "'" << std::endl;
+	  std::cout << "host '" << this->header.host << "'" << std::endl;
 
-	cout << "useragent '" << this->header.str_user_agent << "'" << endl;
+	cout << "useragent '" << this->header.str_user_agent << "'" << std::endl;
 	Header::t_user_agent_it it = this->header.user_agent.begin();
 	for(; it != this->header.user_agent.end(); ++it) {
-	  cout << "User-Agent "<< it->first << " : " << it->second << endl;
+	  std::cout << "User-Agent "<< it->first << " : " << it->second << std::endl;
 	}
 
-	cout << "str_accept '" << this->header.str_accepts << "'" << endl;
+	cout << "str_accept '" << this->header.str_accepts << "'" << std::endl;
 	Header::t_accepts_it it_accept = this->header.accepts.begin();
 	while (it_accept != this->header.accepts.end()) {
-	  cout << "accept '" << it_accept->type << "/"
+	  std::cout << "accept '" << it_accept->type << "/"
 	  << it_accept->subtype << "' "
-	  << "q="<< it_accept->q << endl;
+	  << "q="<< it_accept->q << std::endl;
 	  it_accept++;
 	}
 
-	cout << "str_accept_language '" << this->header.str_accept_languages << "'" << endl;
+	cout << "str_accept_language '" << this->header.str_accept_languages << "'" << std::endl;
 	Header::t_languages_it it_lang = this->header.accept_languages.begin();
 	for(; it_lang != this->header.accept_languages.end(); ++it_lang) {
-	  cout << "accept_language "<< it_lang->lang
+	  std::cout << "accept_language "<< it_lang->lang
 	  << (it_lang->spec != "" ? "-" : "") << it_lang->spec
-	  << " q=" << it_lang->q << endl;
+	  << " q=" << it_lang->q << std::endl;
 	}
 
-	cout << "str_accept_encoding '" << this->header.str_accept_encodings << "'" << endl << endl;
+	cout << "str_accept_encoding '" << this->header.str_accept_encodings << "'" << std::endl << std::endl;
 	Header::t_encodings_it it_encod = this->header.accept_encodings.begin();
 	for(; it_encod != this->header.accept_encodings.end(); ++it_encod) {
-	  cout << "accept_encoding '"<< it_encod->type << "' q=" << it_encod->q << endl;
+	  std::cout << "accept_encoding '"<< it_encod->type << "' q=" << it_encod->q << std::endl;
 	}
 
-	cout << "str cookies : " << this->header.str_cookie << endl;
+	cout << "str cookies : " << this->header.str_cookie << std::endl;
 	Header::t_cookie_it it_cookies = this->header.cookies.begin();
 	for (; it_cookies != this->header.cookies.end(); ++it_cookies)
 	{
-		cout << "cookie '" << it_cookies->first << "' : '" << it_cookies->second << "'" << endl;
+		cout << "cookie '" << it_cookies->first << "' : '" << it_cookies->second << "'" << std::endl;
 	}
-	cout << "Connection : " << this->header.connection << endl;
+	cout << "Connection : " << this->header.connection << std::endl;
 
-	cout << "content_length '" << this->header.content_length << "'" << endl;
-	cout << "content_type '" << this->header.content_type << "'" << endl;
-	cout << "content_encoding '" << this->header.content_encoding << "'" << endl;
-	cout << "content_language '" << this->header.content_language << "'" << endl;
-	cout << "content_location '" << this->header.content_location << "'" << endl  << endl;
+	cout << "content_length '" << this->header.content_length << "'" << std::endl;
+	cout << "content_type '" << this->header.content_type << "'" << std::endl;
+	cout << "content_encoding '" << this->header.content_encoding << "'" << std::endl;
+	cout << "content_language '" << this->header.content_language << "'" << std::endl;
+	cout << "content_location '" << this->header.content_location << "'" << std::endl  << std::endl;
 
-	cout << "All Header : " << endl;
+	cout << "All Header : " << std::endl;
 	Header::t_list_header_it it_all_headers = this->header.list_headers.begin();
 	for (; it_all_headers != this->header.list_headers.end(); ++it_all_headers)
 	{
-		cout << it_all_headers->first << " : " << it_all_headers->second << endl;
+		cout << it_all_headers->first << " : " << it_all_headers->second << std::endl;
 	}
 
-	this->contain_body ? cout << "body\n" << "'" << this->body.content << "'" << endl : cout << "no body" << endl;
-	cout << "\n\nrequete " << (this->header.is_valid ? "valid" : "invalid") << endl;
+	this->contain_body ? std::cout << "body\n" << "'" << this->body.content << "'" << std::endl : std::cout << "no body" << std::endl;
+	cout << "\n\nrequete " << (this->header.is_valid ? "valid" : "invalid") << std::endl;
 }
 
 void Request::resetBuffer( void ) {
@@ -1119,7 +1113,7 @@ bool Request::check_header_buffer(string buffer, Config & config) {
 
 bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet_read) {
 
-	cout << "IS FINISH REQUEST" << endl;
+	cout << "IS FINISH REQUEST" << std::endl;
 	size_t header_size = 0;
 	char sep[4] = {'\r', '\n', '\r', '\n'}; 
 	for (size_t i = 0; i < octet_read - 3; i++) {
@@ -1147,9 +1141,9 @@ bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet
 		string::size_type cl_end = header.find("\r\n", cl_pos);
 		string content_length = header.substr(cl_pos + 16, cl_end - cl_pos - 16);
 		int cl = atoi(content_length.c_str());
-		cout << "content length : " << cl << endl;
-		cout << "total read : " << octet_read << endl;
-		cout << "header length : " <<  header.size() << endl;
+		cout << "content length : " << cl << std::endl;
+		cout << "total read : " << octet_read << std::endl;
+		cout << "header length : " <<  header.size() << std::endl;
 		if (cl == 0)
 			return 1;
 		else if (octet_read - header.length() - 4 == (unsigned int)cl)
