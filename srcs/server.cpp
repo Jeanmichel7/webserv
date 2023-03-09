@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/09 17:07:12 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/09 17:11:33 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,6 @@ int main(int argc, char **argv)
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD);
 								}
 							}
-						
 						}
 						else if (event[i].filter == EVFILT_WRITE)
 						{
@@ -163,6 +162,7 @@ int main(int argc, char **argv)
 									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
 								else if (!sbuffer[event[i].ident]._add_eof)
 								{
+									sbuffer.erase(event[i].ident);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									clients.erase(event[i].ident);
 									close(event[i].ident);
@@ -172,6 +172,7 @@ int main(int argc, char **argv)
 								{
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
+									sbuffer.erase(event[i].ident);
 								}
 							}
 						}

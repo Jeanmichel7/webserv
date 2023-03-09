@@ -47,6 +47,7 @@ class CGI
 		std::FILE *_file_stdout;
 		int _fd_stdin;
 		int _fd_stdout;
+		size_t _readed;
 		bool _cgi_process_body_ready;
 };
 

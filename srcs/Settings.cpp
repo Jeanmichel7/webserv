@@ -163,19 +163,20 @@ void Settings::generate_header(Sbuffer &client)
 	std::stringstream header;
 
 	header << "HTTP/1.1 " << this->error[client.status_code] + "\n";
-	header << this->date() << "\n";
-	
+	header << this->date();
 	if (client.header_script.find("Content-Type") == std::string::npos)
-		header << "Content-Type: " << this->checkextension(client._req.method.path);
-	header << handleCookie(client) << "\n";
+		header << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path));
+	header << handleCookie(client);
 	if (client.header_script.find("Content-Length") != std::string::npos)
 		header << "Content-Lenght: " << (client._buffer.size() + client._body_cookie.size()) << "\n";
 	if (client.header_script.find("Content-Length") == std::string::npos && client._cgi_process_launched)
  		client._add_eof = 1;
 	if (client.header_script.size() > 0)
-		header << '\n' << client.header_script;
+		header << client.header_script;
  	else
  		header << "\r\n\r\n";
+	client._header = header.str();
+	client._header_ready = 1;
 	//MEMO ICI
 }
 
@@ -190,8 +191,7 @@ std::string Settings::handleCookie(Sbuffer &client) {
 		string sessionId = yd::generateSessionId();
 		header_cookie = "Set-Cookie: wsid=";
 		header_cookie += sessionId;
-		header_cookie += "\r\n";
-		
+		header_cookie += "\n";
 		sessions_date[sessionId] = this->date();
 		sessions_count[sessionId]++;
 	} 
@@ -210,13 +210,15 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 	std::fstream		fd;
 
 	client.status_code = 200;
+	yd::getExtension(client._req.method.path);
+	config.getCgi(client._req.method.path, yd::getExtension(client._req.method.path));
 	if ((client._cgi_process_launched == true && client._body_ready == false) || (config.getCgi(client._req.method.path, yd::getExtension(client._req.method.path)) != NULL))
 	{
 		CGI::execute_cgi(this->config, client, client_addr);
 		if (client._body_ready == false )
 			return ;
-		yd::extractHeader(client.header_script, _body);
-		if (_body.size() == 0)
+		yd::extractHeader(client.header_script, client._buffer);
+		if (client._buffer.size() == 0)
 			client.status_code = 204;
 		else if (strcmp(client.header_script.c_str(), "Status: 500") == 0)
 			client.status_code = 500;
@@ -250,11 +252,11 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 		fd.seekg(0, std::ios::end);
 		std::streampos fileSize = fd.tellg();
 		fd.seekg(0, std::ios::beg);
-		client._buffer.reserve(fileSize);
-		fd.read(&client._buffer[0], fileSize);
+		client._buffer.resize(fileSize);
+		fd.read(&*(client._buffer.begin()), fileSize);
 		fd.close();
 	}
-	
+	client._body_ready = 1;
 }
 
 void	Settings::gestion_413(Sbuffer &client, int socket)
@@ -410,7 +412,6 @@ void Settings::del(Sbuffer &client)
 	string path_file = this->config.getFile(client._req.method.path)->c_str();
 	std::ifstream infile(path_file);
 	if (infile.good()) {
-		std::cout << "Le fichier existe" << std::endl;
 		if (remove(path_file.c_str()) != 0)
 		{
 			client.status_code = 403;
@@ -530,8 +531,8 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 
 bool Settings::writeResponse(Sbuffer &client, int socket)
 {
-	std::vector<char>::iterator start = _body.begin();
-	size_t size_data = _body.size();
+	std::vector<char>::iterator start = client._buffer.begin();
+	size_t size_data = client._buffer.size();
 	if (client._header_sent == 0)
 	{
 		send(socket, client._header.c_str(), client._header.size(), 0);
@@ -545,23 +546,20 @@ bool Settings::writeResponse(Sbuffer &client, int socket)
 		else 
 			client._total_sent += sent; 
     }
-
 	if (client._total_sent == size_data)
-		write(socket, client._body_cookie.c_str(), client._body_cookie.size());
-	if (_add_eof)
-		return (-1);
-	return (client._req.header.connection);
+	{
+		send(socket, client._body_cookie.c_str(), client._body_cookie.size(), 0);
+		client._response_sent = 1;
+	}
 }
 
 bool Settings::parseRequest(Sbuffer &client)
 {
 	std::fstream fd;
-	client._header = "HTTP/1.1 ";
 	client._body_ready = 1;
+	client._request_parsed = 1;
 	if (client._req.parseRequest(client._buffer))
 		client._header = method_not_allowed(client._req);
-	else if (!client._req.method.path.empty())
-		fd.open(*this->config.getFile(client._req.method.path));
 	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port))
 		 client._header = this->badRequest(client._req);
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
@@ -587,7 +585,6 @@ bool Settings::parseRequest(Sbuffer &client)
 
 std::string	Settings::checkextension(std::string const& path)
 {
-	std::cout << "PATH : " << path << std::endl;
 	size_t pos = path.rfind('.');
 	
 	if (pos != path.npos)
@@ -689,11 +686,11 @@ void		Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map
 		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2)
 		{
 			usleep(1000);
-			this->set_event(ke, i, EVFILT_READ, EV_DELETE);
-			this->set_event(ke, i, EVFILT_WRITE, EV_ADD);
+			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
+			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD);
 			std::string rep(this->timeout());
-			write(i, rep.c_str(), rep.size());
-			this->set_event(ke, i, EVFILT_WRITE, EV_DELETE);
+			send((*start).first, rep.c_str(), rep.size(), 0);
+			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_DELETE);
 			clients.erase(i);
 			close(i);
 		}

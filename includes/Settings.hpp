@@ -53,10 +53,6 @@ class Settings
 	private:
 		std::map<std::string, std::string> ext;
 		std::map<int, std::string> error;
-		std::string _header;
-		std::vector<char> _body;
-		std::string _cookie;
-		bool _add_eof;
 	public:
 		Config			config;
 		struct timespec check_request_timeout;
