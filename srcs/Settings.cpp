@@ -165,9 +165,9 @@ void Settings::generate_header(Sbuffer &client)
 	header << "HTTP/1.1 " << this->error[client.status_code] + "\n";
 	header << this->date();
 	if (client.header_script.find("Content-Type") == std::string::npos)
-		header << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path));
+		header << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path)) << "\n";
 	header << handleCookie(client);
-	if (client.header_script.find("Content-Length") != std::string::npos)
+	if (client.header_script.find("Content-Length") == std::string::npos && !client._cgi_process_launched)
 		header << "Content-Lenght: " << (client._buffer.size() + client._body_cookie.size()) << "\n";
 	if (client.header_script.find("Content-Length") == std::string::npos && client._cgi_process_launched)
  		client._add_eof = 1;
@@ -177,6 +177,7 @@ void Settings::generate_header(Sbuffer &client)
  		header << "\r\n\r\n";
 	client._header = header.str();
 	client._header_ready = 1;
+	cout << "header : " << client._header << endl;
 	//MEMO ICI
 }
 
@@ -201,6 +202,7 @@ std::string Settings::handleCookie(Sbuffer &client) {
 		
 		sessions_count[client._req.header.cookies.at("wsid")]++;
 		client._body_cookie += sessions_count[client._req.header.cookies.at("wsid")];
+		client._body_cookie += "\n";
 	}
 	return (header_cookie);
 }
@@ -210,8 +212,6 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 	std::fstream		fd;
 
 	client.status_code = 200;
-	yd::getExtension(client._req.method.path);
-	config.getCgi(client._req.method.path, yd::getExtension(client._req.method.path));
 	if ((client._cgi_process_launched == true && client._body_ready == false) || (config.getCgi(client._req.method.path, yd::getExtension(client._req.method.path)) != NULL))
 	{
 		CGI::execute_cgi(this->config, client, client_addr);

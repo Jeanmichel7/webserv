@@ -160,7 +160,7 @@ int main(int argc, char **argv)
 									server.generate_header(sbuffer[event[i].ident]);
 								else if (!sbuffer[event[i].ident]._header_sent || !sbuffer[event[i].ident]._response_sent)
 									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
-								else if (!sbuffer[event[i].ident]._add_eof)
+								else if (sbuffer[event[i].ident]._add_eof)
 								{
 									sbuffer.erase(event[i].ident);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
