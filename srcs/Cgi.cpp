@@ -111,18 +111,18 @@ CGI::~CGI()
 
 void CGI::execute_cgi(Config &config, Sbuffer &client, struct sockaddr_in const &client_addr)
 {
-		if (client._cgi_process_launched == false)
+		if (client._status == REQUEST_PARSED)
 		{
 			client._buffer = CGI::launchProcess(client, config, client_addr);
-			client._cgi_process_launched = true;
+			client._status = CGI_PROCESS_LAUNCHED;
 			if (client._buffer.size() > 0)
-				client._body_ready = true;
+				client._status = BODY_GENERATED;
 		}
 		else 
 		{
 			CGI::handleProcessResponse(client);
 		}
-		if (client._body_ready)
+		if (client._status == BODY_GENERATED)
 		{
 			client._cgi_data.~CGI();
 		}
@@ -140,7 +140,7 @@ void CGI::handleProcessResponse(Sbuffer &client)
 		} else if (rc == client._pid && client._cgi_data._cgi_process_body_ready == false) {
 			if (rt == 1) {
 				client._buffer =  error_500(); 
-				client._body_ready = true; }
+				client._status = BODY_GENERATED; }
 			else {
 				std::fseek(client._cgi_data._file_stdout, 0, SEEK_END);
 				long fileSize = std::ftell(client._cgi_data._file_stdout);
@@ -150,7 +150,7 @@ void CGI::handleProcessResponse(Sbuffer &client)
 			}
 		} else {
 			client._buffer =  error_500(); 
-			client._body_ready = true; }
+			client._status = BODY_GENERATED; }
 	}
 	if (client._cgi_data._cgi_process_body_ready == true) 
 	{
@@ -158,7 +158,7 @@ void CGI::handleProcessResponse(Sbuffer &client)
 		rt = fread(&*client._buffer.begin() + client._cgi_data._readed, sizeof(char), 32668, client._cgi_data._file_stdout);
 		client._cgi_data._readed += rt;
 		if (rt < 32668)
-			client._body_ready = true;
+			client._status = BODY_GENERATED;
 	}
 }
 

@@ -43,6 +43,16 @@
 # include <cstdlib>
 # include <dirent.h>
 
+		enum Status {
+            REQUEST_RECEIVED,
+			REQUEST_PARSED,
+			CGI_PROCESS_LAUNCHED,
+			BODY_GENERATED,
+			HEADER_GENERATED,
+			HEADER_SENT,
+			BODY_SENT
+		};	
+
 # include "Request.hpp"
 # include "Config.hpp"
 # include "Cgi.hpp"

@@ -102,8 +102,7 @@ Settings::~Settings()
 {
 }
 
-Sbuffer::Sbuffer() : _req(), readed(), time_start(), is_chunked(), status_code(), _add_eof(),_cgi_data(), _pid(), _request_parsed(), 
-_cgi_process_launched(), _body_ready(), _header_sent(), _response_sent(), _total_sent()
+Sbuffer::Sbuffer() : _req(), readed(), time_start(), is_chunked(), status_code(200), _add_eof(),_cgi_data(), _pid(),_status(), _total_sent()
 {
 
 }
@@ -154,7 +153,7 @@ std::string Settings::date(void)
 {
 	time_t				tmm = time(0);
 	std::ostringstream	r;
-	r << std::put_time(localtime(&tmm), "date: %a, %d %b %G %T GMT\n");
+	r << std::put_time(localtime(&tmm), "date: %a, %d %b %G %T GMT");
 	return(r.str());
 }
 
@@ -163,21 +162,21 @@ void Settings::generate_header(Sbuffer &client)
 	std::stringstream header;
 
 	// std::cout << "generate_header\n";
-	header << "HTTP/1.1 " << this->error[client.status_code] + "\n";
-	header << this->date();
+	header << "HTTP/1.1 " << this->error[client.status_code];
+	header << "\n" << this->date();
 	if (client.header_script.find("Content-Type") == std::string::npos)
-		header << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path)) << "\n";
+		header << "\n" << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path)) ;
 	header << handleCookie(client);
-	if (client.header_script.find("Content-Length") == std::string::npos && !client._cgi_process_launched)
-		header << "Content-Length: " << (client._buffer.size() + client._body_cookie.size()) << "\n";
-	if (client.header_script.find("Content-Length") == std::string::npos && client._cgi_process_launched)
+	if (client.header_script.find("Content-Length") == std::string::npos && (client._pid == 0))
+		header << "\n" << "Content-Length: " << (client._buffer.size() + client._body_cookie.size());
+	if (client.header_script.find("Content-Length") == std::string::npos && client._pid  != 0)
  		client._add_eof = 1;
 	if (client.header_script.size() > 0)
 		header << client.header_script;
  	else
  		header << "\r\n\r\n";
 	client._header = header.str();
-	client._header_ready = 1;
+	client._status = HEADER_GENERATED;
 	// cout << "header : " << client._header << endl;
 	//MEMO ICI
 }
@@ -191,9 +190,8 @@ std::string Settings::handleCookie(Sbuffer &client) {
 	Header::t_cookie_it it = client._req.header.cookies.find("wsid");
 	if (it == client._req.header.cookies.end()) {
 		string sessionId = yd::generateSessionId();
-		header_cookie = "Set-Cookie: wsid=";
+		header_cookie = "\nSet-Cookie: wsid=";
 		header_cookie += sessionId;
-		header_cookie += "\n";
 		sessions_date[sessionId] = this->date();
 		sessions_count[sessionId]++;
 	} 
@@ -213,11 +211,10 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 	std::fstream		fd;
 
 	// std::cout << "generate_body\n";
-	client.status_code = 200;
-	if ((client._cgi_process_launched == true && client._body_ready == false) || (config.getCgi(client._req.method.path, yd::getExtension(client._req.method.path)) != NULL))
+	if (client.status_code == 200 && ((client._status == CGI_PROCESS_LAUNCHED) || (config.getCgi(client._req.method.path, yd::getExtension(client._req.method.path)) != NULL)))
 	{
 		CGI::execute_cgi(this->config, client, client_addr);
-		if (client._body_ready == false )
+		if (client._status == CGI_PROCESS_LAUNCHED)
 			return ;
 		yd::extractHeader(client.header_script, client._buffer);
 		if (client._buffer.size() == 0)
@@ -225,7 +222,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 		else if (strcmp(client.header_script.c_str(), "Status: 500") == 0)
 			client.status_code = 500;
 	}
-	else
+	else if (client.status_code == 200)
 	{
 		char *file = (char *)this->config.getFile(client._req.method.path)->c_str();
 		if(file[0] == '/')
@@ -245,12 +242,23 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 		page << ERROR_BRUT_FOLDER;
 		page << client.status_code;
 		page << ".html";
+		if (this->config.getError(client.status_code) != NULL)
+		{
 		fd.open(*this->config.getError(client.status_code), std::fstream::in);
 			if (!fd.is_open())
 				fd.open(page.str().c_str(), std::fstream::in);
+		}
+		else 
+			fd.open(page.str().c_str(), std::fstream::in);
+			if (!fd.is_open())
+			{
+				client._buffer.clear();
+				client._buffer.insert(client._buffer.begin(), error[client.status_code].c_str(), error[client.status_code].c_str() + error[client.status_code].size());
+			}	
 	}
 	if (fd.is_open())
 	{
+		client._buffer.clear();
 		fd.seekg(0, std::ios::end);
 		std::streampos fileSize = fd.tellg();
 		fd.seekg(0, std::ios::beg);
@@ -258,17 +266,24 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 		fd.read(&*(client._buffer.begin()), fileSize);
 		fd.close();
 	}
-	client._body_ready = 1;
-	client._header_ready = 0;
+	client._status = BODY_GENERATED;
 }
 
 void	Settings::gestion_413(Sbuffer &client, int socket)
 {
 	// std::cout << "gestion 413\n";
-	char tmp_buff[4097];
-	size_t o_read_p = read(socket, tmp_buff, 4097);
-	if (o_read_p == 0)
-		client._request_parsed = 1;
+	usleep(100000);
+	static char tmp_buff[409700];
+	int o_read_p = recv(socket, &tmp_buff, 409700, MSG_DONTWAIT);
+	std::cout << "VALEUR DE O_READ " << o_read_p << std::endl;
+	if (o_read_p < 0)
+	// the error EAGAIN and EWOULDBLOCK appears when we attempt to recv a empty socket with a O_NONBLOCK flag, so it's a normal error
+	if (o_read_p == 0 || (o_read_p < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))) {
+		client._status = REQUEST_PARSED;
+}
+	if (o_read_p < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+		std::cerr << "Erreur : " << strerror(errno) << std::endl;
+}
 }
 
 // std::string Settings::get(Request const &req, struct sockaddr_in const& client_addr)
@@ -539,12 +554,12 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 	usleep(1000);
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
-	if (client._response_sent == 1)
+	if (client._status == BODY_SENT)
 		return ;
-	if (client._header_sent == 0)
+	if (client._status == HEADER_GENERATED)
 	{
 		send(socket, client._header.c_str(), client._header.size(), 0);
-		client._header_sent = 1;
+		client._status = HEADER_SENT;
 	}
 	if (client._total_sent < size_data) 
 	{
@@ -554,7 +569,7 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 	if (client._total_sent == size_data)
 	{
 		send(socket, client._body_cookie.c_str(), client._body_cookie.size(), 0);
-		client._response_sent = 1;
+		client._status = BODY_SENT;
 	}
 }
 
@@ -562,8 +577,7 @@ void Settings::parseRequest(Sbuffer &client)
 {
 	// std::cout << "parse_request\n";
 	std::fstream fd;
-	client._body_ready = 1;
-	client._request_parsed = 1;
+	client._status = REQUEST_PARSED;
 	if (client._req.parseRequest(client._buffer))
 		client.status_code = 405;
 	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port))
@@ -573,9 +587,12 @@ void Settings::parseRequest(Sbuffer &client)
 	else if (check_forbidden(*this->config.getFile(client._req.method.path)) && checkextension(*this->config.getFile(client._req.method.path)).empty())
 		client.status_code = 404;
 	else if (client._req.method.isGet || client._req.method.isPost  || client._req.method.isDelete)
-		client._body_ready = 0;
+	{
+		return ;
+	}
 	else 
 		client.status_code = 400;
+	client._status = BODY_GENERATED;
 }
 
 // bool Settings::createResponse(Sbuffer &client, sockaddr_in const& client_addr)
@@ -942,5 +959,5 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 			
 		}
 	}
-	sbuffer._request_parsed = 0;
+	sbuffer._status = REQUEST_RECEIVED;
 }

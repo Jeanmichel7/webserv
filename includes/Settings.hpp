@@ -35,12 +35,9 @@ struct Sbuffer {
 	std::string			_header;
 	std::string			header_script; 
 
-	bool				_request_parsed;
-	bool				_cgi_process_launched;
-	bool				_body_ready;
-	bool				_header_ready;
-	bool				_header_sent;
-	bool				_response_sent;
+	Status				_status;
+
+
 	
 	size_t				_total_sent;
 };

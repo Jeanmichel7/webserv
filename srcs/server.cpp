@@ -86,20 +86,34 @@ int main(int argc, char **argv)
 							server.reading_request(sbuffer[event[i].ident], server, ke, event[i].ident, req);
 						else if (event[i].filter == EVFILT_WRITE)
 						{
-								
-								// std::cout << sbuffer[event[i].ident]._buffer.size() << std::endl;
 								if (sbuffer[event[i].ident].status_code == 413)
-									server.gestion_413(sbuffer[event[i].ident], event[i].ident);
-								if (!sbuffer[event[i].ident]._request_parsed)
-									server.parseRequest(sbuffer[event[i].ident]);
-								if (!sbuffer[event[i].ident]._body_ready)
-									server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
-								if (!sbuffer[event[i].ident]._header_ready)
-									server.generate_header(sbuffer[event[i].ident]);
-								if (!sbuffer[event[i].ident]._header_sent && !sbuffer[event[i].ident]._response_sent)
-									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
-								if (sbuffer[event[i].ident]._add_eof || (sbuffer[event[i].ident]._header_sent && sbuffer[event[i].ident]._response_sent))
 								{
+									std::cout << event[i].ident << ": 413" << std::endl;
+									server.gestion_413(sbuffer[event[i].ident], event[i].ident);
+								}
+								if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED && sbuffer[event[i].ident].status_code != 413)
+								{
+									std::cout << event[i].ident << ": parse request " << std::endl;
+									server.parseRequest(sbuffer[event[i].ident]);
+								}
+								if (sbuffer[event[i].ident]._status == REQUEST_PARSED || sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
+								{
+									std::cout << event[i].ident << ": Generate body " << std::endl;
+									server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
+								}
+								if (sbuffer[event[i].ident]._status == BODY_GENERATED)
+								{
+									std::cout << event[i].ident << ": Generate Header " << std::endl;
+									server.generate_header(sbuffer[event[i].ident]);
+								}
+								if (sbuffer[event[i].ident]._status == HEADER_GENERATED || sbuffer[event[i].ident]._status == HEADER_SENT)
+								{
+									std::cout << event[i].ident << ": writeResponse" << std::endl;
+									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
+								}
+								if (sbuffer[event[i].ident]._add_eof && sbuffer[event[i].ident]._status == BODY_SENT)
+								{
+									std::cout << event[i].ident << ": close FD" << std::endl;
 									sbuffer.erase(event[i].ident);
 									std::cout << "CLOSE DE FD\n";
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
@@ -107,8 +121,9 @@ int main(int argc, char **argv)
 									close(event[i].ident);
 									continue ;
 								}
-								else
+								else if (sbuffer[event[i].ident]._status == BODY_SENT)
 								{
+									std::cout << event[i].ident << ": clear sbuffer" << std::endl;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
 									std::memset(&sbuffer[event[i].ident], 0, sizeof(sbuffer[event[i].ident]));
