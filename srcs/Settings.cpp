@@ -237,7 +237,6 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 			client.status_code = 204;
 		else if (strcmp(client.header_script.c_str(), "Status: 500") == 0)
 			client.status_code = 500;
-		std::cout << "BODY SIZE " << client._buffer.size() << std::endl;
 	}
 	else if (client.status_code == 200)
 	{
