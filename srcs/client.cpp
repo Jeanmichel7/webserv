@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 13:43:13 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/07 22:53:14 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/10 00:21:15 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,10 +46,11 @@ void send_chunked_request(const char* host, int port, const char* path, const ch
         return;
     }
     ostringstream oss;
-    oss << "POST " << path << " HTTP/1.1\r\n";
+    oss << "GET " << path << " HTTP/1.1\r\n";
     oss << "Host: " << host << ":" << port << "\r\n";
     oss << "Content-Type: text/plain\r\n";
-    oss << "Transfer-Encoding: chunked\r\n";
+    oss << "Connection: close\n";
+    // oss << "Transfer-Encoding: chunked\r\n";
     oss << "\r\n";
     send(sock, oss.str().c_str(), oss.str().length(), 0);
     int offset = 0;

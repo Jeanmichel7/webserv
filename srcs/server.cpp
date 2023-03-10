@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/10 00:31:04 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/10 02:56:04 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ bool reqIsChuncked(std::string req)
 
 int main(int argc, char **argv)
 {
-	Settings server;
+	Settings	server;
 	if (server.checkArgs(argc) == 1)
 		return (1);
 	try
@@ -40,16 +40,16 @@ int main(int argc, char **argv)
 		return (0);
 	}
 
-	struct kevent 							event[MAX_REQUESTS];
-	Request 										req;
-	std::map<int, sockaddr_in> 	clients;
-	int 												ke = kqueue();
+	struct kevent				event[MAX_REQUESTS];
+	Request						req;
+	std::map<int, sockaddr_in>	clients;
+	int							ke = kqueue();
 	try
 	{
 		if (ke == -1)
 			throw Settings::badCreation();
 		server.build(ke);
-		std::map<int, Sbuffer> sbuffer;
+		std::map<int, Sbuffer>	sbuffer;
 		while (1)
 		{
 			int nevents = kevent(ke, NULL, 0, event, MAX_REQUESTS, &server.check_request_timeout);
@@ -63,13 +63,15 @@ int main(int argc, char **argv)
 					{
 						server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 						clients.erase(event[i].ident);
+						sbuffer.erase(event[i].ident);
 						close(event[i].ident);
-						std::cout << "CLOSE2\n";
+						std::cout << "CLOSE\n";
 					}
 					else
 					{
 						if (clients.find(event[i].ident) == clients.end())
 						{
+							std::cout << "\nACCEPT\n";
 							struct sockaddr_in client_addr;
 							socklen_t client_addr_len = sizeof(client_addr);
 							int socket_client = accept(event[i].ident, (struct sockaddr *)&client_addr, &client_addr_len);
@@ -84,20 +86,22 @@ int main(int argc, char **argv)
 							server.reading_request(sbuffer[event[i].ident], server, ke, event[i].ident, req);
 						else if (event[i].filter == EVFILT_WRITE)
 						{
+								
 								// std::cout << sbuffer[event[i].ident]._buffer.size() << std::endl;
 								if (sbuffer[event[i].ident].status_code == 413)
 									server.gestion_413(sbuffer[event[i].ident], event[i].ident);
-								else if (!sbuffer[event[i].ident]._request_parsed)
+								if (!sbuffer[event[i].ident]._request_parsed)
 									server.parseRequest(sbuffer[event[i].ident]);
-								else if (!sbuffer[event[i].ident]._body_ready)
+								if (!sbuffer[event[i].ident]._body_ready)
 									server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
-								else if (!sbuffer[event[i].ident]._header_ready)
+								if (!sbuffer[event[i].ident]._header_ready)
 									server.generate_header(sbuffer[event[i].ident]);
-								else if (!sbuffer[event[i].ident]._header_sent || !sbuffer[event[i].ident]._response_sent)
+								if (!sbuffer[event[i].ident]._header_sent && !sbuffer[event[i].ident]._response_sent)
 									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
-								else if (sbuffer[event[i].ident]._add_eof)
+								if (sbuffer[event[i].ident]._add_eof || (sbuffer[event[i].ident]._header_sent && sbuffer[event[i].ident]._response_sent))
 								{
 									sbuffer.erase(event[i].ident);
+									std::cout << "CLOSE DE FD\n";
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									clients.erase(event[i].ident);
 									close(event[i].ident);
@@ -107,6 +111,7 @@ int main(int argc, char **argv)
 								{
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
+									std::memset(&sbuffer[event[i].ident], 0, sizeof(sbuffer[event[i].ident]));
 									sbuffer.erase(event[i].ident);
 								}
 							}

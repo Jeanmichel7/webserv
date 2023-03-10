@@ -162,6 +162,7 @@ void Settings::generate_header(Sbuffer &client)
 {
 	std::stringstream header;
 
+	// std::cout << "generate_header\n";
 	header << "HTTP/1.1 " << this->error[client.status_code] + "\n";
 	header << this->date();
 	if (client.header_script.find("Content-Type") == std::string::npos)
@@ -177,7 +178,7 @@ void Settings::generate_header(Sbuffer &client)
  		header << "\r\n\r\n";
 	client._header = header.str();
 	client._header_ready = 1;
-	cout << "header : " << client._header << endl;
+	// cout << "header : " << client._header << endl;
 	//MEMO ICI
 }
 
@@ -211,6 +212,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 {
 	std::fstream		fd;
 
+	// std::cout << "generate_body\n";
 	client.status_code = 200;
 	if ((client._cgi_process_launched == true && client._body_ready == false) || (config.getCgi(client._req.method.path, yd::getExtension(client._req.method.path)) != NULL))
 	{
@@ -257,10 +259,12 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 		fd.close();
 	}
 	client._body_ready = 1;
+	client._header_ready = 0;
 }
 
 void	Settings::gestion_413(Sbuffer &client, int socket)
 {
+	// std::cout << "gestion 413\n";
 	char tmp_buff[4097];
 	size_t o_read_p = read(socket, tmp_buff, 4097);
 	if (o_read_p == 0)
@@ -429,7 +433,7 @@ void Settings::del(Sbuffer &client)
 
 size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_starting, char *buff)
 {
-	cout << "READING HEADER" << std::endl;
+	// cout << "READING HEADER" << std::endl;
 	int o_read = 0;
 	time(&time_starting);
 
@@ -458,7 +462,7 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 
 size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting, char *buff)
 {
-	cout << "READING" << std::endl;
+	// cout << "READING" << std::endl;
 	size_t	o_read = 0;
 	time(&time_starting);
 	std::memset(buff, 0, 4097);
@@ -472,7 +476,7 @@ size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting
 
 char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_starting)
 {
-	cout << "READING CHUNCK" << std::endl;
+	// cout << "READING CHUNCK" << std::endl;
 	int o_read = 0;
 	time(&time_starting);
 
@@ -484,7 +488,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	stringstream sbuffer;
 	
 	o_read = recv(socket, tmp, 1, 0);
-	cout << "tmp[0] : " << "'" << tmp << "'"  << std::endl;
+	// cout << "tmp[0] : " << "'" << tmp << "'"  << std::endl;
 	if (o_read == -1 || o_read == 0)
 		return(NULL);
 	ssize << tmp;
@@ -513,7 +517,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	ss << std::hex << ssize.str();
 	ss >> x;
 	long size = static_cast<string::size_type>(x);
-	cout << "size : " << size << std::endl;
+	// cout << "size : " << size << std::endl;
 	if (size == 0)
 		return (NULL);
 
@@ -531,8 +535,12 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 
 void Settings::writeResponse(Sbuffer &client, int socket)
 {
+	// std::cout << "write_response\n";
+	usleep(1000);
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
+	if (client._response_sent == 1)
+		return ;
 	if (client._header_sent == 0)
 	{
 		send(socket, client._header.c_str(), client._header.size(), 0);
@@ -552,21 +560,22 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 
 void Settings::parseRequest(Sbuffer &client)
 {
+	// std::cout << "parse_request\n";
 	std::fstream fd;
 	client._body_ready = 1;
 	client._request_parsed = 1;
 	if (client._req.parseRequest(client._buffer))
-		client._header = method_not_allowed(client._req);
+		client.status_code = 405;
 	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port))
-		 client._header = this->badRequest(client._req);
+		client.status_code = 400;
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
-		 client._header = this->method_not_allowed(client._req);
+		client.status_code = 405;
 	else if (check_forbidden(*this->config.getFile(client._req.method.path)) && checkextension(*this->config.getFile(client._req.method.path)).empty())
-		client._header=  this->not_found();
+		client.status_code = 404;
 	else if (client._req.method.isGet || client._req.method.isPost  || client._req.method.isDelete)
 		client._body_ready = 0;
 	else 
-		this->badRequest(client._req);
+		client.status_code = 400;
 }
 
 // bool Settings::createResponse(Sbuffer &client, sockaddr_in const& client_addr)
@@ -589,11 +598,11 @@ std::string	Settings::checkextension(std::string const& path)
 		std::map<std::string, std::string>::iterator start = this->ext.begin();
 		std::map<std::string, std::string>::iterator end = this->ext.end();
 		std::string extension = path.substr(pos);
-		cout << "extension : " << extension << std::endl;
+		// cout << "extension : " << extension << std::endl;
 		while(start != end)
 		{
 			if (start->first == extension){
-				cout << "start first : " << start->second << std::endl;
+				// cout << "start first : " << start->second << std::endl;
 				return(start->second);
 			}
 			start++;
@@ -684,7 +693,7 @@ void		Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map
 		{
 			usleep(1000);
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
-			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD);
+			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			std::string rep(this->timeout());
 			send((*start).first, rep.c_str(), rep.size(), 0);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_DELETE);
@@ -868,6 +877,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 	size_t readed = 0;
 	size_t header_readed = 0;
 
+	// std::cout << "READ\n";
 	if (!this->reqIsChuncked(header_buffer) && sbuffer.is_chunked == false && sbuffer._buffer.size() == 0)
 	{
 		header_readed = server.reading_header(ident, sbuffer.readed, sbuffer.time_start, header_buffer);
@@ -875,7 +885,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 		{
 			sbuffer.status_code = 413;
 			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
-			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD);
+			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			// continue;
 		}
 		for (unsigned long j = 0; j < sbuffer.readed; j++)
@@ -893,7 +903,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 		if (chunck_buffer == NULL)
 		{
 			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
-			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD);
+			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			sbuffer._buffer.push_back('\r');
 			sbuffer._buffer.push_back('\n');
 			sbuffer._buffer.push_back('\r');
@@ -913,9 +923,9 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 		std::string::size_type pos = header.find("Content-Length");
 		if (header.size() > 0 && pos == std::string::npos)
 		{
-			cout << "FINISHED" << std::endl;
+			// cout << "FINISHED" << std::endl;
 			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
-			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD);
+			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			// break;
 		}
 		else {
@@ -925,10 +935,12 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 
 			if (req.isFinishedRequest(sbuffer._buffer, sbuffer.readed))
 			{
-				cout << "FINISHED" << std::endl;
+				// cout << "FINISHED" << std::endl;
 				server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
-				server.set_event(ke, ident, EVFILT_WRITE, EV_ADD);
+				server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			}
+			
 		}
 	}
+	sbuffer._request_parsed = 0;
 }
