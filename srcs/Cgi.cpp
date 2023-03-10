@@ -107,6 +107,13 @@ CGI::~CGI()
 		close(_fd_stdin);
 	if (_fd_stdout != 0)
 		close(_fd_stdout);
+	_cgi_process_body_ready = 0;
+	_readed = 0;
+	_fd_stdout = 0;
+	_fd_stdin = 0;
+	_body.clear();
+	_file_stdin = NULL;
+	_file_stdout = NULL;
 }
 
 void CGI::execute_cgi(Config &config, Sbuffer &client, struct sockaddr_in const &client_addr)
@@ -136,8 +143,6 @@ void CGI::handleProcessResponse(Sbuffer &client)
 		int rc = 0;
 		rc = waitpid(client._pid, &rt, WNOHANG);
 		if (rc == 0) {
-		std::cout << "rt : " << rt << std::endl;
-		std::cout << "BODY NOT READ " << std::endl;
 			return ;
 		} else if (rc == client._pid && client._cgi_data._cgi_process_body_ready == false) {
 			if (rt == 1) {

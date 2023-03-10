@@ -116,6 +116,7 @@ void Sbuffer::clean()
 	this->_add_eof = false;
 	this->_cgi_data.~CGI();
 	this->_buffer.clear();
+	this->header_script.clear();
 	this->_pid = 0;
 	this->_status = WAITNG_FOR_REQUEST;
 	this->_total_sent = 0;

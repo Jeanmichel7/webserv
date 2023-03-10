@@ -11,6 +11,7 @@
 int main(int argc, char *argv[], char *envp[])
 {
     char buffer[BUFFER_SIZE];
+    write(2, "NIQUE TA ", strlen("NIQUE TA "));
     write(1, "Content-Type: text/html\r\n\r\n", strlen("Content-Type: text/html\r\n\r\n"));
     int fd = open("http/cgi/cgi.html", O_RDONLY);
     if (fd == -1)
