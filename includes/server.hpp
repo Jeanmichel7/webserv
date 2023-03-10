@@ -44,6 +44,7 @@
 # include <dirent.h>
 
 		enum Status {
+			WAITNG_FOR_REQUEST,
             REQUEST_RECEIVED,
 			REQUEST_PARSED,
 			CGI_PROCESS_LAUNCHED,

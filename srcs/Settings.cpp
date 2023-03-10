@@ -106,6 +106,19 @@ Sbuffer::Sbuffer() : _req(), readed(), time_start(), is_chunked(), status_code(2
 {
 
 }
+void Sbuffer::clean()
+{
+	this->readed = 0;
+	this->time_start = 0;
+	this->is_chunked = false;
+	this->status_code = 200;
+	this->_add_eof = false;
+	this->_cgi_data.~CGI();
+	this->_pid = 0;
+	this->_status = WAITNG_FOR_REQUEST;
+	this->_total_sent = 0;
+}
+
 
 void	Settings::build(int ke)
 {
@@ -272,10 +285,8 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 void	Settings::gestion_413(Sbuffer &client, int socket)
 {
 	// std::cout << "gestion 413\n";
-	usleep(100000);
 	static char tmp_buff[409700];
 	int o_read_p = recv(socket, &tmp_buff, 409700, MSG_DONTWAIT);
-	std::cout << "VALEUR DE O_READ " << o_read_p << std::endl;
 	if (o_read_p < 0)
 	// the error EAGAIN and EWOULDBLOCK appears when we attempt to recv a empty socket with a O_NONBLOCK flag, so it's a normal error
 	if (o_read_p == 0 || (o_read_p < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))) {

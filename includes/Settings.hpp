@@ -19,6 +19,7 @@
 
 struct Sbuffer {
 	Sbuffer();
+	void clean();
 	Request				_req; 
 	unsigned int 		readed;
 	time_t 				time_start;

@@ -64,17 +64,17 @@ int main(int argc, char **argv)
 						server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 						clients.erase(event[i].ident);
 						sbuffer.erase(event[i].ident);
+						std::cout << event[i].ident << ": Close fd" << std::endl;
 						close(event[i].ident);
-						std::cout << "CLOSE\n";
 					}
 					else
 					{
 						if (clients.find(event[i].ident) == clients.end())
 						{
-							std::cout << "\nACCEPT\n";
 							struct sockaddr_in client_addr;
 							socklen_t client_addr_len = sizeof(client_addr);
 							int socket_client = accept(event[i].ident, (struct sockaddr *)&client_addr, &client_addr_len);
+							std::cout << socket_client << ": Accept Connexion " << std::endl;
 							// int r = 1;
 							// if (setsockopt(socket_client, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0)
 							// 	std::cout << "nope\n";
@@ -83,7 +83,10 @@ int main(int argc, char **argv)
 							fcntl(socket_client, F_SETFL, O_NONBLOCK);
 						}
 						else if (event[i].filter == EVFILT_READ)
+						{
+							std::cout << event[i].ident << ": reading request " << std::endl;
 							server.reading_request(sbuffer[event[i].ident], server, ke, event[i].ident, req);
+						}
 						else if (event[i].filter == EVFILT_WRITE)
 						{
 								if (sbuffer[event[i].ident].status_code == 413)
@@ -114,8 +117,8 @@ int main(int argc, char **argv)
 								if (sbuffer[event[i].ident]._add_eof && sbuffer[event[i].ident]._status == BODY_SENT)
 								{
 									std::cout << event[i].ident << ": close FD" << std::endl;
-									sbuffer.erase(event[i].ident);
-									std::cout << "CLOSE DE FD\n";
+									sbuffer[event[i].ident].clean();
+									//sbuffer.erase(event[i].ident);
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									clients.erase(event[i].ident);
 									close(event[i].ident);
@@ -123,11 +126,12 @@ int main(int argc, char **argv)
 								}
 								else if (sbuffer[event[i].ident]._status == BODY_SENT)
 								{
-									std::cout << event[i].ident << ": clear sbuffer" << std::endl;
+									std::cout << event[i].ident << ": clear client, keep fd opend" << std::endl;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
-									std::memset(&sbuffer[event[i].ident], 0, sizeof(sbuffer[event[i].ident]));
-									sbuffer.erase(event[i].ident);
+									//std::memset(&sbuffer[event[i].ident], 0, sizeof(sbuffer[event[i].ident]));
+									sbuffer[event[i].ident].clean();
+									//sbuffer.erase(event[i].ident);
 								}
 							}
 						}
