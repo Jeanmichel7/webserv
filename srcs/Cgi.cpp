@@ -136,6 +136,8 @@ void CGI::handleProcessResponse(Sbuffer &client)
 		int rc = 0;
 		rc = waitpid(client._pid, &rt, WNOHANG);
 		if (rc == 0) {
+		std::cout << "rt : " << rt << std::endl;
+		std::cout << "BODY NOT READ " << std::endl;
 			return ;
 		} else if (rc == client._pid && client._cgi_data._cgi_process_body_ready == false) {
 			if (rt == 1) {

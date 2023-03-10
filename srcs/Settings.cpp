@@ -108,12 +108,14 @@ Sbuffer::Sbuffer() : _req(), readed(), time_start(), is_chunked(), status_code(2
 }
 void Sbuffer::clean()
 {
+	this->_req.reset();
 	this->readed = 0;
 	this->time_start = 0;
 	this->is_chunked = false;
 	this->status_code = 200;
 	this->_add_eof = false;
 	this->_cgi_data.~CGI();
+	this->_buffer.clear();
 	this->_pid = 0;
 	this->_status = WAITNG_FOR_REQUEST;
 	this->_total_sent = 0;
@@ -234,6 +236,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 			client.status_code = 204;
 		else if (strcmp(client.header_script.c_str(), "Status: 500") == 0)
 			client.status_code = 500;
+		std::cout << "BODY SIZE " << client._buffer.size() << std::endl;
 	}
 	else if (client.status_code == 200)
 	{
@@ -286,11 +289,12 @@ void	Settings::gestion_413(Sbuffer &client, int socket)
 {
 	// std::cout << "gestion 413\n";
 	static char tmp_buff[409700];
+	client._add_eof = 1;
 	int o_read_p = recv(socket, &tmp_buff, 409700, MSG_DONTWAIT);
 	if (o_read_p < 0)
 	// the error EAGAIN and EWOULDBLOCK appears when we attempt to recv a empty socket with a O_NONBLOCK flag, so it's a normal error
 	if (o_read_p == 0 || (o_read_p < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))) {
-		client._status = REQUEST_PARSED;
+		client._status = REQUEST_RECEIVED;
 }
 	if (o_read_p < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
 		std::cerr << "Erreur : " << strerror(errno) << std::endl;
@@ -593,16 +597,24 @@ void Settings::parseRequest(Sbuffer &client)
 		client.status_code = 405;
 	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port))
 		client.status_code = 400;
+	else if (client.status_code == 413)
+	{
+		return; 
+	}
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
 		client.status_code = 405;
 	else if (check_forbidden(*this->config.getFile(client._req.method.path)) && checkextension(*this->config.getFile(client._req.method.path)).empty())
 		client.status_code = 404;
 	else if (client._req.method.isGet || client._req.method.isPost  || client._req.method.isDelete)
 	{
+		if (!client._req.header.connection)
+			client._add_eof = 1;
 		return ;
 	}
 	else 
 		client.status_code = 400;
+	if (!client._req.header.connection)
+		client._add_eof = 1;
 	client._status = BODY_GENERATED;
 }
 

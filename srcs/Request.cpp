@@ -990,7 +990,6 @@ bool Request::parseRequest(std::vector<char> &req) {
 		std::vector<char>::const_iterator end = req.begin() + header_size;
 	req.erase(req.begin(), end);
 	this->body.vector_body = &req;
-
 	if (splitRequest(header_str) || method.parseMethod() || header.parseHeader()) {
 		return 1;
 	}
@@ -1110,7 +1109,6 @@ bool Request::check_header_buffer(string buffer, Config & config) {
 
 bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet_read) {
 
-	cout << "IS FINISH REQUEST" << std::endl;
 	size_t header_size = 0;
 	char sep[4] = {'\r', '\n', '\r', '\n'}; 
 	for (size_t i = 0; i < octet_read - 3; i++) {

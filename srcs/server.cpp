@@ -6,7 +6,7 @@
 /*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/10 02:56:04 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/10 15:03:53 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,10 +91,10 @@ int main(int argc, char **argv)
 						{
 								if (sbuffer[event[i].ident].status_code == 413)
 								{
-									std::cout << event[i].ident << ": 413" << std::endl;
+										std::cout << event[i].ident << ": 413" << std::endl;
 									server.gestion_413(sbuffer[event[i].ident], event[i].ident);
 								}
-								if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED && sbuffer[event[i].ident].status_code != 413)
+								if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
 								{
 									std::cout << event[i].ident << ": parse request " << std::endl;
 									server.parseRequest(sbuffer[event[i].ident]);
