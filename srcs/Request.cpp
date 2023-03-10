@@ -976,6 +976,10 @@ bool Request::splitRequest(string req) {
 
 bool Request::parseRequest(std::vector<char> &req) {
 	size_t header_size = 0;
+	if (req.size() < 4) {
+		cerr << "Error : request is empty" << std::endl;
+		return 1;
+	}
 	char sep[4] = {'\r', '\n', '\r', '\n'}; 
 	for (size_t i = 0; i < req.size() - 3; i++) {
 		if (req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
