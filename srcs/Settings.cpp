@@ -952,8 +952,15 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 		}
 		else
 		{
+			cout << "sbuffer.read : " << sbuffer.readed << endl;
 			for (unsigned long j = 0; j < sbuffer.readed; j++)
 				sbuffer._buffer.push_back(chunck_buffer[j]);
+			
+			std::vector<char>::iterator it = sbuffer._buffer.begin();
+			for(; it != sbuffer._buffer.end(); it++)
+				std::cout << *it;
+			cout << "\n\n";
+
 		}
 	}
 	else
