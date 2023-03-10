@@ -590,7 +590,6 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 
 void Settings::parseRequest(Sbuffer &client)
 {
-	// std::cout << "parse_request\n";
 	std::fstream fd;
 	client._status = REQUEST_PARSED;
 	if (client._req.parseRequest(client._buffer))
@@ -605,7 +604,7 @@ void Settings::parseRequest(Sbuffer &client)
 		client.status_code = 405;
 	else if (check_forbidden(*this->config.getFile(client._req.method.path)) && checkextension(*this->config.getFile(client._req.method.path)).empty())
 		client.status_code = 404;
-	else if (client._req.method.isGet || client._req.method.isPost  || client._req.method.isDelete)
+	else if (client._req.method.isGet || client._req.method.isPost || client._req.method.isDelete)
 	{
 		if (!client._req.header.connection)
 			client._add_eof = 1;
@@ -615,7 +614,7 @@ void Settings::parseRequest(Sbuffer &client)
 		client.status_code = 400;
 	if (!client._req.header.connection)
 		client._add_eof = 1;
-	client._status = BODY_GENERATED;
+	client._status = REQUEST_PARSED;
 }
 
 // bool Settings::createResponse(Sbuffer &client, sockaddr_in const& client_addr)
@@ -668,7 +667,8 @@ void Settings::folder_gestion(Sbuffer &client)
 				buffer << "<li>" + std::string(entry->d_name) << "</li>\n";
 		buffer << "</ul></body></html>\r\n";
 		closedir(dir);
-		const char *start = buffer.str().c_str(); 
+		string strbuffer = buffer.str();
+		const char *start = strbuffer.c_str();
 		client._buffer.insert(client._buffer.begin(), start, start + buffer.str().size());
 	}
 	else
