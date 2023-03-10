@@ -606,6 +606,8 @@ void Settings::parseRequest(Sbuffer &client)
 		client.status_code = 404;
 	else if (client._req.method.isGet || client._req.method.isPost || client._req.method.isDelete)
 	{
+		if (client._req.method.isDelete)
+			this->del(client);
 		if (!client._req.header.connection)
 			client._add_eof = 1;
 		return ;
