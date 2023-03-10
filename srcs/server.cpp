@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/10 15:03:53 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/10 16:17:46 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 								}
 								if (sbuffer[event[i].ident]._status == REQUEST_PARSED || sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
 								{
-									std::cout << event[i].ident << ": Generate body " << std::endl;
+									// std::cout << event[i].ident << ": Generate body " << std::endl;
 									server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
 								}
 								if (sbuffer[event[i].ident]._status == BODY_GENERATED)

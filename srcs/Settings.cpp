@@ -926,7 +926,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 			sbuffer.status_code = 413;
 			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
 			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-			// continue;
+			return;
 		}
 		for (unsigned long j = 0; j < sbuffer.readed; j++)
 			sbuffer._buffer.push_back(header_buffer[j]);
@@ -957,6 +957,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 				sbuffer._buffer.push_back(chunck_buffer[j]);
 			
 			std::vector<char>::iterator it = sbuffer._buffer.begin();
+			cout << "the buffer : \n";
 			for(; it != sbuffer._buffer.end(); it++)
 				std::cout << *it;
 			cout << "\n\n";

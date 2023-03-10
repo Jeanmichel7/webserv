@@ -26,8 +26,8 @@ int main(int argc, char *argv[], char *envp[])
         write(STDOUT_FILENO, buffer, bytes_read);
     }
     close(fd);
-    printf("<h1 class = \"cgi\" >CGI STDIN </h1>\n");
-    printf("<p class = \"cgi\" >\n");
+    write(1, "<h1 class = \"cgi\" >CGI STDIN </h1>\n", strlen("<h1 class = \"cgi\" >CGI STDIN </h1>\n"));
+    write(1, "<p class = \"cgi\" >\n", strlen("<p class = \"cgi\" >\n"));
     int c;
     unsigned int i = 0;
     while (1) {
@@ -37,23 +37,23 @@ int main(int argc, char *argv[], char *envp[])
         //  write(2, &c, 1);        
         if (c == '\n')
         {
-            printf("<br>\n"); // utilise la balise HTML pour les nouvelles lignes
+            write(1, "<br>\n", strlen("<br>\n")); // utilise la balise HTML pour les nouvelles lignes
         }
         else if (c == '<')
         {
-            printf("&lt;"); // utilise la référence HTML pour le caractère '<'
+            write(1, "&lt;", strlen("&lt;")); // utilise la référence HTML pour le caractère '<'
         }
         else if (c == '>')
         {
-            printf("&gt;"); // utilise la référence HTML pour le caractère '>'
+            write(1, "&gt;", strlen("&gt;")); // utilise la référence HTML pour le caractère '>'
         }
         else if (c == '&')
         {
-            printf("&amp;"); // utilise la référence HTML pour le caractère '&'
+            write(1, "&amp;", strlen("&amp;")); // utilise la référence HTML pour le caractère '&'
         }
         else if (c == '\0')
         {
-            printf("&#0;");
+            write(1 ,"&#0;", strlen("&#0;"));
         }
         else
         {
