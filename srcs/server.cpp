@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/20 18:58:10 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/20 20:01:22 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,6 +112,7 @@ int main(int argc, char **argv)
 								{
 									std::cout << event[i].ident << ": writeResponse" << std::endl;
 									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
+									server.check_timeout(sbuffer, ke, clients);
 								}
 								if (sbuffer[event[i].ident]._add_eof && sbuffer[event[i].ident]._status == BODY_SENT)
 								{
