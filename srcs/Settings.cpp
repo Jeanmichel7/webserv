@@ -288,8 +288,9 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 void	Settings::gestion_413(Sbuffer &client, int socket)
 {
 	// std::cout << "gestion 413\n";
-	static char tmp_buff[409700];
+	char tmp_buff[409700];
 	client._add_eof = 1;
+	usleep(100000);
 	int o_read_p = recv(socket, &tmp_buff, 409700, MSG_DONTWAIT);
 	if (o_read_p < 0)
 	// the error EAGAIN and EWOULDBLOCK appears when we attempt to recv a empty socket with a O_NONBLOCK flag, so it's a normal error
@@ -566,7 +567,6 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 void Settings::writeResponse(Sbuffer &client, int socket)
 {
 	// std::cout << "write_response\n";
-	usleep(1000);
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
 	if (client._status == BODY_SENT)
@@ -592,14 +592,15 @@ void Settings::parseRequest(Sbuffer &client)
 {
 	std::fstream fd;
 	client._status = REQUEST_PARSED;
-	if (client._req.parseRequest(client._buffer))
+	if (client.status_code == 413)
+	{
+		client._status = REQUEST_PARSED;
+		return; 
+	}
+	else if (client._req.parseRequest(client._buffer))
 		client.status_code = 405;
 	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port))
 		client.status_code = 400;
-	else if (client.status_code == 413)
-	{
-		return; 
-	}
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
 		client.status_code = 405;
 	else if (check_forbidden(*this->config.getFile(client._req.method.path)) && checkextension(*this->config.getFile(client._req.method.path)).empty())

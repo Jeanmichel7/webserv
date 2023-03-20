@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/10 17:26:22 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/20 17:14:47 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,6 @@ int main(int argc, char **argv)
 				for (int i = 0; i < nevents; i++)
 				{
 					std::string reponse_request;
-
 					if (event[i].flags & EV_EOF || event[i].flags & EV_ERROR)
 					{
 						server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
