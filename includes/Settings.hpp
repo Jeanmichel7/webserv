@@ -23,6 +23,7 @@ struct Sbuffer {
 	Request				_req; 
 	unsigned int 		readed;
 	time_t 				time_start;
+	time_t				purge_last_time;
 
 	bool 				is_chunked;
 	int					status_code;

@@ -102,7 +102,7 @@ Settings::~Settings()
 {
 }
 
-Sbuffer::Sbuffer() : _req(), readed(), time_start(), is_chunked(), status_code(200), _add_eof(),_cgi_data(), _pid(),_status(), _total_sent()
+Sbuffer::Sbuffer() : _req(), readed(), time_start(), purge_last_time(), is_chunked(), status_code(200), _add_eof(),_cgi_data(), _pid(),_status(), _total_sent()
 {
 
 }
@@ -111,6 +111,7 @@ void Sbuffer::clean()
 	this->_req.reset();
 	this->readed = 0;
 	this->time_start = 0;
+	this->purge_last_time = 0;
 	this->is_chunked = false;
 	this->status_code = 200;
 	this->_add_eof = false;
@@ -216,7 +217,9 @@ std::string Settings::handleCookie(Sbuffer &client) {
 		sessions_date[client._req.header.cookies.at("wsid")] = this->date();
 		
 		sessions_count[client._req.header.cookies.at("wsid")]++;
-		client._body_cookie += sessions_count[client._req.header.cookies.at("wsid")];
+		std::stringstream stoi;
+		stoi << sessions_count[client._req.header.cookies.at("wsid")];
+		client._body_cookie += stoi.str();
 		client._body_cookie += "\n";
 	}
 	return (header_cookie);
@@ -288,15 +291,26 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 void	Settings::gestion_413(Sbuffer &client, int socket)
 {
 	// std::cout << "gestion 413\n";
-	char tmp_buff[409700];
+	char tmp_buff[32668];
 	client._add_eof = 1;
-	usleep(100000);
-	int o_read_p = recv(socket, &tmp_buff, 409700, MSG_DONTWAIT);
-	if (o_read_p < 0)
+	time_t actual_time;
+	time(&actual_time);
+	int o_read_p = 0;
+	if (difftime(actual_time, client.purge_last_time) > 1)
+	{
+		o_read_p = recv(socket, &tmp_buff, 32668, MSG_DONTWAIT);
+		if (o_read_p == 0   || (o_read_p < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))) 
+		{
+			client._status = REQUEST_RECEIVED;
+			return ;
+		}
+	}
+	o_read_p = recv(socket, &tmp_buff, 32668, MSG_DONTWAIT);
+	if (o_read_p > 0)
+	{
+		time(&client.purge_last_time);
+	}
 	// the error EAGAIN and EWOULDBLOCK appears when we attempt to recv a empty socket with a O_NONBLOCK flag, so it's a normal error
-	if (o_read_p == 0 || (o_read_p < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))) {
-		client._status = REQUEST_RECEIVED;
-}
 	if (o_read_p < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
 		std::cerr << "Erreur : " << strerror(errno) << std::endl;
 }
@@ -593,7 +607,7 @@ void		Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map
 	{
 		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2)
 		{
-			usleep(1000);
+			usleep(1);
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			std::string rep(this->timeout());
