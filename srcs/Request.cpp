@@ -999,7 +999,7 @@ bool Request::parseRequest(std::vector<char> &req) {
 	}
 	this->body.is_chuncked = this->header.is_chuncked;
 	this->body.boundary = this->header.boundary;
-	this->printRequest();
+	//this->printRequest();
 	return 0;
 }
 

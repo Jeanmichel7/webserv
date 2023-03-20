@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/20 17:14:47 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/20 17:58:23 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,27 +90,27 @@ int main(int argc, char **argv)
 						{
 								if (sbuffer[event[i].ident].status_code == 413)
 								{
-										std::cout << event[i].ident << ": 413" << std::endl;
+									//std::cout << event[i].ident << ": 413" << std::endl;
 									server.gestion_413(sbuffer[event[i].ident], event[i].ident);
 								}
 								if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
 								{
-									std::cout << event[i].ident << ": parse request " << std::endl;
+									//std::cout << event[i].ident << ": parse request " << std::endl;
 									server.parseRequest(sbuffer[event[i].ident]);
 								}
 								if (sbuffer[event[i].ident]._status == REQUEST_PARSED || sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
 								{
-									std::cout << event[i].ident << ": Generate body " << std::endl;
+									//std::cout << event[i].ident << ": Generate body " << std::endl;
 									server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
 								}
 								if (sbuffer[event[i].ident]._status == BODY_GENERATED)
 								{
-									std::cout << event[i].ident << ": Generate Header " << std::endl;
+									//std::cout << event[i].ident << ": Generate Header " << std::endl;
 									server.generate_header(sbuffer[event[i].ident]);
 								}
 								if (sbuffer[event[i].ident]._status == HEADER_GENERATED || sbuffer[event[i].ident]._status == HEADER_SENT)
 								{
-									std::cout << event[i].ident << ": writeResponse" << std::endl;
+									//std::cout << event[i].ident << ": writeResponse" << std::endl;
 									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
 								}
 								if (sbuffer[event[i].ident]._add_eof && sbuffer[event[i].ident]._status == BODY_SENT)
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 								}
 								else if (sbuffer[event[i].ident]._status == BODY_SENT)
 								{
-									std::cout << event[i].ident << ": clear client, keep fd opend" << std::endl;
+									std::cout << event[i].ident << ": clear client, keep fd open" << std::endl;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
 									//std::memset(&sbuffer[event[i].ident], 0, sizeof(sbuffer[event[i].ident]));

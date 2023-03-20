@@ -302,141 +302,6 @@ void	Settings::gestion_413(Sbuffer &client, int socket)
 }
 }
 
-// std::string Settings::get(Request const &req, struct sockaddr_in const& client_addr)
-// {
-
-// 	std::string header_script;
-// 	std::stringstream	n;
-// 	std::fstream		fd;
-// 	std::string			tmp;
-// 	std::string buffer;
-// 	bool cgi_executed = false;
-
-// 	if (!this->config.getMethod(req.method.path).isget)
-// 	{
-// 			this->method_not_allowed(req);
-// 			return;
-// 	}
-// 	if (this->config.getFile(req.method.path)->empty())
-// 	{
-// 		_header.append(" 404 Not Found\n");
-// 		fd.open(this->config.getError(404)->c_str());
-// 		if (!fd.is_open())
-// 			fd.open("http/404.html");
-// 	}
-// 	else
-// 	{
-// 		if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
-// 		{
-
-// 			_header.append("200 OK\n");
-// 			_body = CGI::execute_cgi(this->config, req, client_addr);
-// 			yd::extractHeader(header_script, _body);
-// 			cgi_executed = true;
-// 		}
-// 		else
-// 		{
-// 			char *file = (char *)this->config.getFile(req.method.path)->c_str();
-// 			if(file[0] == '/')
-// 				file++;
-// 			fd.open(file, std::fstream::in | std::fstream::out);
-// 			if (fd.is_open())
-// 			{
-// 				_header.append("200 OK\n");
-// 			}
-// 			else if (!this->checkextension(req.method.path).empty())
-// 			{
-// 				_header.append("404 Not Found\n");
-// 				fd.open("http/404.html");
-// 			}
-// 			else if (!this->config.getDirectoryListing(req.method.path).empty())
-// 			{
-// 				folder_gestion(req);
-// 				return;
-// 			}
-// 			while (getline(fd, tmp))
-// 				buffer += tmp + "\n";
-// 		}
-// 	}
-// 	_header += Settings::date();
-// 	_header += "server: " + *this->config.getName() + "\n";
-// 	std::string date = "";
-// 	int count = 0;
-// 	_header += handleCookie(req, date, count);
-// 	n <<  _body.size() + buffer.size() + date.size() + std::to_string(count).size() + 17;
-// 	if (!cgi_executed)
-// 		_header += "Content-Length: " + n.str() + "\n";
-// 	size_t pos = 0;
-// 	if ((pos = header_script.find("Content-Type")) == std::string::npos)
-// 		_header += "Content-Type: " + this->checkextension(*this->config.getFile(req.method.path)) + "\n" ;
-// 	_header += "Connection: keep-alive";
-// 	if (header_script.size() > 0)
-// 		_header += '\n' + header_script;
-// 	else
-// 		_header += "\r\n\r\n";
-// 	_header += buffer;
-// 	_cookie += "nb de refres : " + std::to_string(count) + ", ";
-// 	if (date.size() > 0)
-// 		_cookie += date;
-// 	if (_body.size() == 0)
-// 		_header += "\n";
-// 	if (header_script.find("Content-Length") == std::string::npos)
-// 		_add_eof = 1;
-// 	fd.close();
-// }
-
-// void Settings::post(Request const &req, struct sockaddr_in const& client_addr)
-// {
-// 	std::stringstream header;
-// 	std::string header_script;
-// 	std::fstream fd;
-
-// 	header << "HTTP/1.1 ";
-// 	if (!this->config.getMethod(req.method.path).ispost)
-// 	{
-// 		this->method_not_allowed(req);
-// 		return ;
-// 	}
-// 	fd.open(this->config.getFile(req.method.path)->c_str(), std::fstream::in);
-// 	if (this->config.getCgi(req.method.path, yd::getExtension(req.method.path)) != NULL)
-// 	{
-// 		_body = CGI::execute_cgi(this->config, req, client_addr);
-// 		yd::extractHeader(header_script, _body);
-// 	}
-// 	else if (!fd.is_open())
-// 	{
-// 		fd.open(this->config.getError(404)->c_str(), O_RDONLY);
-// 		if (!fd.is_open())
-// 			fd.open("http/404.html", O_RDONLY);
-// 		header << "404 Not Found\n";
-// 	}
-// 	if (_body.size() == 0)
-// 		header << "204 No Content\n";
-// 	else if (strcmp(header_script.c_str(), "Status: 500") == 0)
-// 		header << "500 Internal Server Error\n";
-// 	else
-// 		header << "200 OK " << "\n";
-// 	header << Settings::date();
-// 	header << "server: " << *this->config.getName() << "\n";
-// 	header << "Content-Length: " << _body.size() << "\n";
-// 	std::string::size_type pos = 0;
-// 	if ((pos = header_script.find("Content-Type")) == std::string::npos)
-// 		header << "Content-Type: " << this->checkextension(*this->config.getFile(req.method.path)) << "\n" ;
-// 	header << "Connection: keep-alive";
-// 	std::cout << "VALEUR HEADER SCRIPT : " << header_script << std::endl;
-// 	if (header_script.size() > 0)
-// 		header << '\n' << header_script;
-// 	else
-// 		header << "\r\n\r\n";
-// 	this->_header = header.str();
-// 	// std::cout << rvalue_script << std::endl;
-// 	pos = 0;
-// 	if ((pos = header_script.find("Content-Lenght")) == std::string::npos)
-// 		_add_eof = 1;
-// 	fd.close();
-// }
-
-
 void Settings::del(Sbuffer &client)
 {
 	if (!this->config.getMethod(client._req.method.path).isdelete)
@@ -485,7 +350,6 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 		if (o_read == -1 || o_read == 0)
 			break;
 		sbuffer << tmp;
-		// std::cout << tmp;
 	}
 	strcpy(buff, sbuffer.str().c_str());
 	return(o_read) ;
@@ -493,7 +357,6 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 
 size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting, char *buff)
 {
-	// cout << "READING" << std::endl;
 	size_t	o_read = 0;
 	time(&time_starting);
 	std::memset(buff, 0, 4097);
@@ -507,7 +370,6 @@ size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting
 
 char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_starting)
 {
-	// cout << "READING CHUNCK" << std::endl;
 	int o_read = 0;
 	time(&time_starting);
 
@@ -519,12 +381,10 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	stringstream sbuffer;
 	
 	o_read = recv(socket, tmp, 1, 0);
-	// cout << "tmp[0] : " << "'" << tmp << "'"  << std::endl;
 	if (o_read == -1 || o_read == 0)
 		return(NULL);
 	ssize << tmp;
 
-	// purge
 	if (tmp[0] == '\r')
 	{
 		o_read = recv(socket, tmp, 1, 0);
@@ -548,7 +408,6 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	ss << std::hex << ssize.str();
 	ss >> x;
 	long size = static_cast<string::size_type>(x);
-	// cout << "size : " << size << std::endl;
 	if (size == 0)
 		return (NULL);
 
@@ -566,7 +425,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 
 void Settings::writeResponse(Sbuffer &client, int socket)
 {
-	// std::cout << "write_response\n";
+	usleep(1000);
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
 	if (client._status == BODY_SENT)
