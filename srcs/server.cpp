@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/20 20:01:22 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/21 11:28:43 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
 									server.check_timeout(sbuffer, ke, clients);
 								}
-								if (sbuffer[event[i].ident]._add_eof && sbuffer[event[i].ident]._status == BODY_SENT)
+								if ((sbuffer[event[i].ident]._add_eof && sbuffer[event[i].ident]._status == BODY_SENT) || (sbuffer[event[i].ident]._status == SOCKET_ERROR))
 								{
 									std::cout << event[i].ident << ": close FD" << std::endl;
 									sbuffer[event[i].ident].clean();
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 								}
 								else if (sbuffer[event[i].ident]._status == BODY_SENT)
 								{
-									std::cout << event[i].ident << ": clear client, keep fd open" << std::endl;
+									std::cout << event[i].ident << ": clear client, keep connexion open" << std::endl;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
 									//std::memset(&sbuffer[event[i].ident], 0, sizeof(sbuffer[event[i].ident]));

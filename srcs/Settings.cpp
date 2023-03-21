@@ -299,7 +299,7 @@ void	Settings::gestion_413(Sbuffer &client, int socket)
 	if (difftime(actual_time, client.purge_last_time) > 1)
 	{
 		o_read_p = recv(socket, &tmp_buff, 32668, MSG_DONTWAIT);
-		if (o_read_p == 0   || (o_read_p < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))) 
+		if (o_read_p == 0   || (o_read_p < 0)) // && (errno == EAGAIN || errno == EWOULDBLOCK))) 
 		{
 			client._status = REQUEST_RECEIVED;
 			return ;
@@ -311,9 +311,9 @@ void	Settings::gestion_413(Sbuffer &client, int socket)
 		time(&client.purge_last_time);
 	}
 	// the error EAGAIN and EWOULDBLOCK appears when we attempt to recv a empty socket with a O_NONBLOCK flag, so it's a normal error
-	if (o_read_p < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+	/*if (o_read_p < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
 		std::cerr << "Erreur : " << strerror(errno) << std::endl;
-}
+}*/
 }
 
 void Settings::del(Sbuffer &client)
@@ -446,17 +446,34 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 		return ;
 	if (client._status == HEADER_GENERATED)
 	{
-		send(socket, client._header.c_str(), client._header.size(), 0);
+
+		if (!send(socket, client._header.c_str(), client._header.size(), 0))
+		{
+			client.status_code = SOCKET_ERROR;
+			std::cout << socket << ": " << "Error socket when attempt to send header" << std::endl;
+		}
 		client._status = HEADER_SENT;
 	}
 	if (client._total_sent < size_data) 
 	{
 		int sent = send(socket, &*start + client._total_sent, size_data - client._total_sent, 0);
 		client._total_sent += sent; 
-    }
+		if (!sent)
+		{
+			client.status_code = SOCKET_ERROR; 
+			std::cout << socket << ": " << "Error socket when attempt to send body" << std::endl;
+		}
+  }
 	if (client._total_sent == size_data)
 	{
-		send(socket, client._body_cookie.c_str(), client._body_cookie.size(), 0);
+		if (client._body_cookie.size() > 0)
+		{
+			if (!send(socket, client._body_cookie.c_str(), client._body_cookie.size(), 0))
+			{
+				client.status_code = SOCKET_ERROR;
+				std::cout << socket << ": " << "Error socket when attempt to send cookie" << std::endl;
+			}
+		}
 		client._status = BODY_SENT;
 	}
 }

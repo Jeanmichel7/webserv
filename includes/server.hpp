@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/03/07 10:14:56 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/03/21 11:16:55 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,13 +45,14 @@
 
 		enum Status {
 			WAITNG_FOR_REQUEST,
-            REQUEST_RECEIVED,
+      REQUEST_RECEIVED,
 			REQUEST_PARSED,
 			CGI_PROCESS_LAUNCHED,
 			BODY_GENERATED,
 			HEADER_GENERATED,
 			HEADER_SENT,
-			BODY_SENT
+			BODY_SENT,
+			SOCKET_ERROR,
 		};	
 
 # include "Request.hpp"
