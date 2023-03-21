@@ -21,7 +21,7 @@ int main(int argc, char *argv[], char *envp[])
     }
 
     int bytes_read = 0; 
-    while ((bytes_read = read(fd, buffer, BUFFER_SIZE)) > 0)
+    while ((bytes_read = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
     {
         write(STDOUT_FILENO, buffer, bytes_read);
     }

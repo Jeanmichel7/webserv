@@ -439,7 +439,7 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 
 void Settings::writeResponse(Sbuffer &client, int socket)
 {
-	usleep(1000);
+	yd::usleep(2000);
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
 	if (client._status == BODY_SENT)
