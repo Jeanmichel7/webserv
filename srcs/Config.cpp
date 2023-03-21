@@ -215,17 +215,16 @@
 	std::string Config::getDirectoryListing(const std::string &path) const
 	{
 		const Location *loc = getLocation(path);
-		if (loc == NULL)
+		if (loc == NULL || loc->_directory_listing == 0)
 			return ("");
-		else
-			return (loc->_root);
+		return (loc->_root);
 	}
 
 	unsigned int Config::getServNumb() const
 	{
 		return (_server.size());
 	}
-
+	
 	void Config::selectFirstServ()
 	{
 		_server_selected = &_server[0];
