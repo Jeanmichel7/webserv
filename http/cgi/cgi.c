@@ -5,8 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #define BUFFER_SIZE 16384
+
 
 int main(int argc, char *argv[], char *envp[])
 {
@@ -21,7 +24,7 @@ int main(int argc, char *argv[], char *envp[])
     }
 
     int bytes_read = 0; 
-    while ((bytes_read = recv(fd, buffer, BUFFER_SIZE, 0)) > 0)
+    while ((bytes_read = read(fd, buffer, BUFFER_SIZE)) > 0)
     {
         write(STDOUT_FILENO, buffer, bytes_read);
     }
@@ -59,11 +62,8 @@ int main(int argc, char *argv[], char *envp[])
         {
             putchar(c);
         }
-        if (i % 100000 == 0)
-            fprintf(stderr, "%d\n", i);
         i++;
     }
-    write(2, "Nombre de caractères lus sur la STDIN : FIIIIIIIIIN \n", strlen("Nombre de caractères lus sur la STDIN : FIIIIIIIIIN \n"));
     printf("\nCARACTERE LU SUR LA STDIN : %d\n", i);
     printf("\n");
     printf("</p>\n");

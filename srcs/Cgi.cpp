@@ -71,16 +71,34 @@ void CGI::build(Config &conf, const Request &req, struct sockaddr_in const &clie
 	_fd_stdin = fileno(_file_stdin);
 	_fd_stdout = fileno(_file_stdout);
 
-	size_t length = conf.getFile(req.method.path)->length();
-	this->_arg = new char *[2];
+	string ext = yd::getExtension(req.method.path);
+	if (ext == "")
+		throw std::exception();
+	std::string const *cgi_path_str = conf.getCgi(req.method.path, ext);
+	if (cgi_path_str == NULL)
+		throw std::exception();
+
+	this->_arg = new char *[3];
 	if (this->_arg == NULL)
 		throw std::exception();
+
+	size_t length = 0; 
+
+	length = cgi_path_str->length();
 	this->_arg[0] = new char[length + 1];
 	if (this->_arg[0] == NULL)
 		throw std::exception();
 	this->_arg[0][length] = 0;
-	conf.getFile(req.method.path)->copy(_arg[0], length);
-	this->_arg[1] = NULL;
+	cgi_path_str->copy(_arg[0], length);
+	
+	length = conf.getFile(req.method.path)->length();
+	this->_arg[1] = new char[length + 1];
+	if (this->_arg[1] == NULL)
+		throw std::exception();
+	this->_arg[1][length] = 0;
+	conf.getFile(req.method.path)->copy(_arg[1], length);
+
+	this->_arg[2] = NULL;
 }
 
 CGI::~CGI()
@@ -96,6 +114,8 @@ CGI::~CGI()
 	{
 		if (_arg[0] != NULL)
 			delete _arg[0];
+		if (_arg[1] != NULL)
+			delete _arg[1];
 		delete[] _arg;
 		_arg = NULL;
 	}
@@ -184,16 +204,12 @@ std::vector<char> CGI::launchProcess(Sbuffer &client,  Config &config, struct so
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
 	write(client._cgi_data._fd_stdin, &*start, size_data);
+	//write(1, &*start, 1000);
+	//exit(0);
 	client._buffer.clear();
 	fseek(client._cgi_data._file_stdin, 0, SEEK_SET);
 
-	string ext = yd::getExtension(client._req.method.path);
-	if (ext == "")
-		return (error_404());
-	std::string const *cgi_path_str = config.getCgi(client._req.method.path, ext);
-	if (cgi_path_str == NULL)
-		return (error_404());
-	const char *cgi_path = cgi_path_str->c_str();
+
 	pid_t pid = fork(); 
 	if (pid == -1)
 		return (error_500());
@@ -201,7 +217,7 @@ std::vector<char> CGI::launchProcess(Sbuffer &client,  Config &config, struct so
 	{
 		dup2(client._cgi_data._fd_stdin, 0);
 		dup2(client._cgi_data._fd_stdout, 1);
-		execve(cgi_path, client._cgi_data._arg, client._cgi_data._env);
+		execve(client._cgi_data._arg[0], client._cgi_data._arg, client._cgi_data._env);
 		std::cerr << "\e[0;31mWebServ$> "
 				  << "Execve has crashed "
 				  << "\e[0m" << std::endl;

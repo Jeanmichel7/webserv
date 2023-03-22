@@ -1143,9 +1143,6 @@ bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet
 		string::size_type cl_end = header.find("\r\n", cl_pos);
 		string content_length = header.substr(cl_pos + 16, cl_end - cl_pos - 16);
 		int cl = atoi(content_length.c_str());
-		cout << "content length : " << cl << std::endl;
-		cout << "total read : " << octet_read << std::endl;
-		cout << "header length : " <<  header.size() << std::endl;
 		if (cl == 0)
 			return 1;
 		else if (octet_read - header.length() - 4 == (unsigned int)cl)

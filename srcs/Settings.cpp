@@ -189,7 +189,7 @@ void Settings::generate_header(Sbuffer &client)
 	if (client.header_script.find("Content-Length") == std::string::npos && client._pid  != 0)
  		client._add_eof = 1;
 	if (client.header_script.size() > 0)
-		header << client.header_script;
+		header << "\n" << client.header_script;
  	else
  		header << "\r\n\r\n";
 	client._header = header.str();
@@ -625,6 +625,7 @@ void		Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map
 		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2)
 		{
 			usleep(1);
+			std::cout << "OK" << std::endl;
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			std::string rep(this->timeout());
