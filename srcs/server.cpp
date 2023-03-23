@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/22 17:27:36 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/23 10:56:04 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,7 @@ int main(int argc, char **argv)
 						else if (event[i].filter == EVFILT_READ)
 						{
 							std::cout << event[i].ident << ": reading request " << std::endl;
+							sbuffer[event[i].ident]._status = REQUEST_BEING_RECEIVED;
 							server.reading_request(sbuffer[event[i].ident], server, ke, event[i].ident, req);
 						}
 						else if (event[i].filter == EVFILT_WRITE)

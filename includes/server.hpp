@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/03/21 11:16:55 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/23 10:55:20 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@
 
 		enum Status {
 			WAITNG_FOR_REQUEST,
+			REQUEST_BEING_RECEIVED,
       REQUEST_RECEIVED,
 			REQUEST_PARSED,
 			CGI_PROCESS_LAUNCHED,

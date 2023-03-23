@@ -622,7 +622,7 @@ void		Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map
 	std::map<int, Sbuffer> ::iterator start = requests.begin();
 	for (int i = 0; start != requests.end(); start++)
 	{
-		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2)
+		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2 && (*start).second._status == REQUEST_BEING_RECEIVED)
 		{
 			usleep(1);
 			std::cout << "OK" << std::endl;
