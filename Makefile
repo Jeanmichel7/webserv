@@ -37,7 +37,7 @@ CC 						= g++
 
 CFLAGS 				= -Wall -Wextra -std=c++98
 CPPFLAGS			= -I./includes
-DEBEUG 				= -g3
+DEBEUG 				= -g3 -fsanitize=address
 
 all: $(NAME_SERVER) $(NAME_CLIENT)
 

@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/23 10:56:04 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/03/30 20:54:06 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 								}
 								if (sbuffer[event[i].ident]._status == REQUEST_PARSED || sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
 								{
-									std::cout << event[i].ident << ": Generate body " << std::endl;
+									//std::cout << event[i].ident << ": Generate body " << std::endl;
 									server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
 								}
 								if (sbuffer[event[i].ident]._status == BODY_GENERATED)

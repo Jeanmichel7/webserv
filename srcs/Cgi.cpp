@@ -162,12 +162,14 @@ void CGI::handleProcessResponse(Sbuffer &client)
 		int rt = 0;
 		int rc = 0;
 		rc = waitpid(client._pid, &rt, WNOHANG);
+		//std::cout << "rc" << client._pid << std::endl;
 		if (rc == 0) {
 			return ;
 		} else if (rc == client._pid && client._cgi_data._cgi_process_body_ready == false) {
 			if (rt == 1) {
 				client._buffer =  error_500(); 
-				client._status = BODY_GENERATED; }
+				client._status = BODY_GENERATED; 
+			}
 			else {
 				std::fseek(client._cgi_data._file_stdout, 0, SEEK_END);
 				long fileSize = std::ftell(client._cgi_data._file_stdout);
@@ -219,8 +221,10 @@ std::vector<char> CGI::launchProcess(Sbuffer &client,  Config &config, struct so
 		dup2(client._cgi_data._fd_stdout, 1);
 		execve(client._cgi_data._arg[0], client._cgi_data._arg, client._cgi_data._env);
 		std::cerr << "\e[0;31mWebServ$> "
-				  << "Execve has crashed "
+				  << "Execve hasss crashed "
 				  << "\e[0m" << std::endl;
+		write(1, "Status: 500\r\n\r\n", std::strlen("Status: 500\r\n\r\n"));
+		exit(1);
 	}
 	client._pid = pid;
 	return (empty_vector);
@@ -229,14 +233,14 @@ std::vector<char> CGI::launchProcess(Sbuffer &client,  Config &config, struct so
 std::vector<char> CGI::error_500()
 {
 	std::vector<char> return_value;
-	std::string error = "Status: 500\n\r\n\r";
+	std::string error = "Status: 500\r\n\r\n";
 	return_value.insert(return_value.end(), error.begin(), error.end());
 	return (return_value);
 }
 std::vector<char> CGI::error_404()
 {
 	std::vector<char> return_value;
-	std::string error = "Status: 404\n\r\n\r";
+	std::string error = "Status: 404\r\n\r\n";
 	return_value.insert(return_value.end(), error.begin(), error.end());
 	return (return_value);
 }

@@ -236,10 +236,12 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 		if (client._status == CGI_PROCESS_LAUNCHED)
 			return ;
 		yd::extractHeader(client.header_script, client._buffer);
-		if (client._buffer.size() == 0)
+		if (client._buffer.size() == 0 && client.header_script.size() == 0)
 			client.status_code = 204;
-		else if (strcmp(client.header_script.c_str(), "Status: 500") == 0)
+		else if (strcmp(client.header_script.c_str(), "Status: 500\r\n\r\n") == 0)
+		{
 			client.status_code = 500;
+		}
 	}
 	else if (client.status_code == 200)
 	{
