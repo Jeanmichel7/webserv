@@ -6,7 +6,7 @@
 #    By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/03/10 16:48:13 by jrasser          ###   ########.fr        #
+#    Updated: 2023/03/31 13:40:03 by jrasser          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -37,7 +37,7 @@ CC 						= g++
 
 CFLAGS 				= -Wall -Wextra -std=c++98
 CPPFLAGS			= -I./includes
-DEBEUG 				= -g3 -fsanitize=address
+DEBEUG 				= -g3 #-fsanitize=address
 
 all: $(NAME_SERVER) $(NAME_CLIENT)
 

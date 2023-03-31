@@ -158,6 +158,7 @@ void	Settings::build(int ke)
 			EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, 0);
 			if (kevent(ke, &change, 1, NULL, 0, NULL) == -1)
 					throw Settings::badCreation();
+			memset(&this->check_request_timeout, 0, sizeof(this->check_request_timeout));
 			all_ports.push_back(this->config.getPort());
 		}
 		++config;
@@ -484,6 +485,7 @@ void Settings::parseRequest(Sbuffer &client)
 {
 	std::fstream fd;
 	client._status = REQUEST_PARSED;
+	
 	if (client.status_code == 413)
 	{
 		client._status = REQUEST_PARSED;
@@ -510,6 +512,14 @@ void Settings::parseRequest(Sbuffer &client)
 	if (!client._req.header.connection)
 		client._add_eof = 1;
 	client._status = REQUEST_PARSED;
+
+	// to delete
+	cout << "client._req.method.path : " << client._req.method.path << endl;
+	if(client._req.method.path == "/kill")
+	{
+		exit(0);
+	}
+
 }
 
 // bool Settings::createResponse(Sbuffer &client, sockaddr_in const& client_addr)
