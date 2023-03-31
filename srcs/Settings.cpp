@@ -493,7 +493,7 @@ void Settings::parseRequest(Sbuffer &client)
 	}
 	else if (client._req.parseRequest(client._buffer))
 		client.status_code = 405;
-	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port))
+	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port, client._req.method.path))
 		client.status_code = 400;
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
 		client.status_code = 405;
@@ -514,12 +514,8 @@ void Settings::parseRequest(Sbuffer &client)
 	client._status = REQUEST_PARSED;
 
 	// to delete
-	cout << "client._req.method.path : " << client._req.method.path << endl;
 	if(client._req.method.path == "/kill")
-	{
 		exit(0);
-	}
-
 }
 
 // bool Settings::createResponse(Sbuffer &client, sockaddr_in const& client_addr)

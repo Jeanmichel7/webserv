@@ -93,7 +93,7 @@
 			if ((uint32_t)_server[i].getIp() == int_ip && (uint32_t)_server[i].getPort() == int_port)
 			{
 				if (!first_serv)
-				_server_selected = &_server[i];
+					_server_selected = &_server[i];
 				const std::string *server_name = _server[i].getServerName();
 				if ((*server_name).size() > 0)
 				{
