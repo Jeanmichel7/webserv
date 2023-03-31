@@ -98,8 +98,7 @@ Settings::Settings()
 	this->error[500] = "500 Internal Server Error";
 }
 
-Settings::~Settings()
-{
+Settings::~Settings() {
 }
 
 Sbuffer::Sbuffer() : _req(), readed(), time_start(), purge_last_time(), is_chunked(), status_code(200), _add_eof(),_cgi_data(), _pid(),_status(), _total_sent()
@@ -481,7 +480,7 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 	}
 }
 
-void Settings::parseRequest(Sbuffer &client)
+bool Settings::parseRequest(Sbuffer &client)
 {
 	std::fstream fd;
 	client._status = REQUEST_PARSED;
@@ -489,7 +488,7 @@ void Settings::parseRequest(Sbuffer &client)
 	if (client.status_code == 413)
 	{
 		client._status = REQUEST_PARSED;
-		return; 
+		return 0; 
 	}
 	else if (client._req.parseRequest(client._buffer))
 		client.status_code = 405;
@@ -505,7 +504,7 @@ void Settings::parseRequest(Sbuffer &client)
 			this->del(client);
 		if (!client._req.header.connection)
 			client._add_eof = 1;
-		return ;
+		return 0 ;
 	}
 	else 
 		client.status_code = 400;
@@ -514,8 +513,12 @@ void Settings::parseRequest(Sbuffer &client)
 	client._status = REQUEST_PARSED;
 
 	// to delete
-	if(client._req.method.path == "/kill")
-		exit(0);
+	if(client._req.method.path == "/kill"){
+		std::cout << "kill" << std::endl;
+		client.clean();
+		return(1);
+	}
+	return 0;
 }
 
 // bool Settings::createResponse(Sbuffer &client, sockaddr_in const& client_addr)

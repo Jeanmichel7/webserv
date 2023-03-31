@@ -38,9 +38,6 @@ struct Sbuffer {
 	std::string			header_script; 
 
 	Status				_status;
-
-
-	
 	size_t				_total_sent;
 };
 
@@ -73,7 +70,7 @@ class Settings
 		void			folder_gestion(Sbuffer &client);
 		void			set_event(int ke, int socket, short filter, short flag);
 		bool			checkmethod(Request const& req, Methods const& t);
-		void			parseRequest(Sbuffer &client);
+		bool			parseRequest(Sbuffer &client);
 		void 			writeResponse(Sbuffer &client, int socket);
 		void			generate_cookie(Sbuffer &client, struct sockaddr_in const& client_addr);
 		void			gestion_413(Sbuffer &client, int socket);

@@ -6,7 +6,7 @@
 /*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/31 14:07:37 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/03/31 15:49:05 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,8 @@ int main(int argc, char **argv)
 								if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
 								{
 									std::cout << event[i].ident << ": parse request " << std::endl;
-									server.parseRequest(sbuffer[event[i].ident]);
+									if (server.parseRequest(sbuffer[event[i].ident]))
+										return 1;
 								}
 								if (sbuffer[event[i].ident]._status == REQUEST_PARSED || sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
 								{

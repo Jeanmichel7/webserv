@@ -44,6 +44,7 @@ Method::Method(Method const &src)
 
 Method::~Method()
 {
+	// cerr << "Method destructor called" << std::endl;
 	return ;
 }
 
@@ -221,6 +222,7 @@ Header::Header(Header const &src)
 
 Header::~Header()
 {
+	// cerr << "Header destructor called" << std::endl;
 	return ;
 }
 
@@ -843,6 +845,7 @@ Body::Body(Body const &src) {
 }
 
 Body::~Body() {
+	// cerr << "Body destructor" << std::endl;
 	return ;
 }
 
@@ -910,6 +913,7 @@ Request::Request(Request const &src){
 }
 
 Request::~Request() {
+	// cerr << "Request destructor" << std::endl;
 	return ;
 }
 
