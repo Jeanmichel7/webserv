@@ -98,12 +98,12 @@ Settings::Settings()
 	this->error[500] = "500 Internal Server Error";
 }
 
-Settings::~Settings() {
+Settings::~Settings()
+{
 }
 
-Sbuffer::Sbuffer() : _req(), readed(), time_start(), purge_last_time(), is_chunked(), status_code(200), _add_eof(),_cgi_data(), _pid(),_status(), _total_sent()
+Sbuffer::Sbuffer() : _req(), readed(), time_start(), purge_last_time(), is_chunked(), status_code(200), _add_eof(), _cgi_data(), _pid(), _status(), _total_sent()
 {
-
 }
 void Sbuffer::clean()
 {
@@ -122,20 +122,19 @@ void Sbuffer::clean()
 	this->_total_sent = 0;
 }
 
-
-void	Settings::build(int ke)
+void Settings::build(int ke)
 {
-	static struct kevent	change;
-	int						socket_fd;
-	struct addrinfo			serv_addr, *res;
-	std::vector<std::string>	all_ports;
+	static struct kevent change;
+	int socket_fd;
+	struct addrinfo serv_addr, *res;
+	std::vector<std::string> all_ports;
 
 	this->config.selectFirstServ();
-	for(unsigned int i = 0; i < this->config.getServNumb(); i++)
+	for (unsigned int i = 0; i < this->config.getServNumb(); i++)
 	{
 		if (std::find(all_ports.begin(), all_ports.end(), this->config.getPort()) == all_ports.end())
 		{
-			std::memset(&serv_addr , 0, sizeof(serv_addr));
+			std::memset(&serv_addr, 0, sizeof(serv_addr));
 			serv_addr.ai_family = AF_INET;
 			serv_addr.ai_socktype = SOCK_STREAM;
 			int status = getaddrinfo(this->config.getIp().c_str(), this->config.getPort().c_str(), &serv_addr, &res);
@@ -147,16 +146,16 @@ void	Settings::build(int ke)
 			int r = 1;
 			if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0)
 				throw Settings::badCreation();
-  			fcntl(socket_fd, F_SETFL, fcntl(socket_fd, F_GETFL, 0) | O_NONBLOCK);
+			fcntl(socket_fd, F_SETFL, fcntl(socket_fd, F_GETFL, 0) | O_NONBLOCK);
 			int bind_status = bind(socket_fd, res->ai_addr, res->ai_addrlen);
 			if (bind_status == -1)
 				throw Settings::badCreation();
 			freeaddrinfo(res);
 			if (listen(socket_fd, 1024) == -1)
 				throw Settings::badCreation();
-			EV_SET(&change, socket_fd, EVFILT_READ , EV_ADD | EV_ENABLE, 0, 0, 0);
+			EV_SET(&change, socket_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, 0);
 			if (kevent(ke, &change, 1, NULL, 0, NULL) == -1)
-					throw Settings::badCreation();
+				throw Settings::badCreation();
 			memset(&this->check_request_timeout, 0, sizeof(this->check_request_timeout));
 			all_ports.push_back(this->config.getPort());
 		}
@@ -164,14 +163,12 @@ void	Settings::build(int ke)
 	}
 }
 
-
-
 std::string Settings::date(void)
 {
-	time_t				tmm = time(0);
-	std::ostringstream	r;
+	time_t tmm = time(0);
+	std::ostringstream r;
 	r << std::put_time(localtime(&tmm), "date: %a, %d %b %G %T GMT");
-	return(r.str());
+	return (r.str());
 }
 
 void Settings::generate_header(Sbuffer &client)
@@ -180,42 +177,49 @@ void Settings::generate_header(Sbuffer &client)
 
 	// std::cout << "generate_header\n";
 	header << "HTTP/1.1 " << this->error[client.status_code];
-	header << "\n" << this->date();
+	header << "\n"
+				 << this->date();
 	if (client.header_script.find("Content-Type") == std::string::npos)
-		header << "\n" << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path)) ;
+		header << "\n"
+					 << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path));
 	header << handleCookie(client);
 	if (client.header_script.find("Content-Length") == std::string::npos && (client._pid == 0))
-		header << "\n" << "Content-Length: " << (client._buffer.size() + client._body_cookie.size());
-	if (client.header_script.find("Content-Length") == std::string::npos && client._pid  != 0)
- 		client._add_eof = 1;
+		header << "\n"
+					 << "Content-Length: " << (client._buffer.size() + client._body_cookie.size());
+	if (client.header_script.find("Content-Length") == std::string::npos && client._pid != 0)
+		client._add_eof = 1;
 	if (client.header_script.size() > 0)
-		header << "\n" << client.header_script;
- 	else
- 		header << "\r\n\r\n";
+		header << "\n"
+					 << client.header_script;
+	else
+		header << "\r\n\r\n";
 	client._header = header.str();
 	client._status = HEADER_GENERATED;
 	// cout << "header : " << client._header << endl;
-	//MEMO ICI
+	// MEMO ICI
 }
 
-std::string Settings::handleCookie(Sbuffer &client) {
+std::string Settings::handleCookie(Sbuffer &client)
+{
 	std::string header_cookie = "";
-	
+
 	static map<string, string> sessions_date;
 	static map<string, int> sessions_count;
-	
+
 	Header::t_cookie_it it = client._req.header.cookies.find("wsid");
-	if (it == client._req.header.cookies.end()) {
+	if (it == client._req.header.cookies.end())
+	{
 		string sessionId = yd::generateSessionId();
 		header_cookie = "\nSet-Cookie: wsid=";
 		header_cookie += sessionId;
 		sessions_date[sessionId] = this->date();
 		sessions_count[sessionId]++;
-	} 
-	else {
+	}
+	else
+	{
 		client._body_cookie = sessions_date[client._req.header.cookies.at("wsid")];
 		sessions_date[client._req.header.cookies.at("wsid")] = this->date();
-		
+
 		sessions_count[client._req.header.cookies.at("wsid")]++;
 		std::stringstream stoi;
 		stoi << sessions_count[client._req.header.cookies.at("wsid")];
@@ -225,16 +229,16 @@ std::string Settings::handleCookie(Sbuffer &client) {
 	return (header_cookie);
 }
 
-void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_addr)
+void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_addr)
 {
-	std::fstream		fd;
+	std::fstream fd;
 
 	// std::cout << "generate_body\n";
 	if (client.status_code == 200 && ((client._status == CGI_PROCESS_LAUNCHED) || (config.getCgi(client._req.method.path, yd::getExtension(client._req.method.path)) != NULL)))
 	{
 		CGI::execute_cgi(this->config, client, client_addr);
 		if (client._status == CGI_PROCESS_LAUNCHED)
-			return ;
+			return;
 		yd::extractHeader(client.header_script, client._buffer);
 		if (client._buffer.size() == 0 && client.header_script.size() == 0)
 			client.status_code = 204;
@@ -246,7 +250,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 	else if (client.status_code == 200)
 	{
 		char *file = (char *)this->config.getFile(client._req.method.path)->c_str();
-		if(file[0] == '/')
+		if (file[0] == '/')
 			file++;
 		fd.open(file, std::fstream::in | std::fstream::out);
 		if (!fd.is_open())
@@ -265,17 +269,17 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 		page << ".html";
 		if (this->config.getError(client.status_code) != NULL)
 		{
-		fd.open(*this->config.getError(client.status_code), std::fstream::in);
+			fd.open(*this->config.getError(client.status_code), std::fstream::in);
 			if (!fd.is_open())
 				fd.open(page.str().c_str(), std::fstream::in);
 		}
-		else 
+		else
 			fd.open(page.str().c_str(), std::fstream::in);
-			if (!fd.is_open())
-			{
-				client._buffer.clear();
-				client._buffer.insert(client._buffer.begin(), error[client.status_code].c_str(), error[client.status_code].c_str() + error[client.status_code].size());
-			}	
+		if (!fd.is_open())
+		{
+			client._buffer.clear();
+			client._buffer.insert(client._buffer.begin(), error[client.status_code].c_str(), error[client.status_code].c_str() + error[client.status_code].size());
+		}
 	}
 	if (fd.is_open())
 	{
@@ -290,7 +294,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const& client_a
 	client._status = BODY_GENERATED;
 }
 
-void	Settings::gestion_413(Sbuffer &client, int socket)
+void Settings::gestion_413(Sbuffer &client, int socket)
 {
 	// std::cout << "gestion 413\n";
 	char tmp_buff[32668];
@@ -301,10 +305,10 @@ void	Settings::gestion_413(Sbuffer &client, int socket)
 	if (difftime(actual_time, client.purge_last_time) > 1)
 	{
 		o_read_p = recv(socket, &tmp_buff, 32668, MSG_DONTWAIT);
-		if (o_read_p == 0   || (o_read_p < 0)) // && (errno == EAGAIN || errno == EWOULDBLOCK))) 
+		if (o_read_p == 0 || (o_read_p < 0)) // && (errno == EAGAIN || errno == EWOULDBLOCK)))
 		{
 			client._status = REQUEST_RECEIVED;
-			return ;
+			return;
 		}
 	}
 	o_read_p = recv(socket, &tmp_buff, 32668, MSG_DONTWAIT);
@@ -323,11 +327,12 @@ void Settings::del(Sbuffer &client)
 	if (!this->config.getMethod(client._req.method.path).isdelete)
 	{
 		client.status_code = 405;
-		return ;
+		return;
 	}
 	string path_file = this->config.getFile(client._req.method.path)->c_str();
 	std::ifstream infile(path_file);
-	if (infile.good()) {
+	if (infile.good())
+	{
 		if (remove(path_file.c_str()) != 0)
 		{
 			client.status_code = 403;
@@ -353,38 +358,38 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 	std::memset(tmp, 0, 2);
 	std::memset(buff, 0, 4097);
 	stringstream sbuffer;
-	
+
 	o_read = recv(socket, tmp, 1, 0);
-	readed ++;
+	readed++;
 	if (o_read == -1 || o_read == 0)
-		return(o_read);
+		return (o_read);
 	sbuffer << tmp;
 	while (sbuffer.str().find("\r\n\r\n") == string::npos)
 	{
 		o_read = recv(socket, tmp, 1, 0);
-		readed ++;
+		readed++;
 		if (o_read == -1 || o_read == 0)
 			break;
 		sbuffer << tmp;
 	}
 	strcpy(buff, sbuffer.str().c_str());
-	return(o_read) ;
+	return (o_read);
 }
 
 size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting, char *buff)
 {
-	size_t	o_read = 0;
+	size_t o_read = 0;
 	time(&time_starting);
 	std::memset(buff, 0, 4097);
-	
+
 	o_read = recv(socket, buff, 4096, 0);
 	if (o_read == (size_t)-1 || o_read == (size_t)0)
-		return(o_read);
+		return (o_read);
 	readed += o_read;
-	return(o_read) ;
+	return (o_read);
 }
 
-char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_starting)
+char *Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_starting)
 {
 	int o_read = 0;
 	time(&time_starting);
@@ -395,20 +400,20 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	std::memset(tmp_purge, 0, 2);
 	stringstream ssize;
 	stringstream sbuffer;
-	
+
 	o_read = recv(socket, tmp, 1, 0);
 	if (o_read == -1 || o_read == 0)
-		return(NULL);
+		return (NULL);
 	ssize << tmp;
 
 	if (tmp[0] == '\r')
 	{
 		o_read = recv(socket, tmp, 1, 0);
 		if (o_read == -1 || o_read == 0)
-			return(NULL);
+			return (NULL);
 	}
 
-	while (ssize.str().find("\r\n") == string::npos )
+	while (ssize.str().find("\r\n") == string::npos)
 	{
 		o_read = recv(socket, tmp, 1, 0);
 		if (o_read == -1 || o_read == 0)
@@ -433,11 +438,10 @@ char* Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_st
 	o_read = recv(socket, buff, size, 0);
 	readed += o_read;
 	if (o_read == -1 || o_read == 0)
-		return(NULL);
+		return (NULL);
 	printf("buff char * : '%s'\n", buff);
 	return (buff);
 }
-
 
 void Settings::writeResponse(Sbuffer &client, int socket)
 {
@@ -445,37 +449,40 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
 	if (client._status == BODY_SENT)
-		return ;
+		return;
 	if (client._status == HEADER_GENERATED)
 	{
-		if (send(socket, client._header.c_str(), client._header.size(), MSG_NOSIGNAL) <= 0)
+		if (send(socket, client._header.c_str(), client._header.size(), 0) <= 0)
 		{
 			client._status = SOCKET_ERROR;
-			std::cout << socket << ": " << "Error socket when attempt to send header" << std::endl;
-			return ;
+			std::cout << socket << ": "
+								<< "Error socket when attempt to send header" << std::endl;
+			return;
 		}
 		client._status = HEADER_SENT;
 	}
-	if (client._total_sent < size_data) 
+	if (client._total_sent < size_data)
 	{
-		int sent = send(socket, &*start + client._total_sent, size_data - client._total_sent, MSG_NOSIGNAL);
-		client._total_sent += sent; 
+		int sent = send(socket, &*start + client._total_sent, size_data - client._total_sent, 0);
+		client._total_sent += sent;
 		if (sent <= 0)
 		{
-			client._status = SOCKET_ERROR; 
-			std::cout << socket << ": " << "Error socket when attempt to send body" << std::endl;
-			return ;
+			client._status = SOCKET_ERROR;
+			std::cout << socket << ": "
+								<< "Error socket when attempt to send body" << std::endl;
+			return;
 		}
-  }
+	}
 	if (client._total_sent == size_data)
 	{
 		if (client._body_cookie.size() > 0)
 		{
-			if (send(socket, client._body_cookie.c_str(), client._body_cookie.size(), MSG_NOSIGNAL) <= 0)
+			if (send(socket, client._body_cookie.c_str(), client._body_cookie.size(), 0) <= 0)
 			{
 				client._status = SOCKET_ERROR;
-				std::cout << socket << ": " << "Error socket when attempt to send cookie" << std::endl;
-				return ;
+				std::cout << socket << ": "
+									<< "Error socket when attempt to send cookie" << std::endl;
+				return;
 			}
 		}
 		client._status = BODY_SENT;
@@ -486,11 +493,11 @@ bool Settings::parseRequest(Sbuffer &client)
 {
 	std::fstream fd;
 	client._status = REQUEST_PARSED;
-	
+
 	if (client.status_code == 413)
 	{
 		client._status = REQUEST_PARSED;
-		return 0; 
+		return 0;
 	}
 	else if (client._req.parseRequest(client._buffer))
 		client.status_code = 405;
@@ -506,26 +513,27 @@ bool Settings::parseRequest(Sbuffer &client)
 			this->del(client);
 		if (!client._req.header.connection)
 			client._add_eof = 1;
-		return 0 ;
+		return 0;
 	}
-	else 
+	else
 		client.status_code = 400;
 	if (!client._req.header.connection)
 		client._add_eof = 1;
 	client._status = REQUEST_PARSED;
 
 	// to delete
-	if(client._req.method.path == "/kill"){
+	if (client._req.method.path == "/kill")
+	{
 		std::cout << "kill" << std::endl;
 		client.clean();
-		return(1);
+		return (1);
 	}
 	return 0;
 }
 
 // bool Settings::createResponse(Sbuffer &client, sockaddr_in const& client_addr)
 // {
-// 	client._buffer.clear();	
+// 	client._buffer.clear();
 // 	if (client._req.method.isGet)
 // 		client._header = this->get(client._req, client_addr);
 // 	else if (client._req.method.isPost)
@@ -534,34 +542,33 @@ bool Settings::parseRequest(Sbuffer &client)
 // 		client._header = this->del(client._req, client_addr);
 // }
 
-std::string	Settings::checkextension(std::string const& path)
+std::string Settings::checkextension(std::string const &path)
 {
 	size_t pos = path.rfind('.');
-	
+
 	if (pos != path.npos)
 	{
 		std::map<std::string, std::string>::iterator start = this->ext.begin();
 		std::map<std::string, std::string>::iterator end = this->ext.end();
 		std::string extension = path.substr(pos);
 		// cout << "extension : " << extension << std::endl;
-		while(start != end)
+		while (start != end)
 		{
-			if (start->first == extension){
+			if (start->first == extension)
+			{
 				// cout << "start first : " << start->second << std::endl;
-				return(start->second);
+				return (start->second);
 			}
 			start++;
 		}
-		return(std::string(""));
+		return (std::string(""));
 	}
 	return (std::string());
 }
 
-
-
 void Settings::folder_gestion(Sbuffer &client)
 {
-	std::stringstream	buffer;
+	std::stringstream buffer;
 
 	DIR *dir = opendir(this->config.getDirectoryListing(client._req.method.path).c_str());
 	if (dir)
@@ -581,10 +588,7 @@ void Settings::folder_gestion(Sbuffer &client)
 		client.status_code = 404;
 }
 
-
-
-
-bool Settings::checkmethod(Request const& req, Methods const& t)
+bool Settings::checkmethod(Request const &req, Methods const &t)
 {
 	if (req.method.isPost && t.ispost)
 		return (true);
@@ -595,18 +599,13 @@ bool Settings::checkmethod(Request const& req, Methods const& t)
 	return (false);
 }
 
-
-void	Settings::set_event(int ke, int socket, short filter, short flag)
+void Settings::set_event(int ke, int socket, short filter, short flag)
 {
 	struct kevent changeEvent;
 	EV_SET(&changeEvent, socket, filter, flag, 0, 0, nullptr);
 	if (kevent(ke, &changeEvent, 1, nullptr, 0, &this->check_request_timeout) == -1)
-		std::cerr << "Could not add client " << socket <<" socket to kqueue" << std::endl;
-	
+		std::cerr << "Could not add client " << socket << " socket to kqueue" << std::endl;
 }
-
-
-
 
 /********************************************/
 /*											*/
@@ -614,25 +613,26 @@ void	Settings::set_event(int ke, int socket, short filter, short flag)
 /*											*/
 /********************************************/
 
-
 int Settings::checkArgs(int argc)
 {
-	if (argc < 2) {
+	if (argc < 2)
+	{
 		std::cerr << RED << "WebServ$> Bad argument: please enter the path of the configuration file." << DEF << std::endl;
 		return (1);
 	}
-	if (argc > 3) {
+	if (argc > 3)
+	{
 		std::cerr << RED << "WebServ$> Bad argument: please enter only the path of the configuration file." << DEF << std::endl;
 		return (1);
 	}
 	return (0);
 }
 
-void		Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<int, sockaddr_in>& clients)
+void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<int, sockaddr_in> &clients)
 {
 	time_t actual_time;
 	time(&actual_time);
-	std::map<int, Sbuffer> ::iterator start = requests.begin();
+	std::map<int, Sbuffer>::iterator start = requests.begin();
 	for (int i = 0; start != requests.end(); start++)
 	{
 		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2 && (*start).second._status == REQUEST_BEING_RECEIVED)
@@ -642,7 +642,7 @@ void		Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			std::string rep(this->timeout());
-			send((*start).first, rep.c_str(), rep.size(), MSG_NOSIGNAL);
+			send((*start).first, rep.c_str(), rep.size(), 0);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_DELETE);
 			clients.erase(i);
 			close(i);
@@ -650,9 +650,7 @@ void		Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map
 	}
 }
 
-
-
-int Settings::check_forbidden(std::string const& path)
+int Settings::check_forbidden(std::string const &path)
 {
 	struct stat info;
 
@@ -660,20 +658,19 @@ int Settings::check_forbidden(std::string const& path)
 	if (path.c_str()[0] == '/')
 		i = 1;
 	if (stat(path.c_str() + i, &info) != 0)
-		return(1);
+		return (1);
 	if (S_ISDIR(info.st_mode))
-		return(1);
+		return (1);
 	else
-		return(0);
+		return (0);
 }
 
-
-std::string Settings::not_found( void )
+std::string Settings::not_found(void)
 {
-	std::fstream		file("http/404.html");
-	std::stringstream	contentefile;
-	std::stringstream	reponse;
-	
+	std::fstream file("http/404.html");
+	std::stringstream contentefile;
+	std::stringstream reponse;
+
 	if (file.is_open())
 		contentefile << file.rdbuf();
 	reponse << "HTTP/1.1 404 Not Found\n";
@@ -686,18 +683,16 @@ std::string Settings::not_found( void )
 		reponse << contentefile.str() << "\n";
 	}
 	else
-		reponse << "Content-Length: 0\n\n"; 
-	return(reponse.str());
+		reponse << "Content-Length: 0\n\n";
+	return (reponse.str());
 }
 
-
-
-std::string Settings::Unauthorized( void )
+std::string Settings::Unauthorized(void)
 {
-	std::fstream		file("http/401.html");
-	std::stringstream	contentefile;
-	std::stringstream	reponse;
-	
+	std::fstream file("http/401.html");
+	std::stringstream contentefile;
+	std::stringstream reponse;
+
 	if (file.is_open())
 		contentefile << file.rdbuf();
 	reponse << "HTTP/1.1 401 Unauthorized\n";
@@ -710,40 +705,36 @@ std::string Settings::Unauthorized( void )
 		reponse << contentefile.str() << "\n";
 	}
 	else
-		reponse << "Content-Length: 0\n\n"; 
-		return(reponse.str());
+		reponse << "Content-Length: 0\n\n";
+	return (reponse.str());
 }
 
-
-
-std::string Settings::method_not_allowed(Request const& req)
+std::string Settings::method_not_allowed(Request const &req)
 {
 	std::stringstream reponse;
-	
+
 	reponse << "HTTP/1.1 405 Method Not Allowed\n";
 	reponse << "Allow:";
 	if (this->config.getMethod(req.method.path).ispost)
 		reponse << " POST";
 	if (this->config.getMethod(req.method.path).isget)
 		reponse << " GET";
-	reponse << "\nContent-Type: text/plain\n"; 
+	reponse << "\nContent-Type: text/plain\n";
 
 	reponse << Settings::date();
 	reponse << "server: " << *this->config.getName() + "\n";
 	reponse << "Content-Length: 25\n";
 	reponse << "Connection: keep-alive\n";
 	reponse << "\nMethod Not Allowed (405)\n";
-	return(reponse.str());
+	return (reponse.str());
 }
 
-
-
-std::string Settings::forbidden_error( void )
+std::string Settings::forbidden_error(void)
 {
-	std::fstream		file("http/403.html");
-	std::stringstream	contentefile;
-	std::stringstream	reponse;
-	
+	std::fstream file("http/403.html");
+	std::stringstream contentefile;
+	std::stringstream reponse;
+
 	if (file.is_open())
 		contentefile << file.rdbuf();
 	reponse << "HTTP/1.1 403 Forbidden\n";
@@ -756,16 +747,14 @@ std::string Settings::forbidden_error( void )
 		reponse << contentefile.str() << "\n";
 	}
 	else
-		reponse << "Content-Length: 0\n\n"; 
-		return(reponse.str());
+		reponse << "Content-Length: 0\n\n";
+	return (reponse.str());
 }
 
-
-
-std::string Settings::badRequest(Request const& req)
+std::string Settings::badRequest(Request const &req)
 {
-	std::stringstream	reponse;
-	
+	std::stringstream reponse;
+
 	reponse << "HTTP/1.1 400 Bad Request\n";
 	reponse << Settings::date();
 	reponse << "server: " << *this->config.getName() + "\n";
@@ -777,13 +766,13 @@ std::string Settings::badRequest(Request const& req)
 	else if (req.method.isPost)
 		reponse << "POST";
 	reponse << " request\n";
-	return(reponse.str());
+	return (reponse.str());
 }
 
-std::string Settings::timeout( void )
+std::string Settings::timeout(void)
 {
-	std::stringstream	reponse;
-	std::fstream		fd;
+	std::stringstream reponse;
+	std::fstream fd;
 
 	reponse << "HTTP/1.1 408 Timeout\n";
 	reponse << Settings::date();
@@ -803,9 +792,8 @@ std::string Settings::timeout( void )
 		reponse << "Content-Length: 17\n\n";
 		reponse << "Request Timeout\n";
 	}
-	return(reponse.str());
+	return (reponse.str());
 }
-
 
 bool Settings::reqIsChuncked(std::string req)
 {
@@ -862,13 +850,12 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 			cout << "sbuffer.read : " << sbuffer.readed << endl;
 			for (unsigned long j = 0; j < sbuffer.readed; j++)
 				sbuffer._buffer.push_back(chunck_buffer[j]);
-			
+
 			std::vector<char>::iterator it = sbuffer._buffer.begin();
 			cout << "the buffer : \n";
-			for(; it != sbuffer._buffer.end(); it++)
+			for (; it != sbuffer._buffer.end(); it++)
 				std::cout << *it;
 			cout << "\n\n";
-
 		}
 	}
 	else
@@ -883,7 +870,8 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			// break;
 		}
-		else {
+		else
+		{
 			readed = server.reading(ident, sbuffer.readed, sbuffer.time_start, buffer);
 			for (unsigned long j = 0; j < readed; j++)
 				sbuffer._buffer.push_back(buffer[j]);
@@ -894,7 +882,6 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 				server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
 				server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			}
-			
 		}
 	}
 	sbuffer._status = REQUEST_RECEIVED;

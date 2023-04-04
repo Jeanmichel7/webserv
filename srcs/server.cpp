@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/02 15:07:15 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/04 19:33:47 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ bool reqIsChuncked(std::string req)
 
 int main(int argc, char **argv)
 {
-	Settings	server;
+	Settings server;
 	if (server.checkArgs(argc) == 1)
 		return (1);
 	try
@@ -40,16 +40,16 @@ int main(int argc, char **argv)
 		return (0);
 	}
 
-	struct kevent				event[MAX_REQUESTS];
-	Request						req;
-	std::map<int, sockaddr_in>	clients;
-	int							ke = kqueue();
+	struct kevent event[MAX_REQUESTS];
+	Request req;
+	std::map<int, sockaddr_in> clients;
+	int ke = kqueue();
 	try
 	{
 		if (ke == -1)
 			throw Settings::badCreation();
 		server.build(ke);
-		std::map<int, Sbuffer>	sbuffer;
+		std::map<int, Sbuffer> sbuffer;
 		while (1)
 		{
 			int nevents = kevent(ke, NULL, 0, event, MAX_REQUESTS, &server.check_request_timeout);
@@ -73,6 +73,11 @@ int main(int argc, char **argv)
 							struct sockaddr_in client_addr;
 							socklen_t client_addr_len = sizeof(client_addr);
 							int socket_client = accept(event[i].ident, (struct sockaddr *)&client_addr, &client_addr_len);
+							int option = 1;
+							if (setsockopt(socket_client, SOL_SOCKET, SO_NOSIGPIPE, &option, sizeof(option)) < 0)
+							{
+								std::cout << "Erreur lors de la configuration de SO_NOSIGPIPE" << std::endl;
+							}
 							std::cout << socket_client << ": Accept Connexion " << std::endl;
 							// int r = 1;
 							// if (setsockopt(socket_client, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0)
@@ -89,59 +94,59 @@ int main(int argc, char **argv)
 						}
 						else if (event[i].filter == EVFILT_WRITE)
 						{
-								if (sbuffer[event[i].ident].status_code == 413)
-								{
-									std::cout << event[i].ident << ": 413" << std::endl;
-									server.gestion_413(sbuffer[event[i].ident], event[i].ident);
-								}
-								if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
-								{
-									std::cout << event[i].ident << ": parse request " << std::endl;
-									if (server.parseRequest(sbuffer[event[i].ident]))
-										return 1;
-								}
-								if (sbuffer[event[i].ident]._status == REQUEST_PARSED || sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
-								{
-									//std::cout << event[i].ident << ": Generate body " << std::endl;
-									server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
-								}
-								if (sbuffer[event[i].ident]._status == BODY_GENERATED)
-								{
-									std::cout << event[i].ident << ": Generate Header " << std::endl;
-									server.generate_header(sbuffer[event[i].ident]);
-								}
-								if (sbuffer[event[i].ident]._status == HEADER_GENERATED || sbuffer[event[i].ident]._status == HEADER_SENT)
-								{
-									std::cout << event[i].ident << ": writeResponse" << std::endl;
-									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
-								}
-								if ((sbuffer[event[	i].ident]._add_eof && sbuffer[event[i].ident]._status == BODY_SENT) || (sbuffer[event[i].ident]._status == SOCKET_ERROR))
-								{
-									std::cout << event[i].ident << ": close FD" << std::endl;
-									sbuffer[event[i].ident].clean();
-									//sbuffer.erase(event[i].ident);
-									std::cout << "test" << std::endl;
-									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-									std::cout << "test 2"  << std::endl;
-									clients.erase(event[i].ident);
-									close(event[i].ident);
-									server.check_timeout(sbuffer, ke, clients);
-									continue ;
-								}
-								else if (sbuffer[event[i].ident]._status == BODY_SENT)
-								{
-									std::cout << event[i].ident << ": clear client, keep connexion open" << std::endl;
-									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-									server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
-									//std::memset(&sbuffer[event[i].ident], 0, sizeof(sbuffer[event[i].ident]));
-									sbuffer[event[i].ident].clean();
-									server.check_timeout(sbuffer, ke, clients);
-									//sbuffer.erase(event[i].ident);
-								}
+							if (sbuffer[event[i].ident].status_code == 413)
+							{
+								std::cout << event[i].ident << ": 413" << std::endl;
+								server.gestion_413(sbuffer[event[i].ident], event[i].ident);
+							}
+							if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
+							{
+								std::cout << event[i].ident << ": parse request " << std::endl;
+								if (server.parseRequest(sbuffer[event[i].ident]))
+									return 1;
+							}
+							if (sbuffer[event[i].ident]._status == REQUEST_PARSED || sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
+							{
+								// std::cout << event[i].ident << ": Generate body " << std::endl;
+								server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
+							}
+							if (sbuffer[event[i].ident]._status == BODY_GENERATED)
+							{
+								std::cout << event[i].ident << ": Generate Header " << std::endl;
+								server.generate_header(sbuffer[event[i].ident]);
+							}
+							if (sbuffer[event[i].ident]._status == HEADER_GENERATED || sbuffer[event[i].ident]._status == HEADER_SENT)
+							{
+								std::cout << event[i].ident << ": writeResponse" << std::endl;
+								server.writeResponse(sbuffer[event[i].ident], event[i].ident);
+							}
+							if ((sbuffer[event[i].ident]._add_eof && sbuffer[event[i].ident]._status == BODY_SENT) || (sbuffer[event[i].ident]._status == SOCKET_ERROR))
+							{
+								std::cout << event[i].ident << ": close FD" << std::endl;
+								sbuffer[event[i].ident].clean();
+								// sbuffer.erase(event[i].ident);
+								std::cout << "test" << std::endl;
+								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+								std::cout << "test 2" << std::endl;
+								clients.erase(event[i].ident);
+								close(event[i].ident);
+								server.check_timeout(sbuffer, ke, clients);
+								continue;
+							}
+							else if (sbuffer[event[i].ident]._status == BODY_SENT)
+							{
+								std::cout << event[i].ident << ": clear client, keep connexion open" << std::endl;
+								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+								server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
+								// std::memset(&sbuffer[event[i].ident], 0, sizeof(sbuffer[event[i].ident]));
+								sbuffer[event[i].ident].clean();
+								server.check_timeout(sbuffer, ke, clients);
+								// sbuffer.erase(event[i].ident);
 							}
 						}
 					}
 				}
+			}
 			else
 				server.check_timeout(sbuffer, ke, clients);
 		}
@@ -153,4 +158,3 @@ int main(int argc, char **argv)
 							<< e.what() << std::endl;
 	}
 }
-

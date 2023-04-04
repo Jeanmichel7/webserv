@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <sys/socket.h>
 
 int main() {
     std::string line;
@@ -9,6 +10,7 @@ int main() {
     headers.push_back("Content-Type:text/html\r\n");
     headers.push_back("Connection:keep-alive\r\n");
     headers.push_back("Cache-Control:no-cache\r\n");
+	std::cout << MSG_EOR << std::endl;
 
     for (size_t i = 0; i < headers.size(); ++i) {
         std::string str = headers[i];
