@@ -448,32 +448,34 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 		return ;
 	if (client._status == HEADER_GENERATED)
 	{
-
-		if (!send(socket, client._header.c_str(), client._header.size(), 0))
+		if (send(socket, client._header.c_str(), client._header.size(), MSG_NOSIGNAL) <= 0)
 		{
-			client.status_code = SOCKET_ERROR;
+			client._status = SOCKET_ERROR;
 			std::cout << socket << ": " << "Error socket when attempt to send header" << std::endl;
+			return ;
 		}
 		client._status = HEADER_SENT;
 	}
 	if (client._total_sent < size_data) 
 	{
-		int sent = send(socket, &*start + client._total_sent, size_data - client._total_sent, 0);
+		int sent = send(socket, &*start + client._total_sent, size_data - client._total_sent, MSG_NOSIGNAL);
 		client._total_sent += sent; 
-		if (!sent)
+		if (sent <= 0)
 		{
-			client.status_code = SOCKET_ERROR; 
+			client._status = SOCKET_ERROR; 
 			std::cout << socket << ": " << "Error socket when attempt to send body" << std::endl;
+			return ;
 		}
   }
 	if (client._total_sent == size_data)
 	{
 		if (client._body_cookie.size() > 0)
 		{
-			if (!send(socket, client._body_cookie.c_str(), client._body_cookie.size(), 0))
+			if (send(socket, client._body_cookie.c_str(), client._body_cookie.size(), MSG_NOSIGNAL) <= 0)
 			{
-				client.status_code = SOCKET_ERROR;
+				client._status = SOCKET_ERROR;
 				std::cout << socket << ": " << "Error socket when attempt to send cookie" << std::endl;
+				return ;
 			}
 		}
 		client._status = BODY_SENT;
@@ -640,7 +642,7 @@ void		Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			std::string rep(this->timeout());
-			send((*start).first, rep.c_str(), rep.size(), 0);
+			send((*start).first, rep.c_str(), rep.size(), MSG_NOSIGNAL);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_DELETE);
 			clients.erase(i);
 			close(i);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/03/31 15:49:05 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/04/02 15:07:15 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,12 +115,14 @@ int main(int argc, char **argv)
 									std::cout << event[i].ident << ": writeResponse" << std::endl;
 									server.writeResponse(sbuffer[event[i].ident], event[i].ident);
 								}
-								if ((sbuffer[event[i].ident]._add_eof && sbuffer[event[i].ident]._status == BODY_SENT) || (sbuffer[event[i].ident]._status == SOCKET_ERROR))
+								if ((sbuffer[event[	i].ident]._add_eof && sbuffer[event[i].ident]._status == BODY_SENT) || (sbuffer[event[i].ident]._status == SOCKET_ERROR))
 								{
 									std::cout << event[i].ident << ": close FD" << std::endl;
 									sbuffer[event[i].ident].clean();
 									//sbuffer.erase(event[i].ident);
+									std::cout << "test" << std::endl;
 									server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
+									std::cout << "test 2"  << std::endl;
 									clients.erase(event[i].ident);
 									close(event[i].ident);
 									server.check_timeout(sbuffer, ke, clients);

@@ -24,6 +24,7 @@ struct	Methods
 
 //this class serv to extracte and create config and serveur object in a file 
 namespace yd{
+	bool isSocketReadyToWrite(int socket_fd);
 	bool isValidPathDir(std::string const &s);
 	bool isValidPathFile(std::string const &s);
 	int comparePath(const std::string &path1, const std::string &path2);

@@ -255,6 +255,22 @@
 //                                      libft Yann                                      //
 //--------------------------------------------------------------------------------------//
 
+bool yd::isSocketReadyToWrite(int socket_fd) {
+    fd_set write_fds;
+
+    FD_ZERO(&write_fds);
+    FD_SET(socket_fd, &write_fds);
+
+    int result = select(socket_fd + 1, NULL, &write_fds, NULL, NULL);
+    if (result > 0 && FD_ISSET(socket_fd, &write_fds)) {
+        return true;
+		std::cout << "select OK" << std::endl;
+    } else {
+		std::cout << "select error" << std::endl;
+        return false;
+    }
+}
+
 size_t yd::stoui(const std::string &s)
 {
 	size_t rt = 0;
