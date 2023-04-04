@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/04 19:33:47 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/04 20:50:21 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ int main(int argc, char **argv)
 			throw Settings::badCreation();
 		server.build(ke);
 		std::map<int, Sbuffer> sbuffer;
+		std::cout << "\e[0;32m\e[1mWebServ$> Ready to accept request.\e[0m" << std::endl;
 		while (1)
 		{
 			int nevents = kevent(ke, NULL, 0, event, MAX_REQUESTS, &server.check_request_timeout);
