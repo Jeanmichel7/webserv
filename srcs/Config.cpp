@@ -876,7 +876,9 @@ Tokenizer::Tokenizer(Config &config, std::string const &path)
 	}
 	start = config._server.begin();
 	
-	/* For the moment webserv can handle multiple server with same ip, port, add this code to prevent it
+	// For the moment webserv can handle multiple server with same ip, port, add this code to prevent it
+	#if ONE_PORT_PER_CONFIG 
+	
 	std::vector<Server>::iterator it = config._server.begin();
 	for (; start != config._server.end(); start++)
 	{
@@ -887,7 +889,7 @@ Tokenizer::Tokenizer(Config &config, std::string const &path)
 				throw(ConfigurationError("Webserv can't handle multiple server with same ip, port"));
 		}
 	}
-	*/
+	#endif
 }
 
 Server Tokenizer::parsServer()
