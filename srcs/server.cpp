@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/05 13:45:53 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/05 14:20:55 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 							}
 							if (sbuffer[event[i].ident]._status == REQUEST_PARSED || sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
 							{
-								// std::cout << event[i].ident << ": Generate body " << std::endl;
+								std::cout << event[i].ident << ": Generate body " << std::endl;
 								server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
 							}
 							if (sbuffer[event[i].ident]._status == BODY_GENERATED)
@@ -129,9 +129,7 @@ int main(int argc, char **argv)
 								std::cout << event[i].ident << ": close FD" << std::endl;
 								sbuffer[event[i].ident].clean();
 								// sbuffer.erase(event[i].ident);
-								std::cout << "test" << std::endl;
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-								std::cout << "test 2" << std::endl;
 								clients.erase(event[i].ident);
 								close(event[i].ident);
 								server.check_timeout(sbuffer, ke, clients);
