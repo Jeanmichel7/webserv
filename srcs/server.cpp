@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/04 20:50:21 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/05 09:47:06 by lomasson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 							}
 							if (sbuffer[event[i].ident]._status == REQUEST_PARSED || sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
 							{
-								// std::cout << event[i].ident << ": Generate body " << std::endl;
+								std::cout << event[i].ident << ": Generate body " << std::endl;
 								server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
 							}
 							if (sbuffer[event[i].ident]._status == BODY_GENERATED)
@@ -126,9 +126,7 @@ int main(int argc, char **argv)
 								std::cout << event[i].ident << ": close FD" << std::endl;
 								sbuffer[event[i].ident].clean();
 								// sbuffer.erase(event[i].ident);
-								std::cout << "test" << std::endl;
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
-								std::cout << "test 2" << std::endl;
 								clients.erase(event[i].ident);
 								close(event[i].ident);
 								server.check_timeout(sbuffer, ke, clients);
