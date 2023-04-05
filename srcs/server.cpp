@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/04 20:50:21 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/05 13:45:53 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,10 @@ int main(int argc, char **argv)
 		return (1);
 	try
 	{
-		server.config = Config(argv[1]);
+		if (argc == 1)
+			server.config = Config("config/default.conf");
+		else if (argv[1] != NULL)
+			server.config = Config(argv[1]);
 	}
 	catch (std::runtime_error &e)
 	{

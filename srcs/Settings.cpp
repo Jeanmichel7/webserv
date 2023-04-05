@@ -295,7 +295,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 		{
 			if (!this->checkextension(client._req.method.path).empty())
 				client.status_code = 404;
-			else if (!this->config.getDirectoryListing(client._req.method.path).empty())
+			if (!this->config.getDirectoryListing(client._req.method.path).empty())
 				folder_gestion(client);
 		}
 	}
@@ -397,11 +397,12 @@ size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_s
 	std::memset(buff, 0, 4097);
 	stringstream sbuffer;
 
+	/*
 	o_read = recv(socket, tmp, 1, 0);
 	readed++;
 	if (o_read == -1 || o_read == 0)
 		return (o_read);
-	sbuffer << tmp;
+	sbuffer << tmp;*/
 	while (sbuffer.str().find("\r\n\r\n") == string::npos)
 	{
 		o_read = recv(socket, tmp, 1, 0);
@@ -543,7 +544,7 @@ bool Settings::parseRequest(Sbuffer &client)
 		client.status_code = 400;
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
 		client.status_code = 405;
-	else if (check_forbidden(*this->config.getFile(client._req.method.path)) && checkextension(*this->config.getFile(client._req.method.path)).empty())
+	else if (check_forbidden(*this->config.getFile(client._req.method.path)) && !checkextension(*this->config.getFile(client._req.method.path)).empty())
 		client.status_code = 404;
 	else if (client._req.method.isGet || client._req.method.isPost || client._req.method.isDelete)
 	{
@@ -653,11 +654,6 @@ void Settings::set_event(int ke, int socket, short filter, short flag)
 
 int Settings::checkArgs(int argc)
 {
-	if (argc < 2)
-	{
-		std::cerr << RED << "WebServ$> Bad argument: please enter the path of the configuration file." << DEF << std::endl;
-		return (1);
-	}
 	if (argc > 3)
 	{
 		std::cerr << RED << "WebServ$> Bad argument: please enter only the path of the configuration file." << DEF << std::endl;

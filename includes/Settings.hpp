@@ -15,7 +15,7 @@
 
 #include "server.hpp"
 
-# define ERROR_BRUT_FOLDER "http/"
+# define ERROR_BRUT_FOLDER "webserv_default_ressources/"
 
 struct Sbuffer {
 	Sbuffer();
