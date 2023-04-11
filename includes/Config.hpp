@@ -35,6 +35,7 @@ namespace yd{
 	std::string generateSessionId();
 	bool ends_with_rn(std::string const& str);
 	void extractHeader(std::string &header, std::vector<char> &req);
+	void copyHeader(std::string &header, std::vector<char> &req);
 	size_t stoui(const std::string &s);
 	void usleep(unsigned int time);
 }

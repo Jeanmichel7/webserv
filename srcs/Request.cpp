@@ -1118,39 +1118,40 @@ bool Request::check_header_buffer(string buffer, Config & config) {
 	return 0;
 }
 
-bool Request::isFinishedRequest(std::vector<char> const &req, unsigned int octet_read) {
+bool Request::isFinishedRequest(std::vector<char> const &req) {
 
-	size_t header_size = 0;
-	char sep[4] = {'\r', '\n', '\r', '\n'}; 
-	for (size_t i = 0; i < octet_read - 3; i++) {
-		if (req.size()> 3 && req[i] && req[i+1] && req[i+2] && req[i+3]
-		&& req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
-			header_size = i;
-			break;
-		}
-	}
-	std::string header = "";
-	for (size_t i = 0; i < header_size; i++) {
-		header.push_back(req[i]);
-	}
+    size_t header_size = 0;
+    char sep[4] = {'\r', '\n', '\r', '\n'};
+    for (size_t i = 0; i < req.size() - 3; i++) {
+        if (req[i] && req[i+1] && req[i+2] && req[i+3]
+            && req[i] == sep[0] && req[i + 1] == sep[1] && req[i + 2] == sep[2] && req[i + 3] == sep[3]) {
+            header_size = i;
+            break;
+        }
+    }
+    std::string header = "";
+    for (size_t i = 0; i < header_size; i++) {
+        header.push_back(req[i]);
+    }
 
-	/* get content-length */
-	string::size_type cl_pos = header.find("Content-Length: ");
-	if (cl_pos == string::npos) 
-	{
-		if (header.size() == req.size() - 4) 
-			return 1;
-		else
-			return 0;
-	}
-	else {
-		string::size_type cl_end = header.find("\r\n", cl_pos);
-		string content_length = header.substr(cl_pos + 16, cl_end - cl_pos - 16);
-		int cl = atoi(content_length.c_str());
-		if (cl == 0)
-			return 1;
-		else if (octet_read - header.length() - 4 == (unsigned int)cl)
-			return 1;
-	}
-	return 0;
+    /* get content-length */
+    string::size_type cl_pos = header.find("Content-Length: ");
+    if (cl_pos == string::npos)
+    {
+        if (header.size() == req.size() - 4)
+            return 1;
+        else
+            return 0;
+    }
+    else {
+        string::size_type cl_end = header.find("\r\n", cl_pos);
+        string content_length = header.substr(cl_pos + 16, cl_end - cl_pos - 16);
+        int cl = atoi(content_length.c_str());
+        if (cl == 0)
+            return 1;
+        else if (req.size() - header.length() - 4 == (unsigned int)cl)
+            return 1;
+    }
+    return 0;
 }
+

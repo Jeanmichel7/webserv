@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/24 15:20:31 by jrasser           #+#    #+#             */
-/*   Updated: 2023/04/04 23:40:19 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/12 01:06:55 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,9 @@
 # include <dirent.h>
 
 		enum Status {
-			WAITNG_FOR_REQUEST,
-			REQUEST_BEING_RECEIVED,
+			WAITING_FOR_REQUEST,	
+			HEADER_RECEIVED,
+			REQUEST_CHUNKED,
 			REQUEST_RECEIVED,
 			REQUEST_PARSED,
 			CGI_PROCESS_LAUNCHED,

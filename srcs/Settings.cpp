@@ -140,7 +140,7 @@ Settings::~Settings()
 {
 }
 
-Sbuffer::Sbuffer() : _req(), readed(), time_start(), purge_last_time(), is_chunked(), status_code(200), _add_eof(), _cgi_data(), _pid(), _status(), _total_sent()
+Sbuffer::Sbuffer() : _req(), readed(), time_start(), purge_last_time(), _chunk_index(), status_code(200), _add_eof(), _cgi_data(), _pid(), _status(), _total_sent()
 {
 }
 void Sbuffer::clean()
@@ -149,14 +149,14 @@ void Sbuffer::clean()
 	this->readed = 0;
 	this->time_start = 0;
 	this->purge_last_time = 0;
-	this->is_chunked = false;
+	this->_chunk_index = 0;
 	this->status_code = 200;
 	this->_add_eof = false;
 	this->_cgi_data.~CGI();
 	this->_buffer.clear();
 	this->header_script.clear();
 	this->_pid = 0;
-	this->_status = WAITNG_FOR_REQUEST;
+	this->_status = WAITING_FOR_REQUEST;
 	this->_total_sent = 0;
 }
 
@@ -386,101 +386,155 @@ void Settings::del(Sbuffer &client)
 		client.status_code = 404;
 }
 
-size_t Settings::reading_header(int socket, unsigned int &readed, time_t &time_starting, char *buff)
+
+int Settings::reading_socket(int socket, time_t &time_starting, std::vector<char> &client_buff)
 {
 	// cout << "READING HEADER" << std::endl;
 	int o_read = 0;
 	time(&time_starting);
 
-	char tmp[2];
-	std::memset(tmp, 0, 2);
-	std::memset(buff, 0, 4097);
-	stringstream sbuffer;
+	const size_t read_size = 8197;
 
-	/*
-	o_read = recv(socket, tmp, 1, 0);
-	readed++;
+	// Sauvegarde la taille actuelle du client_buff
+	size_t current_size = client_buff.size();
+
+	// Augmente la taille du client_buff de read_size
+	client_buff.resize(current_size + read_size);
+
+	// Réception des données à partir de la fin du vecteur
+	o_read = recv(socket, client_buff.data() + current_size, read_size, 0);
 	if (o_read == -1 || o_read == 0)
-		return (o_read);
-	sbuffer << tmp;*/
-	while (sbuffer.str().find("\r\n\r\n") == string::npos)
 	{
-		o_read = recv(socket, tmp, 1, 0);
-		readed++;
-		if (o_read == -1 || o_read == 0)
-			break;
-		sbuffer << tmp;
+		return o_read;
 	}
-	strcpy(buff, sbuffer.str().c_str());
-	return (o_read);
+	// Réduit la taille du client_buff pour enlever les octets non utilisés
+	client_buff.resize(current_size + o_read);
+
+	return o_read;
 }
 
-size_t Settings::reading(int socket, unsigned int &readed, time_t &time_starting, char *buff)
+size_t Settings::read_hex_size(const std::vector<char> &data, size_t &index) {
+    size_t size = 0;
+
+    while (index < data.size()) {
+        char current_char = data[index];
+        
+        if ((current_char >= '0' && current_char <= '9')|| 
+            (current_char >= 'a' && current_char <= 'f') || 
+			(current_char >= 'A' && current_char <= 'F')) {
+            size = size * 16 + std::stoi(std::string(1, current_char), nullptr, 16);
+            index++;
+        } else if (current_char == '\r' && index + 1 < data.size() && data[index + 1] == '\n') {
+            index += 2;
+            break;
+        } else {
+            throw std::runtime_error("Invalid character encountered while reading chunk size.");
+        }
+    }
+
+    return size;
+}
+
+int Settings::process_chunks(std::vector<char> &data, size_t &current_index) {
+    std::vector<char> output_data;
+    size_t index = current_index;
+
+    while (index < data.size()) {
+        size_t chunk_size = read_hex_size(data, index);
+
+        if (chunk_size == 0) {
+            data.erase(data.begin(), data.begin() + index);
+            current_index = 0;
+            return 1; // Fin des chunks
+        }
+
+        if (index + chunk_size > data.size()) {
+            // Chunk incomplet ou dépassant la taille requise
+            current_index = index;
+            return -1;
+        }
+
+        // Copie du chunk (sans la valeur hexadécimale) dans output_data
+        output_data.insert(output_data.end(), data.begin() + index, data.begin() + index + chunk_size);
+        index += chunk_size;
+    }
+
+    data.swap(output_data);
+    current_index = index;
+    return 0; // Des chunks sont toujours en attente d'arriver sur le socket
+}
+
+void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintptr_t ident, Request &req)
 {
-	size_t o_read = 0;
-	time(&time_starting);
-	std::memset(buff, 0, 4097);
+    char buffer[8197];
+    memset(buffer, 0, 8197);
+    size_t readed = 0;
 
-	o_read = recv(socket, buff, 4096, 0);
-	if (o_read == (size_t)-1 || o_read == (size_t)0)
-		return (o_read);
-	readed += o_read;
-	return (o_read);
-}
-
-char *Settings::reading_chunck(int socket, unsigned int &readed, time_t &time_starting)
-{
-	int o_read = 0;
-	time(&time_starting);
-
-	char tmp[2];
-	char tmp_purge[2];
-	std::memset(tmp, 0, 2);
-	std::memset(tmp_purge, 0, 2);
-	stringstream ssize;
-	stringstream sbuffer;
-
-	o_read = recv(socket, tmp, 1, 0);
-	if (o_read == -1 || o_read == 0)
-		return (NULL);
-	ssize << tmp;
-
-	if (tmp[0] == '\r')
+    int o_read = reading_socket(ident, sbuffer.time_start, sbuffer._buffer);
+    if (o_read == -1 || o_read == 0)
+    {
+		sbuffer._status = SOCKET_ERROR;
+        return;
+    }
+    switch (sbuffer._status)
+    {
+    case WAITING_FOR_REQUEST:
 	{
-		o_read = recv(socket, tmp, 1, 0);
-		if (o_read == -1 || o_read == 0)
-			return (NULL);
-	}
-
-	while (ssize.str().find("\r\n") == string::npos)
-	{
-		o_read = recv(socket, tmp, 1, 0);
-		if (o_read == -1 || o_read == 0)
+		std::string header;
+		yd::copyHeader(header, sbuffer._buffer);
+		if(req.check_header_buffer(header, server.config))
+		{
+			sbuffer.status_code = 413;
+			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
+			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+			return;
+		}
+		sbuffer._status = HEADER_RECEIVED;
+		if (reqIsChuncked(header) == true)
+		{
+			sbuffer._status = REQUEST_CHUNKED;
 			break;
-		ssize << tmp;
+		}
+		// check si il y a un body
+		std::string::size_type pos = header.find("Content-Length");
+		if (header.size() > 0 && pos == std::string::npos)
+			sbuffer._status = REQUEST_RECEIVED;
+		else
+			sbuffer._status = HEADER_RECEIVED;
 	}
-	if (ssize.str().empty())
-		return (NULL);
-
-	string::size_type x;
-	std::stringstream ss;
-	std::stringstream ssbody;
-	ss << std::hex << ssize.str();
-	ss >> x;
-	long size = static_cast<string::size_type>(x);
-	if (size == 0)
-		return (NULL);
-
-	char *buff = new char[size + 1];
-	std::memset(buff, 0, size + 1);
-
-	o_read = recv(socket, buff, size, 0);
-	readed += o_read;
-	if (o_read == -1 || o_read == 0)
-		return (NULL);
-	printf("buff char * : '%s'\n", buff);
-	return (buff);
+    case HEADER_RECEIVED:
+	{
+		if (req.isFinishedRequest(sbuffer._buffer))
+		{
+			sbuffer._status = REQUEST_RECEIVED;
+			break;
+		}
+        break;
+	}
+    case REQUEST_CHUNKED:
+	{
+		int rt = 0;
+		sbuffer.readed = 0;
+		rt = server.process_chunks(sbuffer._buffer, sbuffer._chunk_index);
+		if (rt == -1)
+		{
+			sbuffer.status_code = 400;
+		}
+		if (rt == 1)
+		{
+			sbuffer._buffer.push_back('\r');
+			sbuffer._buffer.push_back('\n');
+			sbuffer._buffer.push_back('\r');
+			sbuffer._buffer.push_back('\n');
+			sbuffer._status = REQUEST_RECEIVED;
+		}
+	}
+        break;
+    default:
+        break;
+    }
 }
+
 
 void Settings::writeResponse(Sbuffer &client, int socket)
 {
@@ -539,7 +593,7 @@ bool Settings::parseRequest(Sbuffer &client)
 		return 0;
 	}
 	else if (client._req.parseRequest(client._buffer))
-		client.status_code = 405;
+		client.status_code = 400;
 	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port, client._req.method.path))
 		client.status_code = 400;
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
@@ -669,7 +723,7 @@ void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<
 	std::map<int, Sbuffer>::iterator start = requests.begin();
 	for (int i = 0; start != requests.end(); start++)
 	{
-		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2 && (*start).second._status == REQUEST_BEING_RECEIVED)
+		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2 && ((*start).second._status <= 3 && (*start).second._status > 0))
 		{
 			usleep(1);
 			std::cout << "OK" << std::endl;
@@ -837,86 +891,3 @@ bool Settings::reqIsChuncked(std::string req)
 	return (false);
 }
 
-void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintptr_t ident, Request &req)
-{
-	char buffer[4097];
-	char header_buffer[4097];
-	memset(buffer, 0, 4097);
-	memset(header_buffer, 0, 4097);
-	size_t readed = 0;
-	size_t header_readed = 0;
-
-	// std::cout << "READ\n";
-	if (!this->reqIsChuncked(header_buffer) && sbuffer.is_chunked == false && sbuffer._buffer.size() == 0)
-	{
-		header_readed = server.reading_header(ident, sbuffer.readed, sbuffer.time_start, header_buffer);
-		if (req.check_header_buffer(header_buffer, server.config))
-		{
-			sbuffer.status_code = 413;
-			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
-			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-			return;
-		}
-		for (unsigned long j = 0; j < sbuffer.readed; j++)
-			sbuffer._buffer.push_back(header_buffer[j]);
-	}
-	if (reqIsChuncked(header_buffer) == true)
-		sbuffer.is_chunked = true;
-
-	if (sbuffer.is_chunked == true)
-	{
-		char *chunck_buffer = NULL;
-		sbuffer.readed = 0;
-		chunck_buffer = server.reading_chunck(ident, sbuffer.readed, sbuffer.time_start);
-
-		if (chunck_buffer == NULL)
-		{
-			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
-			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-			sbuffer._buffer.push_back('\r');
-			sbuffer._buffer.push_back('\n');
-			sbuffer._buffer.push_back('\r');
-			sbuffer._buffer.push_back('\n');
-			sbuffer.is_chunked = false;
-		}
-		else
-		{
-			cout << "sbuffer.read : " << sbuffer.readed << endl;
-			for (unsigned long j = 0; j < sbuffer.readed; j++)
-				sbuffer._buffer.push_back(chunck_buffer[j]);
-
-			std::vector<char>::iterator it = sbuffer._buffer.begin();
-			cout << "the buffer : \n";
-			for (; it != sbuffer._buffer.end(); it++)
-				std::cout << *it;
-			cout << "\n\n";
-		}
-	}
-	else
-	{
-		// check si il y a un body
-		std::string header(header_buffer);
-		std::string::size_type pos = header.find("Content-Length");
-		if (header.size() > 0 && pos == std::string::npos)
-		{
-			// cout << "FINISHED" << std::endl;
-			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
-			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-			// break;
-		}
-		else
-		{
-			readed = server.reading(ident, sbuffer.readed, sbuffer.time_start, buffer);
-			for (unsigned long j = 0; j < readed; j++)
-				sbuffer._buffer.push_back(buffer[j]);
-
-			if (req.isFinishedRequest(sbuffer._buffer, sbuffer.readed))
-			{
-				// cout << "FINISHED" << std::endl;
-				server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
-				server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-			}
-		}
-	}
-	sbuffer._status = REQUEST_RECEIVED;
-}

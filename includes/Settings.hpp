@@ -25,7 +25,7 @@ struct Sbuffer {
 	time_t 				time_start;
 	time_t				purge_last_time;
 
-	bool 				is_chunked;
+	size_t				_chunk_index;
 	int					status_code;
 	bool				_add_eof;
 
@@ -63,9 +63,9 @@ class Settings
 		std::string		Unauthorized( void );
 		int 			check_forbidden(std::string const& path);
 		std::string		method_not_allowed( Request const& req );
-		size_t 			reading(int socket, unsigned int &readed, time_t &time_starting, char *buffer);
-		size_t 			reading_header(int socket, unsigned int &readed, time_t &time_starting, char *buff);
-		char * 			reading_chunck(int socket, unsigned int &readed, time_t &time_starting);
+		int				reading_socket(int socket, time_t &time_starting, std::vector<char> &client_buff);
+		size_t 			read_hex_size(const std::vector<char> &data, size_t &index);
+		int 			process_chunks(std::vector<char> &data, size_t &current_index);
 		std::string		checkextension(std::string const& path);
 		void			folder_gestion(Sbuffer &client);
 		void			set_event(int ke, int socket, short filter, short flag);

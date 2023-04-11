@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/05 14:20:55 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/11 23:03:59 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,8 +93,25 @@ int main(int argc, char **argv)
 						else if (event[i].filter == EVFILT_READ)
 						{
 							std::cout << event[i].ident << ": reading request " << std::endl;
-							sbuffer[event[i].ident]._status = REQUEST_BEING_RECEIVED;
 							server.reading_request(sbuffer[event[i].ident], server, ke, event[i].ident, req);
+							if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
+							{
+								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
+								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+								std::cout << event[i].ident << ": parse request " << std::endl;
+								if (server.parseRequest(sbuffer[event[i].ident]))
+									return 1;
+							}
+							if (sbuffer[event[i].ident]._status == SOCKET_ERROR)
+							{
+								std::cout << event[i].ident << ": close FD" << std::endl;
+								sbuffer[event[i].ident].clean();
+								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
+								clients.erase(event[i].ident);
+								close(event[i].ident);
+								server.check_timeout(sbuffer, ke, clients);
+								continue;
+							}
 						}
 						else if (event[i].filter == EVFILT_WRITE)
 						{
