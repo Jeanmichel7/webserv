@@ -210,8 +210,6 @@ std::vector<char> CGI::launchProcess(Sbuffer &client,  Config &config, struct so
 	//exit(0);
 	client._buffer.clear();
 	fseek(client._cgi_data._file_stdin, 0, SEEK_SET);
-
-
 	pid_t pid = fork(); 
 	if (pid == -1)
 		return (error_500());
