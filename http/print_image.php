@@ -1,48 +1,44 @@
+#!/usr/bin/env php
 <?php
-// Récupérer l'image à partir de la stdin
-$stdin = fopen('php://stdin', 'r');
-$stderr = fopen('php://stderr', 'w');
 
-// Supprimer les délimiteurs de multipart
-$boundaryPos = strpos(fgets($stdin), "\r\n");
+// Lecture des données de l'entrée standard (stdin)
+$data = file_get_contents("php://stdin");
 
-if ($boundaryPos !== false) {
-    $boundary = substr(fgets($stdin), 0, $boundaryPos);
-
-    // Obtenir le contenu du fichier et les en-têtes
-    $fileContent = '';
-    $mimeType = '';
-    $isInHeaders = true;
-    while (($line = fgets($stdin)) !== false && strpos($line, $boundary) === false) {
-        // Ignorer les en-têtes si nous avons déjà terminé
-        if (!$isInHeaders) {
-            $fileContent .= $line;
-            continue;
-        }
-
-        // Extraire le type MIME de l'en-tête Content-Type
-        if (preg_match('/^Content-Type:\s*(.+)$/i', $line, $matches)) {
-            $mimeType = trim($matches[1]);
-        }
-        
-        // Vérifier si nous avons atteint la fin des en-têtes
-        if (trim($line) === "\r\n") {
-            $isInHeaders = false;
-        }
-    }
-
-    // Utiliser le type MIME extrait pour définir l'en-tête Content-Type
-    if (!empty($mimeType)) {
-        echo "Content-Type: $mimeType\r\n\r\n";
-    } else {
-        echo "Content-Type: image/jpeg\r\n\r\n"; // Utiliser une valeur par défaut si nous n'avons pas réussi à extraire le type MIME
-    }
-
-    // Afficher l'image ou la vidéo
-    $output = $fileContent;
-    fprintf($stderr, "Aperçu du contenu (premiers 100 caractères) :\n%s\n", substr($output, 0, 100));
-    echo $output;
-} else {
-    echo "Erreur : impossible de récupérer l'image.";
+// Vérifie si les données sont reçues
+if (empty($data)) {
+    fwrite(STDERR, "Aucune donnée reçue\n");
+    exit(1);
 }
-?>
+
+// Extraction de la limite multipart
+preg_match('/boundary=(.*)$/', $_SERVER['CONTENT_TYPE'], $matches);
+$boundary = $matches[1];
+
+// Division du contenu en utilisant la limite
+$parts = array_slice(explode("--" . $boundary, $data), 1, -1);
+
+foreach ($parts as $part) {
+    // En-têtes de la partie
+    $headerSection = substr($part, 0, strpos($part, "\r\n\r\n"));
+    $headers = explode("\r\n", $headerSection);
+
+    // Extraction du contenu de la partie
+    $content = trim(substr($part, strlen($headerSection) + 4));
+
+    // Recherche de l'en-tête Content-Type
+    foreach ($headers as $header) {
+        if (preg_match('/^Content-Type: (.*)$/i', $header, $matches)) {
+            $contentType = $matches[1];
+            break;
+        }
+    }
+
+    // Vérification si le Content-Type est trouvé
+    if (!empty($contentType)) {
+        // Ajout de l'en-tête Content-Type au début de la réponse
+        $output = "Content-Type: " . $contentType . "\r\n\r\n" . $content;
+
+        // Écriture du résultat sur la sortie standard (stdout)
+        fwrite(STDOUT, $output);
+    }
+}
