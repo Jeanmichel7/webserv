@@ -218,8 +218,14 @@ void Settings::generate_header(Sbuffer &client)
 	header << "\n"
 				 << this->date();
 	if (client.header_script.find("Content-Type") == std::string::npos)
-		header << "\n"
-					 << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path));
+	{
+		if (client.status_code < 400)
+			header << "\n"
+						 << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path));
+		else
+			header << "\n"
+						 << "Content-Type: text/html";
+	}
 	header << handleCookie(client);
 	if (client.header_script.find("Content-Length") == std::string::npos && (client._pid == 0))
 		header << "\n"
@@ -285,7 +291,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 			client.status_code = 500;
 		}
 	}
-	else if (client.status_code == 200)
+	else if (client.status_code == 200 && client._req.method.isGet == true)
 	{
 		char *file = (char *)this->config.getFile(client._req.method.path)->c_str();
 		if (file[0] == '/')
@@ -299,7 +305,11 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 				folder_gestion(client);
 		}
 	}
-	if (client.status_code != 200 && client.status_code != 204)
+	else if (client.status_code == 200 && client._req.method.isGet == false)
+	{
+		client.status_code = 405;
+	}
+	else if (client.status_code != 200 && client.status_code != 204)
 	{
 		std::stringstream page;
 		page << ERROR_BRUT_FOLDER;
@@ -316,7 +326,22 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 		if (!fd.is_open())
 		{
 			client._buffer.clear();
-			client._buffer.insert(client._buffer.begin(), error[client.status_code].c_str(), error[client.status_code].c_str() + error[client.status_code].size());
+			std::stringstream html_error;
+			html_error << "<!DOCTYPE html>\n"
+								 << "<html>\n"
+								 << "<head>\n"
+								 << "<title>" << error[client.status_code] << "</title>\n"
+								 << "</head>\n"
+								 << "<body bgcolor=\"white\">\n"
+								 << "<center>\n"
+								 << "<h1>" << error[client.status_code] << "</h1>\n"
+								 << "</center>\n"
+								 << "<hr>\n"
+								 << "<center>WebServ/1.0</center>\n"
+								 << "</body>\n"
+								 << "</html>";
+			std::string html_error_str = html_error.str();
+			client._buffer.insert(client._buffer.begin(), html_error_str.c_str(), html_error_str.c_str() + html_error_str.size());
 		}
 	}
 	if (fd.is_open())
@@ -386,7 +411,6 @@ void Settings::del(Sbuffer &client)
 		client.status_code = 404;
 }
 
-
 int Settings::reading_socket(int socket, time_t &time_starting, std::vector<char> &client_buff)
 {
 	// cout << "READING HEADER" << std::endl;
@@ -413,76 +437,106 @@ int Settings::reading_socket(int socket, time_t &time_starting, std::vector<char
 	return o_read;
 }
 
-size_t Settings::read_hex_size(const std::vector<char> &data, size_t &index) {
-    size_t size = 0;
+size_t Settings::read_hex_size(const std::vector<char> &data, size_t &index)
+{
+	size_t size = 0;
 
-    while (index < data.size()) {
-        char current_char = data[index];
-        
-        if ((current_char >= '0' && current_char <= '9')|| 
-            (current_char >= 'a' && current_char <= 'f') || 
-			(current_char >= 'A' && current_char <= 'F')) {
-            size = size * 16 + std::stoi(std::string(1, current_char), nullptr, 16);
-            index++;
-        } else if (current_char == '\r' && index + 1 < data.size() && data[index + 1] == '\n') {
-            index += 2;
-            break;
-        } else {
-            throw std::runtime_error("Invalid character encountered while reading chunk size.");
-        }
-    }
+	while (index < data.size())
+	{
+		char current_char = data[index];
 
-    return size;
+		if ((current_char >= '0' && current_char <= '9') ||
+				(current_char >= 'a' && current_char <= 'f') ||
+				(current_char >= 'A' && current_char <= 'F'))
+		{
+			size = size * 16 + std::stoi(std::string(1, current_char), nullptr, 16);
+			index++;
+		}
+		else if (current_char == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
+		{
+			index += 2;
+			break;
+		}
+		else
+		{
+			throw std::runtime_error("Invalid character encountered while reading chunk size.");
+		}
+	}
+	return size;
 }
 
-int Settings::process_chunks(std::vector<char> &data, size_t &current_index) {
-    std::vector<char> output_data;
-    size_t index = current_index;
+int Settings::process_chunks(std::vector<char> &data, size_t start_index, size_t &current_index)
+{
+	std::vector<char> output_data;
+	size_t index = current_index;
+	if (current_index < start_index)
+	{
+		index = start_index;
+	}
+	else
+	{
+		index = current_index;
+	}
 
-    while (index < data.size()) {
-        size_t chunk_size = read_hex_size(data, index);
+	while (index < data.size())
+	{
+		size_t chunk_size = read_hex_size(data, index);
 
-        if (chunk_size == 0) {
-            data.erase(data.begin(), data.begin() + index);
-            current_index = 0;
-            return 1; // Fin des chunks
-        }
+		if (chunk_size == 0)
+		{
+			// Supprime le dernier CRLF après le chunk de taille 0 (fin des chunks)
+			if (index < data.size() && data[index] == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
+			{
+				index += 2;
+			}
+			data.erase(data.begin() + start_index, data.begin() + index);
+			current_index = 0;
+			return 1; // Fin des chunks
+		}
 
-        if (index + chunk_size > data.size()) {
-            // Chunk incomplet ou dépassant la taille requise
-            current_index = index;
-            return -1;
-        }
+		if (index + chunk_size > data.size())
+		{
+			// Chunk incomplet ou dépassant la taille requise
+			current_index = index;
+			return -1;
+		}
 
-        // Copie du chunk (sans la valeur hexadécimale) dans output_data
-        output_data.insert(output_data.end(), data.begin() + index, data.begin() + index + chunk_size);
-        index += chunk_size;
-    }
+		// Copie du chunk (sans la valeur hexadécimale) dans output_data
+		output_data.insert(output_data.end(), data.begin() + index, data.begin() + index + chunk_size);
+		index += chunk_size;
 
-    data.swap(output_data);
-    current_index = index;
-    return 0; // Des chunks sont toujours en attente d'arriver sur le socket
+		// Supprime le CRLF après le chunk actuel
+		if (index < data.size() && data[index] == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
+		{
+			index += 2;
+		}
+	}
+
+	data.erase(data.begin() + start_index, data.begin() + current_index);
+	data.insert(data.begin() + start_index, output_data.begin(), output_data.end());
+	current_index = index;
+	return 0; // Des chunks sont toujours en attente d'arriver sur le socket
 }
 
 void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintptr_t ident, Request &req)
 {
-    char buffer[8197];
-    memset(buffer, 0, 8197);
-    size_t readed = 0;
+	char buffer[8197];
+	memset(buffer, 0, 8197);
+	size_t readed = 0;
 
-    int o_read = reading_socket(ident, sbuffer.time_start, sbuffer._buffer);
-    if (o_read == -1 || o_read == 0)
-    {
+	int o_read = reading_socket(ident, sbuffer.time_start, sbuffer._buffer);
+	if (o_read == -1 || o_read == 0)
+	{
 		sbuffer._status = SOCKET_ERROR;
-        return;
-    }
-    switch (sbuffer._status)
-    {
-    case WAITING_FOR_REQUEST:
+		return;
+	}
+	switch (sbuffer._status)
+	{
+	case WAITING_FOR_REQUEST:
 	{
 		std::string header;
 		yd::copyHeader(header, sbuffer._buffer);
-		if(req.check_header_buffer(header, server.config))
+		if (req.check_header_buffer(header, server.config))
 		{
 			sbuffer.status_code = 413;
 			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
@@ -493,29 +547,19 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 		if (reqIsChuncked(header) == true)
 		{
 			sbuffer._status = REQUEST_CHUNKED;
-			break;
 		}
-		// check si il y a un body
-		std::string::size_type pos = header.find("Content-Length");
-		if (header.size() > 0 && pos == std::string::npos)
+		else if (header.size() > 0 && header.find("Content-Length") == std::string::npos)
 			sbuffer._status = REQUEST_RECEIVED;
 		else
 			sbuffer._status = HEADER_RECEIVED;
 	}
-    case HEADER_RECEIVED:
-	{
-		if (req.isFinishedRequest(sbuffer._buffer))
-		{
-			sbuffer._status = REQUEST_RECEIVED;
-			break;
-		}
-        break;
-	}
-    case REQUEST_CHUNKED:
+	case REQUEST_CHUNKED:
 	{
 		int rt = 0;
 		sbuffer.readed = 0;
-		rt = server.process_chunks(sbuffer._buffer, sbuffer._chunk_index);
+		std::string header;
+		yd::copyHeader(header, sbuffer._buffer);
+		rt = server.process_chunks(sbuffer._buffer, static_cast<size_t>(header.size()), sbuffer._chunk_index);
 		if (rt == -1)
 		{
 			sbuffer.status_code = 400;
@@ -528,13 +572,22 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 			sbuffer._buffer.push_back('\n');
 			sbuffer._status = REQUEST_RECEIVED;
 		}
+		break;
 	}
-        break;
-    default:
-        break;
-    }
-}
+	case HEADER_RECEIVED:
+	{
+		if (req.isFinishedRequest(sbuffer._buffer))
+		{
+			sbuffer._status = REQUEST_RECEIVED;
+			break;
+		}
+		break;
+	}
 
+	default:
+		break;
+	}
+}
 
 void Settings::writeResponse(Sbuffer &client, int socket)
 {
@@ -890,4 +943,3 @@ bool Settings::reqIsChuncked(std::string req)
 		return (true);
 	return (false);
 }
-
