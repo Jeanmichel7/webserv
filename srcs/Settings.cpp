@@ -480,8 +480,16 @@ int Settings::process_chunks(std::vector<char> &data, size_t start_index, size_t
 
 	while (index < data.size())
 	{
-		size_t chunk_size = read_hex_size(data, index);
-
+		size_t chunk_size = 0;
+		try
+		{
+			chunk_size = read_hex_size(data, index);
+		}
+		catch (std::runtime_error &e)
+		{
+			current_index = index;
+			return -1;
+		}
 		if (chunk_size == 0)
 		{
 			// Supprime le dernier CRLF après le chunk de taille 0 (fin des chunks)
