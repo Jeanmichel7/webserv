@@ -549,9 +549,20 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 			sbuffer._status = REQUEST_CHUNKED;
 		}
 		else if (header.size() > 0 && header.find("Content-Length") == std::string::npos)
+		{
 			sbuffer._status = REQUEST_RECEIVED;
+			break;
+		}
 		else
 			sbuffer._status = HEADER_RECEIVED;
+	}
+	case HEADER_RECEIVED:
+	{
+		if ((sbuffer._status != REQUEST_CHUNKED) && req.isFinishedRequest(sbuffer._buffer))
+		{
+			sbuffer._status = REQUEST_RECEIVED;
+			break;
+		}
 	}
 	case REQUEST_CHUNKED:
 	{
@@ -571,15 +582,6 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 			sbuffer._buffer.push_back('\r');
 			sbuffer._buffer.push_back('\n');
 			sbuffer._status = REQUEST_RECEIVED;
-		}
-		break;
-	}
-	case HEADER_RECEIVED:
-	{
-		if (req.isFinishedRequest(sbuffer._buffer))
-		{
-			sbuffer._status = REQUEST_RECEIVED;
-			break;
 		}
 		break;
 	}
