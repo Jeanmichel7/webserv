@@ -82,7 +82,7 @@ public:
 	void generate_header(Sbuffer &client);
 
 	bool reqIsChuncked(std::string req);
-	void reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintptr_t ident, Request &req);
+	void reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ident, Request &req);
 
 	std::string handleCookie(Sbuffer &client);
 	Settings(Config const &base);

@@ -309,7 +309,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 	{
 		client.status_code = 405;
 	}
-	else if (client.status_code != 200 && client.status_code != 204)
+	if (client.status_code != 200 && client.status_code != 204)
 	{
 		std::stringstream page;
 		page << ERROR_BRUT_FOLDER;
@@ -368,21 +368,19 @@ void Settings::gestion_413(Sbuffer &client, int socket)
 	if (difftime(actual_time, client.purge_last_time) > 1)
 	{
 		o_read_p = recv(socket, &tmp_buff, 32668, MSG_DONTWAIT);
-		if (o_read_p == 0 || (o_read_p < 0)) // && (errno == EAGAIN || errno == EWOULDBLOCK)))
+		if (o_read_p == 0 || o_read_p < 0)
 		{
 			client._status = REQUEST_RECEIVED;
 			return;
 		}
 	}
-	o_read_p = recv(socket, &tmp_buff, 32668, MSG_DONTWAIT);
-	if (o_read_p > 0)
+	if (o_read_p == 0 || o_read_p < 0)
 	{
-		time(&client.purge_last_time);
+		client._status = SOCKET_ERROR;
+		return;
 	}
-	// the error EAGAIN and EWOULDBLOCK appears when we attempt to recv a empty socket with a O_NONBLOCK flag, so it's a normal error
-	/*if (o_read_p < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-		std::cerr << "Erreur : " << strerror(errno) << std::endl;
-}*/
+	if (o_read_p > 0)
+		time(&client.purge_last_time);
 }
 
 void Settings::del(Sbuffer &client)
@@ -526,16 +524,26 @@ int Settings::process_chunks(std::vector<char> &data, size_t start_index, size_t
 	return 0; // Des chunks sont toujours en attente d'arriver sur le socket
 }
 
-void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintptr_t ident, Request &req)
+void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ident, Request &req)
 {
 	char buffer[8197];
 	memset(buffer, 0, 8197);
-	size_t readed = 0;
 
 	int o_read = reading_socket(ident, sbuffer.time_start, sbuffer._buffer);
 	if (o_read == -1 || o_read == 0)
 	{
 		sbuffer._status = SOCKET_ERROR;
+		return;
+	}
+	if (sbuffer._status == PURGE_REQUIRED)
+	{
+		// gestion_413(sbuffer, ident);
+		std::cout << o_read << std::endl;
+		if (o_read < 8197)
+		{
+			sbuffer._buffer.clear();
+			sbuffer.purge_last_time = time(nullptr);
+		}
 		return;
 	}
 	switch (sbuffer._status)
@@ -547,8 +555,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 		if (req.check_header_buffer(header, server.config))
 		{
 			sbuffer.status_code = 413;
-			server.set_event(ke, ident, EVFILT_READ, EV_DELETE);
-			server.set_event(ke, ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+			sbuffer._status = PURGE_REQUIRED;
 			return;
 		}
 		sbuffer._status = HEADER_RECEIVED;
@@ -571,6 +578,8 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 			sbuffer._status = REQUEST_RECEIVED;
 			break;
 		}
+		if (sbuffer._status != REQUEST_CHUNKED)
+			break;
 	}
 	case REQUEST_CHUNKED:
 	{
@@ -601,7 +610,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, int ke, uintp
 
 void Settings::writeResponse(Sbuffer &client, int socket)
 {
-	yd::usleep(2000);
+	yd::usleep(1000);
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
 	if (client._status == BODY_SENT)
@@ -617,7 +626,7 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 		}
 		client._status = HEADER_SENT;
 	}
-	if (client._total_sent < size_data)
+	else if (client._total_sent < size_data)
 	{
 		int sent = send(socket, &*start + client._total_sent, size_data - client._total_sent, 0);
 		client._total_sent += sent;
@@ -629,7 +638,7 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 			return;
 		}
 	}
-	if (client._total_sent == size_data)
+	else if (client._total_sent == size_data)
 	{
 		if (client._body_cookie.size() > 0)
 		{
@@ -676,27 +685,8 @@ bool Settings::parseRequest(Sbuffer &client)
 	if (!client._req.header.connection)
 		client._add_eof = 1;
 	client._status = REQUEST_PARSED;
-
-	// to delete
-	if (client._req.method.path == "/kill")
-	{
-		std::cout << "kill" << std::endl;
-		client.clean();
-		return (1);
-	}
 	return 0;
 }
-
-// bool Settings::createResponse(Sbuffer &client, sockaddr_in const& client_addr)
-// {
-// 	client._buffer.clear();
-// 	if (client._req.method.isGet)
-// 		client._header = this->get(client._req, client_addr);
-// 	else if (client._req.method.isPost)
-// 		client._header = this->post(client._req, client_addr);
-// 	else if (client._req.method.isDelete)
-// 		client._header = this->del(client._req, client_addr);
-// }
 
 std::string Settings::checkextension(std::string const &path)
 {
@@ -786,9 +776,15 @@ void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<
 	std::map<int, Sbuffer>::iterator start = requests.begin();
 	for (int i = 0; start != requests.end(); start++)
 	{
+		if ((*start).second._status == PURGE_REQUIRED && difftime(actual_time, (*start).second.purge_last_time) > 2)
+		{
+			(*start).second._status = REQUEST_RECEIVED;
+			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
+			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+		}
 		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2 && ((*start).second._status <= 3 && (*start).second._status > 0))
 		{
-			usleep(1);
+			yd::usleep(1);
 			std::cout << "OK" << std::endl;
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);

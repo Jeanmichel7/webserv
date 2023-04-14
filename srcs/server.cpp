@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/11 23:03:59 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/14 14:26:51 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 						else if (event[i].filter == EVFILT_READ)
 						{
 							std::cout << event[i].ident << ": reading request " << std::endl;
-							server.reading_request(sbuffer[event[i].ident], server, ke, event[i].ident, req);
+							server.reading_request(sbuffer[event[i].ident], server, event[i].ident, req);
 							if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
 							{
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
@@ -115,11 +115,6 @@ int main(int argc, char **argv)
 						}
 						else if (event[i].filter == EVFILT_WRITE)
 						{
-							if (sbuffer[event[i].ident].status_code == 413)
-							{
-								std::cout << event[i].ident << ": 413" << std::endl;
-								server.gestion_413(sbuffer[event[i].ident], event[i].ident);
-							}
 							if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
 							{
 								std::cout << event[i].ident << ": parse request " << std::endl;
