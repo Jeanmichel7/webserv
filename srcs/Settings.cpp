@@ -464,67 +464,66 @@ size_t Settings::read_hex_size(const std::vector<char> &data, size_t &index)
 	}
 	return size;
 }
-
 int Settings::process_chunks(std::vector<char> &data, size_t start_index, size_t &current_index)
 {
-	std::vector<char> output_data;
-	size_t index = current_index;
-	if (current_index < start_index)
-	{
-		index = start_index;
-	}
-	else
-	{
-		index = current_index;
-	}
+    std::vector<char> output_data;
+    output_data.insert(output_data.end(), data.begin(), data.begin() + start_index); // Copie le header dans output_data
+    
+    size_t index = current_index;
+    if (current_index < start_index)
+    {
+        index = start_index;
+    }
+    else
+    {
+        index = current_index;
+    }
 
-	while (index < data.size())
-	{
-		size_t chunk_size = 0;
-		try
-		{
-			chunk_size = read_hex_size(data, index);
-		}
-		catch (std::runtime_error &e)
-		{
-			current_index = index;
-			return -1;
-		}
-		if (chunk_size == 0)
-		{
-			// Supprime le dernier CRLF après le chunk de taille 0 (fin des chunks)
-			if (index < data.size() && data[index] == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
-			{
-				index += 2;
-			}
-			data.erase(data.begin() + start_index, data.begin() + index);
-			current_index = 0;
-			return 1; // Fin des chunks
-		}
+    while (true)
+    {
+        size_t chunk_size = 0;
+        try
+        {
+            chunk_size = read_hex_size(data, index);
+        }
+        catch (std::runtime_error &e)
+        {
+            current_index = index;
+            return -1;
+        }
+        if (chunk_size == 0)
+        {
+            // Supprime le dernier CRLF après le chunk de taille 0 (fin des chunks)
+            if (index < data.size() && data[index] == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
+            {
+                index += 2;
+            }
+            break; // Fin des chunks
+        }
 
-		if (index + chunk_size > data.size())
-		{
-			// Chunk incomplet ou dépassant la taille requise
-			current_index = index;
-			return -1;
-		}
+        if (index + chunk_size > data.size())
+        {
+            // Chunk incomplet ou dépassant la taille requise
+            current_index = index;
+            return -1;
+        }
 
-		// Copie du chunk (sans la valeur hexadécimale) dans output_data
-		output_data.insert(output_data.end(), data.begin() + index, data.begin() + index + chunk_size);
-		index += chunk_size;
+        // Copie du chunk (sans la valeur hexadécimale) dans output_data
+		std::cout << "INDEX : " << index << std::endl;
+        output_data.insert(output_data.end(), data.begin() + index, data.begin() + index + chunk_size);
+        index += chunk_size;
 
-		// Supprime le CRLF après le chunk actuel
-		if (index < data.size() && data[index] == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
-		{
-			index += 2;
-		}
-	}
-
-	data.erase(data.begin() + start_index, data.begin() + current_index);
-	data.insert(data.begin() + start_index, output_data.begin(), output_data.end());
-	current_index = index;
-	return 0; // Des chunks sont toujours en attente d'arriver sur le socket
+        // Supprime le CRLF après le chunk actuel
+        if (index < data.size() && data[index] == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
+        {
+            index += 2;
+        }
+    }
+    data = output_data; 
+    current_index = 0;
+    return 1;
 }
+
 
 void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ident, Request &req)
 {
@@ -585,7 +584,6 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 	}
 	case REQUEST_CHUNKED:
 	{
-
 		cout << "req chunck " << endl;
 		int rt = 0;
 		sbuffer.readed = 0;
@@ -598,8 +596,6 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 		}
 		if (rt == 1)
 		{
-			for (int ju = 0; ju < sbuffer._buffer.size(); ju++)
-				std::cout << sbuffer._buffer[ju] << std::endl;
 			sbuffer._buffer.push_back('\r');
 			sbuffer._buffer.push_back('\n');
 			sbuffer._buffer.push_back('\r');
