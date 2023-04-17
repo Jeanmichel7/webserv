@@ -71,7 +71,7 @@ void send_chunked_request(const char* host, int port, const char* path, const ch
 int main() {
     const char* host = "localhost";
     int port = 4241;
-    const char* path = "/a.out";
+    const char* path = "/";
     const char* data = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
     int length = strlen(data);
     send_chunked_request(host, port, path, data, length);

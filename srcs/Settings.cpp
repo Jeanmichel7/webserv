@@ -429,6 +429,8 @@ int Settings::reading_socket(int socket, time_t &time_starting, std::vector<char
 	{
 		return o_read;
 	}
+
+	std::cout << static_cast<char *>(client_buff.data()) << std::endl;
 	// Réduit la taille du client_buff pour enlever les octets non utilisés
 	client_buff.resize(current_size + o_read);
 
@@ -583,6 +585,8 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 	}
 	case REQUEST_CHUNKED:
 	{
+
+		cout << "req chunck " << endl;
 		int rt = 0;
 		sbuffer.readed = 0;
 		std::string header;
@@ -594,6 +598,8 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 		}
 		if (rt == 1)
 		{
+			for (int ju = 0; ju < sbuffer._buffer.size(); ju++)
+				std::cout << sbuffer._buffer[ju] << std::endl;
 			sbuffer._buffer.push_back('\r');
 			sbuffer._buffer.push_back('\n');
 			sbuffer._buffer.push_back('\r');
