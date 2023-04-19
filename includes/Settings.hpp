@@ -75,7 +75,7 @@ public:
 	void writeResponse(Sbuffer &client, int socket);
 	void generate_cookie(Sbuffer &client, struct sockaddr_in const &client_addr);
 	void gestion_413(Sbuffer &client, int socket);
-	void check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<int, sockaddr_in> &clients);
+	void check_timeout(std::map<int, Sbuffer> &requests, int ke);
 	std::string timeout(void);
 
 	void generate_body(Sbuffer &client, struct sockaddr_in const &client_addr);

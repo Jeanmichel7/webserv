@@ -109,7 +109,6 @@ bool Method::checkType(void)
 	}
 	else
 	{
-		cerr << "Error : request method is not valid" << std::endl;
 		return 1;
 	}
 	return 0;

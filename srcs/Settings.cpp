@@ -291,7 +291,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 			client.status_code = 500;
 		}
 	}
-	else if (client.status_code == 200 && client._req.method.isGet == true)
+	else if (client.status_code == 200 && (client._req.method.isGet == true || client._req.method.isPost == true))
 	{
 		char *file = (char *)this->config.getFile(client._req.method.path)->c_str();
 		if (file[0] == '/')
@@ -305,7 +305,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 				folder_gestion(client);
 		}
 	}
-	else if (client.status_code == 200 && client._req.method.isGet == false)
+	else if (client.status_code == 200)
 	{
 		client.status_code = 405;
 	}
@@ -430,7 +430,6 @@ int Settings::reading_socket(int socket, time_t &time_starting, std::vector<char
 		return o_read;
 	}
 
-	std::cout << static_cast<char *>(client_buff.data()) << std::endl;
 	// Réduit la taille du client_buff pour enlever les octets non utilisés
 	client_buff.resize(current_size + o_read);
 
@@ -509,7 +508,6 @@ int Settings::process_chunks(std::vector<char> &data, size_t start_index, size_t
         }
 
         // Copie du chunk (sans la valeur hexadécimale) dans output_data
-		std::cout << "INDEX : " << index << std::endl;
         output_data.insert(output_data.end(), data.begin() + index, data.begin() + index + chunk_size);
         index += chunk_size;
 
@@ -661,14 +659,18 @@ bool Settings::parseRequest(Sbuffer &client)
 	std::fstream fd;
 	client._status = REQUEST_PARSED;
 
-	if (client.status_code == 413)
+	if (client.status_code == 413 || client.status_code == 408)
 	{
 		client._status = REQUEST_PARSED;
 		return 0;
 	}
 	else if (client._req.parseRequest(client._buffer))
 		client.status_code = 400;
-	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port, client._req.method.path))
+	else if (client._req.method.protocole != "HTTP/1.1")
+		client.status_code = 400;
+	else if (!client._req.method.isGet && !client._req.method.isPost && !client._req.method.isDelete)
+		client.status_code = 405;
+	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port, client._req.header.host))
 		client.status_code = 400;
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
 		client.status_code = 405;
@@ -771,12 +773,12 @@ int Settings::checkArgs(int argc)
 	return (0);
 }
 
-void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<int, sockaddr_in> &clients)
+void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke)
 {
 	time_t actual_time;
 	time(&actual_time);
 	std::map<int, Sbuffer>::iterator start = requests.begin();
-	for (int i = 0; start != requests.end(); start++)
+	for (;start != requests.end(); start++)
 	{
 		if ((*start).second._status == PURGE_REQUIRED && difftime(actual_time, (*start).second.purge_last_time) > 2)
 		{
@@ -784,16 +786,13 @@ void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 		}
-		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2 && ((*start).second._status <= 3 && (*start).second._status > 0))
+		if ((*start).second._buffer.size() != 0 && difftime(actual_time, (*start).second.time_start) > 30 && ((*start).second._status <= 3 && (*start).second._status > 0))
 		{
-			std::cout << "OK" << std::endl;
+			(*start).second._status = REQUEST_RECEIVED;
+			std::cout << (*start).first << ": Timed out" << std::endl;
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-			std::string rep(this->timeout());
-			send((*start).first, rep.c_str(), rep.size(), 0);
-			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_DELETE);
-			clients.erase(i);
-			close(i);
+			(*start).second.status_code = 408;
 		}
 	}
 }

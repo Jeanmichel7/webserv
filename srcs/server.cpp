@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/14 14:26:51 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/19 18:34:23 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,8 +99,7 @@ int main(int argc, char **argv)
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 								std::cout << event[i].ident << ": parse request " << std::endl;
-								if (server.parseRequest(sbuffer[event[i].ident]))
-									return 1;
+								server.parseRequest(sbuffer[event[i].ident]);
 							}
 							if (sbuffer[event[i].ident]._status == SOCKET_ERROR)
 							{
@@ -109,18 +108,12 @@ int main(int argc, char **argv)
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 								clients.erase(event[i].ident);
 								close(event[i].ident);
-								server.check_timeout(sbuffer, ke, clients);
+								server.check_timeout(sbuffer, ke);
 								continue;
 							}
 						}
 						else if (event[i].filter == EVFILT_WRITE)
 						{
-							if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
-							{
-								std::cout << event[i].ident << ": parse request " << std::endl;
-								if (server.parseRequest(sbuffer[event[i].ident]))
-									return 1;
-							}
 							if (sbuffer[event[i].ident]._status == REQUEST_PARSED || sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
 							{
 								std::cout << event[i].ident << ": Generate body " << std::endl;
@@ -144,7 +137,7 @@ int main(int argc, char **argv)
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_DELETE);
 								clients.erase(event[i].ident);
 								close(event[i].ident);
-								server.check_timeout(sbuffer, ke, clients);
+								server.check_timeout(sbuffer, ke);
 								continue;
 							}
 							else if (sbuffer[event[i].ident]._status == BODY_SENT)
@@ -154,7 +147,7 @@ int main(int argc, char **argv)
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_ADD | EV_ENABLE);
 								// std::memset(&sbuffer[event[i].ident], 0, sizeof(sbuffer[event[i].ident]));
 								sbuffer[event[i].ident].clean();
-								server.check_timeout(sbuffer, ke, clients);
+								server.check_timeout(sbuffer, ke);
 								// sbuffer.erase(event[i].ident);
 							}
 						}
@@ -162,7 +155,7 @@ int main(int argc, char **argv)
 				}
 			}
 			else
-				server.check_timeout(sbuffer, ke, clients);
+				server.check_timeout(sbuffer, ke);
 		}
 	}
 	catch (const std::exception &e)
