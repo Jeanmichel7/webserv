@@ -317,14 +317,6 @@ bool yd::isValidPathFile(std::string const &s)
 	}
 	return true;
 }
-// write a function compatible with c++98 and use timeval that work like usleep and wait for the time in microsecond
-void yd::usleep(unsigned int time)
-{
-	struct timeval tv;
-	tv.tv_sec = time / 1000000;
-	tv.tv_usec = time % 1000000;
-	select(0, NULL, NULL, NULL, &tv);
-}
 
 std::string yd::getExtension(std::string const &path)
 {

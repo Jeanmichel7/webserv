@@ -612,7 +612,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 
 void Settings::writeResponse(Sbuffer &client, int socket)
 {
-	yd::usleep(1000);
+	for(int i = 0; i < 350000; i++){}
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
 	if (client._status == BODY_SENT)
@@ -786,7 +786,6 @@ void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke, std::map<
 		}
 		if ((*start).second.readed != 0 && difftime(actual_time, (*start).second.time_start) > 2 && ((*start).second._status <= 3 && (*start).second._status > 0))
 		{
-			yd::usleep(1);
 			std::cout << "OK" << std::endl;
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
