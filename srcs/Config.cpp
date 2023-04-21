@@ -180,6 +180,22 @@ const std::string *Config::getCgi(const std::string &path, const std::string &cg
 	return (loc->getCgi(cgi));
 }
 
+const std::string Config::getRedirectionType(const std::string &path)
+{
+	const Location *loc = getLocation(path);
+	if (loc == NULL)
+		return ("");
+	return (loc->_redirection_type);
+}
+
+const std::string Config::getRedirectionUrl(const std::string &path)
+{
+	const Location *loc = getLocation(path);
+	if (loc == NULL)
+		return ("");
+	return (loc->_redirection_url);
+}
+
 unsigned int Config::getMaxSize() const
 {
 	return (_server_selected->getMaxBodySize());

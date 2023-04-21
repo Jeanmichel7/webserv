@@ -129,6 +129,8 @@ public:
 	const std::string *getError(const unsigned int error) const;
 	const std::string *getCgi(const std::string &path, const std::string &cgi) const;
 	const std::string *getUpload(const std::string &path) const;
+	const std::string getRedirectionUrl(const std::string &path);
+	const std::string getRedirectionType(const std::string &path);
 	const std::vector<Server> &getServerTab() const;
 	std::string getDirectoryListing(const std::string &path) const;
 	unsigned int getMaxSize() const;
