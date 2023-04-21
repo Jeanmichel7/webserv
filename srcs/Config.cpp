@@ -609,6 +609,7 @@ Location::Location() : _upload_file(), _default_file(), _root(), _path(), _redir
 	_tokens["allow"] = &Location::setMethod;
 	_tokens["default_file"] = &Location::setDefaultFile;
 	_tokens["directory_listing"] = &Location::setDirectoryListing;
+	_tokens["rewrite"] = &Location::setRedirection;
 }
 
 void (Location::*Location::selectSetter(std::string const &token))(Tokenizer &tok)

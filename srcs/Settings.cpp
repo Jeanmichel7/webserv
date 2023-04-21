@@ -213,10 +213,15 @@ void Settings::generate_header(Sbuffer &client)
 {
 	std::stringstream header;
 
+
+
 	// std::cout << "generate_header\n";
 	header << "HTTP/1.1 " << this->error[client.status_code];
-	header << "\n"
-				 << this->date();
+	header << "\n" << this->date();
+
+	if (client.status_code == 301 || client.status_code == 307)
+		header << "\nLocation: " << this->config.getRedirectionUrl(client._req.method.path);
+
 	if (client.header_script.find("Content-Type") == std::string::npos)
 	{
 		if (client.status_code < 400)
@@ -659,6 +664,8 @@ bool Settings::parseRequest(Sbuffer &client)
 	std::fstream fd;
 	client._status = REQUEST_PARSED;
 
+
+
 	if (client.status_code == 413 || client.status_code == 408)
 	{
 		client._status = REQUEST_PARSED;
@@ -684,8 +691,24 @@ bool Settings::parseRequest(Sbuffer &client)
 			client._add_eof = 1;
 		return 0;
 	}
+
+	if(this->config.getRedirectionType(client._req.method.path) == "permanent") {
+		client.status_code = 301;
+		// client.redir_url = this->config.getRedirectionUrl();
+	}
+	else if (this->config.getRedirectionType(client._req.method.path) == "temporary")
+		client.status_code = 307;
+
+	// else if (this->config._redirection_type == 'permanent') { 
+	// 	client.status_code = 301;
+	// }
+	// else if (this->config._redirection_type == 'temporary') {
+	// 	client.status_code = 307;
+	// }
 	else
 		client.status_code = 400;
+
+	
 	if (!client._req.header.connection)
 		client._add_eof = 1;
 	client._status = REQUEST_PARSED;
