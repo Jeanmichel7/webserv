@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/19 18:34:23 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/21 13:46:31 by jrasser          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,22 @@ int main(int argc, char **argv)
 							socklen_t client_addr_len = sizeof(client_addr);
 							int socket_client = accept(event[i].ident, (struct sockaddr *)&client_addr, &client_addr_len);
 							int option = 1;
+
+
+
+
+							if (getsockname(socket_client, (struct sockaddr *)&client_addr, &client_addr_len) < 0)
+							{
+								std::cout << "Erreur lors de la récupération de l'adresse du serveur" << std::endl;
+							}
+							std::cout << "Port du serveur: " << ntohs(client_addr.sin_port) << std::endl;
+							char server_ip[INET_ADDRSTRLEN];
+							inet_ntop(AF_INET, &client_addr.sin_addr, server_ip, INET_ADDRSTRLEN);
+							std::cout << "Adresse IP du serveur: " << server_ip << std::endl;
+
+
+
+
 							if (setsockopt(socket_client, SOL_SOCKET, SO_NOSIGPIPE, &option, sizeof(option)) < 0)
 							{
 								std::cout << "Erreur lors de la configuration de SO_NOSIGPIPE" << std::endl;
@@ -89,6 +105,9 @@ int main(int argc, char **argv)
 							clients[socket_client] = client_addr;
 							server.set_event(ke, socket_client, EVFILT_READ, EV_ADD | EV_ENABLE);
 							fcntl(socket_client, F_SETFL, O_NONBLOCK);
+
+							// cout << "test ip : "<< client_addr.sin_addr.s_addr << endl;
+							// cout << "test port : "<< ntohs(client_addr.sin_port) << endl;
 						}
 						else if (event[i].filter == EVFILT_READ)
 						{
