@@ -50,12 +50,15 @@ public:
 	void setUploadFile(Tokenizer &tok);
 	void setMethod(Tokenizer &tok);
 	void setPath(Tokenizer &tok);
+	void setRedirection(Tokenizer &tok);
 	std::string const *getCgi(std::string const &cgi) const;
 	void (Location::*selectSetter(std::string const &token))(Tokenizer &tok);
 	std::string _upload_file;
 	std::string _default_file;
 	std::string _root;
 	std::string _path;
+	std::string _redirection_url;
+	std::string _redirection_type;
 	std::map<std::string, std::string> _cgi;
 	int _is_get;
 	int _is_post;
@@ -119,7 +122,7 @@ public:
 	Config();
 	friend class Tokenizer;
 	Config(const std::string &path);
-	bool selectServ(const unsigned int ip = 2130706433, const unsigned int port = 80, const std::string path = "");
+	bool selectServ(const unsigned int ip = 2130706433, const unsigned int port = 80, const std::string host = "");
 	bool selectServ(std::string ip = "127.0.0.1", std::string port = "80", std::string path = "");
 	const std::string *getFile(const std::string &path);
 	Methods getMethod(const std::string &path) const;
