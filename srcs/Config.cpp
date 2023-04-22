@@ -31,50 +31,17 @@ Config &Config::operator=(Config const &other)
 Config::Config() : _server(), _server_selected(), _pos_server(), _buffer()
 {
 }
-bool Config::selectServ(const unsigned int ip, const unsigned int port, std::string host)
-{
-	bool first_serv = 0;
-	for (unsigned int i = 0; i < _server.size(); i++)
-	{
-		if (_server[i].getIp() == ip && _server[i].getPort() == port)
-		{
-			if (!first_serv)
-				_server_selected = &_server[i];
-			const std::string *server_name = _server[i].getServerName();
-			if ((*server_name).size() > 0)
-			{
-				for (int j = 0; (*server_name)[j] == host[j + 1]; j++)
-				{
-					// si le serveur name et le path correspondent exactement on change le nom de serveur
-					if ((*server_name)[j] == '\0' && (host[j + 1] == '/' || host[j + 1] == '\0'))
-					{
-						_server_selected = &_server[i];
-						_pos_server = i;
-						break;
-					}
-				}
-			}
-			return (1);
-		}
-	}
-	return (0);
-}
-bool Config::selectServ(std::string ip, std::string port, std::string path)
+
+bool Config::selectServ(const std::string &ip ,const uint16_t &port, const std::string &host)
 {
 	bool first_serv = 0;
 	unsigned int num = 0;
 	unsigned int final_num = 0;
 	unsigned int octet = 3;
-	if (ip == "localhost")
-		ip = "127.0.0.1";
 	for (unsigned int i = 0; i <= ip.length(); i++)
 	{
 		if (ip[i] == '.' || i == ip.length())
 		{
-			if (num < 0 || num > 255)
-			{
-				throw(FormatError(ip, "numbers between 0 and 255"));
-			}
 			final_num = ((num << (8 * octet)) + final_num);
 			octet--;
 			num = 0;
@@ -85,19 +52,18 @@ bool Config::selectServ(std::string ip, std::string port, std::string path)
 		}
 	}
 	uint32_t int_ip = final_num;
-	uint32_t int_port = yd::stoui(port);
 	for (unsigned int i = 0; i < _server.size(); i++)
 	{
-		if ((uint32_t)_server[i].getIp() == int_ip && (uint32_t)_server[i].getPort() == int_port)
+		if ((uint32_t)_server[i].getIp() == int_ip && (uint32_t)_server[i].getPort() == port)
 		{
 			if (!first_serv)
 				_server_selected = &_server[i];
 			const std::string *server_name = _server[i].getServerName();
 			if ((*server_name).size() > 0)
 			{
-				for (int j = 0; (*server_name)[j] == path[j + 1]; j++)
+				for (int j = 0; (*server_name)[j] == host[j + 1]; j++)
 				{
-					if ((*server_name)[j] == '\0' && (path[j + 1] == '/' || path[j + 1] == '\0'))
+					if ((*server_name)[j] == '\0' && (host[j + 1] == '/' || host[j + 1] == '\0'))
 					{
 						_server_selected = &_server[i];
 						break;

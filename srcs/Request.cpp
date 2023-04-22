@@ -1191,7 +1191,7 @@ void Request::reset(void)
 	this->isFinished = false;
 }
 
-bool Request::check_header_buffer(string buffer, Config &config)
+bool Request::check_header_buffer(Sbuffer &client, string buffer, Config &config)
 {
 	Request tmp;
 
@@ -1202,7 +1202,7 @@ bool Request::check_header_buffer(string buffer, Config &config)
 	tmp.header.brut_header = buffer;
 	tmp.header.parseHeader();
 
-	config.selectServ(tmp.header.host_ip, tmp.header.port, tmp.method.path);
+	config.selectServ(client._ip, client._port, tmp.method.path);
 	if (tmp.header.content_length == "")
 		return 0;
 

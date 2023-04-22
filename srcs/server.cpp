@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jrasser <jrasser@student.42mulhouse.fr>    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/21 13:46:31 by jrasser          ###   ########.fr       */
+/*   Updated: 2023/04/22 19:46:00 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,14 +86,11 @@ int main(int argc, char **argv)
 							{
 								std::cout << "Erreur lors de la récupération de l'adresse du serveur" << std::endl;
 							}
-							std::cout << "Port du serveur: " << ntohs(client_addr.sin_port) << std::endl;
-							char server_ip[INET_ADDRSTRLEN];
+							sbuffer[socket_client]._port = ntohs(client_addr.sin_port);
+							char server_ip[INET_ADDRSTRLEN + 1];
+							memset(server_ip, 0, sizeof(server_ip));
 							inet_ntop(AF_INET, &client_addr.sin_addr, server_ip, INET_ADDRSTRLEN);
-							std::cout << "Adresse IP du serveur: " << server_ip << std::endl;
-
-
-
-
+							sbuffer[socket_client]._ip = server_ip;
 							if (setsockopt(socket_client, SOL_SOCKET, SO_NOSIGPIPE, &option, sizeof(option)) < 0)
 							{
 								std::cout << "Erreur lors de la configuration de SO_NOSIGPIPE" << std::endl;
@@ -112,6 +109,8 @@ int main(int argc, char **argv)
 						else if (event[i].filter == EVFILT_READ)
 						{
 							std::cout << event[i].ident << ": reading request " << std::endl;
+							std::cout << "PORT" << sbuffer[event[i].ident]._port << std::endl;
+							std::cout << "NIQUE TA MERE" << std::endl;
 							server.reading_request(sbuffer[event[i].ident], server, event[i].ident, req);
 							if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
 							{

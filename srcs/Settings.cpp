@@ -140,13 +140,14 @@ Settings::~Settings()
 {
 }
 
-Sbuffer::Sbuffer() : _req(), readed(), time_start(), purge_last_time(), _chunk_index(), status_code(200), _add_eof(), _cgi_data(), _pid(), _status(), _total_sent()
+Sbuffer::Sbuffer() : _req(),  time_start(), purge_last_time(), _port(), _ip(), _chunk_index(), status_code(200), _add_eof(), _cgi_data(), _pid(), _status(), _total_sent()
 {
 }
 void Sbuffer::clean()
 {
+	this->_port = 0;
+	this->_ip.clear();
 	this->_req.reset();
-	this->readed = 0;
 	this->time_start = 0;
 	this->purge_last_time = 0;
 	this->_chunk_index = 0;
@@ -556,7 +557,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 	{
 		std::string header;
 		yd::copyHeader(header, sbuffer._buffer);
-		if (req.check_header_buffer(header, server.config))
+		if (req.check_header_buffer(sbuffer, header, server.config))
 		{
 			sbuffer.status_code = 413;
 			sbuffer._status = PURGE_REQUIRED;
@@ -589,7 +590,6 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 	{
 		cout << "req chunck " << endl;
 		int rt = 0;
-		sbuffer.readed = 0;
 		std::string header;
 		yd::copyHeader(header, sbuffer._buffer);
 		rt = server.process_chunks(sbuffer._buffer, static_cast<size_t>(header.size()), sbuffer._chunk_index);
@@ -677,7 +677,7 @@ bool Settings::parseRequest(Sbuffer &client)
 		client.status_code = 400;
 	else if (!client._req.method.isGet && !client._req.method.isPost && !client._req.method.isDelete)
 		client.status_code = 405;
-	else if (!this->config.selectServ(client._req.header.host_ip, client._req.header.port, client._req.header.host))
+	else if (!this->config.selectServ(client._ip, client._port, client._req.header.host))
 		client.status_code = 400;
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
 		client.status_code = 405;
