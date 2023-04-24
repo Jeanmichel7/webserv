@@ -122,7 +122,7 @@ public:
 	Config();
 	friend class Tokenizer;
 	Config(const std::string &path);
-	bool selectServ(const std::string &ip, const uint16_t &port, const std::string &host);
+	bool selectServ(const uint32_t &ip, const uint16_t &port, const std::string &host);
 	const std::string *getFile(const std::string &path);
 	Methods getMethod(const std::string &path) const;
 	const std::string *getError(const unsigned int error) const;

@@ -198,7 +198,7 @@ struct Request {
 	void reset( void );
 	// bool isFinishedRequest( string const &buff );
 	bool isFinishedRequest(std::vector<char> const &req);
-	bool check_header_buffer(Sbuffer &client, string buffer, Config & config);
+	bool check_header_buffer(string buffer, Config & config, sockaddr_in &client_net);
 };
 
 #endif

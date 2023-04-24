@@ -32,29 +32,17 @@ Config::Config() : _server(), _server_selected(), _pos_server(), _buffer()
 {
 }
 
-bool Config::selectServ(const std::string &ip ,const uint16_t &port, const std::string &host)
+bool Config::selectServ(const uint32_t &int_ip ,const uint16_t &port, const std::string &host)
 {
+		uint32_t convert_ip = int_ip;
+	convert_ip = (((convert_ip >> 24) & 0xFF)       | // échange des octets 1 et 4
+           ((convert_ip << 8) & 0xFF0000)   | // échange des octets 2 et 3
+           ((convert_ip >> 8) & 0xFF00)      | // échange des octets 3 et 2
+           ((convert_ip << 24) & 0xFF000000));
 	bool first_serv = 0;
-	unsigned int num = 0;
-	unsigned int final_num = 0;
-	unsigned int octet = 3;
-	for (unsigned int i = 0; i <= ip.length(); i++)
-	{
-		if (ip[i] == '.' || i == ip.length())
-		{
-			final_num = ((num << (8 * octet)) + final_num);
-			octet--;
-			num = 0;
-		}
-		else
-		{
-			num = num * 10 + (ip[i] - '0');
-		}
-	}
-	uint32_t int_ip = final_num;
 	for (unsigned int i = 0; i < _server.size(); i++)
 	{
-		if ((uint32_t)_server[i].getIp() == int_ip && (uint32_t)_server[i].getPort() == port)
+		if ((uint32_t)_server[i].getIp() == convert_ip && (uint32_t)_server[i].getPort() == port)
 		{
 			if (!first_serv)
 				_server_selected = &_server[i];

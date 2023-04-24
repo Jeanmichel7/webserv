@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/22 19:46:00 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/24 11:07:16 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,38 +86,28 @@ int main(int argc, char **argv)
 							{
 								std::cout << "Erreur lors de la récupération de l'adresse du serveur" << std::endl;
 							}
-							sbuffer[socket_client]._port = ntohs(client_addr.sin_port);
 							char server_ip[INET_ADDRSTRLEN + 1];
 							memset(server_ip, 0, sizeof(server_ip));
 							inet_ntop(AF_INET, &client_addr.sin_addr, server_ip, INET_ADDRSTRLEN);
-							sbuffer[socket_client]._ip = server_ip;
 							if (setsockopt(socket_client, SOL_SOCKET, SO_NOSIGPIPE, &option, sizeof(option)) < 0)
 							{
 								std::cout << "Erreur lors de la configuration de SO_NOSIGPIPE" << std::endl;
 							}
 							std::cout << socket_client << ": Accept Connexion " << std::endl;
-							// int r = 1;
-							// if (setsockopt(socket_client, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0)
-							// 	std::cout << "nope\n";
 							clients[socket_client] = client_addr;
 							server.set_event(ke, socket_client, EVFILT_READ, EV_ADD | EV_ENABLE);
 							fcntl(socket_client, F_SETFL, O_NONBLOCK);
-
-							// cout << "test ip : "<< client_addr.sin_addr.s_addr << endl;
-							// cout << "test port : "<< ntohs(client_addr.sin_port) << endl;
 						}
 						else if (event[i].filter == EVFILT_READ)
 						{
 							std::cout << event[i].ident << ": reading request " << std::endl;
-							std::cout << "PORT" << sbuffer[event[i].ident]._port << std::endl;
-							std::cout << "NIQUE TA MERE" << std::endl;
-							server.reading_request(sbuffer[event[i].ident], server, event[i].ident, req);
+							server.reading_request(sbuffer[event[i].ident], server, event[i].ident, req, clients[event[i].ident]);
 							if (sbuffer[event[i].ident]._status == REQUEST_RECEIVED)
 							{
 								server.set_event(ke, event[i].ident, EVFILT_READ, EV_DELETE);
 								server.set_event(ke, event[i].ident, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 								std::cout << event[i].ident << ": parse request " << std::endl;
-								server.parseRequest(sbuffer[event[i].ident]);
+								server.parseRequest(sbuffer[event[i].ident], clients[event[i].ident]);
 							}
 							if (sbuffer[event[i].ident]._status == SOCKET_ERROR)
 							{

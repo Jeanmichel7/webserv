@@ -140,13 +140,11 @@ Settings::~Settings()
 {
 }
 
-Sbuffer::Sbuffer() : _req(),  time_start(), purge_last_time(), _port(), _ip(), _chunk_index(), status_code(200), _add_eof(), _cgi_data(), _pid(), _status(), _total_sent()
+Sbuffer::Sbuffer() : _req(),  time_start(), purge_last_time(), _chunk_index(), status_code(200), _add_eof(), _cgi_data(), _pid(), _status(), _total_sent()
 {
 }
 void Sbuffer::clean()
 {
-	this->_port = 0;
-	this->_ip.clear();
 	this->_req.reset();
 	this->time_start = 0;
 	this->purge_last_time = 0;
@@ -529,7 +527,7 @@ int Settings::process_chunks(std::vector<char> &data, size_t start_index, size_t
 }
 
 
-void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ident, Request &req)
+void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ident, Request &req, sockaddr_in client_net)
 {
 	char buffer[8197];
 	memset(buffer, 0, 8197);
@@ -557,7 +555,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 	{
 		std::string header;
 		yd::copyHeader(header, sbuffer._buffer);
-		if (req.check_header_buffer(sbuffer, header, server.config))
+		if (req.check_header_buffer(header, server.config, client_net))
 		{
 			sbuffer.status_code = 413;
 			sbuffer._status = PURGE_REQUIRED;
@@ -659,11 +657,10 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 	}
 }
 
-bool Settings::parseRequest(Sbuffer &client)
+bool Settings::parseRequest(Sbuffer &client, sockaddr_in &client_net)
 {
 	std::fstream fd;
 	client._status = REQUEST_PARSED;
-
 
 
 	if (client.status_code == 413 || client.status_code == 408)
@@ -677,12 +674,22 @@ bool Settings::parseRequest(Sbuffer &client)
 		client.status_code = 400;
 	else if (!client._req.method.isGet && !client._req.method.isPost && !client._req.method.isDelete)
 		client.status_code = 405;
-	else if (!this->config.selectServ(client._ip, client._port, client._req.header.host))
+	else if (!this->config.selectServ(client_net.sin_addr.s_addr, ntohs(client_net.sin_port), client._req.header.host))
 		client.status_code = 400;
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
 		client.status_code = 405;
 	else if (check_forbidden(*this->config.getFile(client._req.method.path)) && !checkextension(*this->config.getFile(client._req.method.path)).empty())
 		client.status_code = 404;
+	else if(this->config.getRedirectionType(client._req.method.path) == "permanent") {
+		client.status_code = 301;
+		return 0;
+		// client.redir_url = this->config.getRedirectionUrl();
+	}
+	else if (this->config.getRedirectionType(client._req.method.path) == "temporary")
+	{
+		client.status_code = 307;
+		return 0;
+	}
 	else if (client._req.method.isGet || client._req.method.isPost || client._req.method.isDelete)
 	{
 		if (client._req.method.isDelete)
@@ -691,13 +698,8 @@ bool Settings::parseRequest(Sbuffer &client)
 			client._add_eof = 1;
 		return 0;
 	}
-
-	if(this->config.getRedirectionType(client._req.method.path) == "permanent") {
-		client.status_code = 301;
-		// client.redir_url = this->config.getRedirectionUrl();
-	}
-	else if (this->config.getRedirectionType(client._req.method.path) == "temporary")
-		client.status_code = 307;
+	else
+		client.status_code = 400;
 
 	// else if (this->config._redirection_type == 'permanent') { 
 	// 	client.status_code = 301;
@@ -705,8 +707,6 @@ bool Settings::parseRequest(Sbuffer &client)
 	// else if (this->config._redirection_type == 'temporary') {
 	// 	client.status_code = 307;
 	// }
-	else
-		client.status_code = 400;
 
 	
 	if (!client._req.header.connection)

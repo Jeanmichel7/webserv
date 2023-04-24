@@ -24,8 +24,6 @@ struct Sbuffer
 	Request _req;
 	time_t time_start;
 	time_t purge_last_time;
-	uint16_t _port;
-	std::string _ip;
 	size_t _chunk_index;
 	int status_code;
 	bool _add_eof;
@@ -71,7 +69,7 @@ public:
 	void folder_gestion(Sbuffer &client);
 	void set_event(int ke, int socket, short filter, short flag);
 	bool checkmethod(Request const &req, Methods const &t);
-	bool parseRequest(Sbuffer &client);
+	bool parseRequest(Sbuffer &client, sockaddr_in &client_net);
 	void writeResponse(Sbuffer &client, int socket);
 	void generate_cookie(Sbuffer &client, struct sockaddr_in const &client_addr);
 	void gestion_413(Sbuffer &client, int socket);
@@ -82,7 +80,7 @@ public:
 	void generate_header(Sbuffer &client);
 
 	bool reqIsChuncked(std::string req);
-	void reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ident, Request &req);
+	void reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ident, Request &req, sockaddr_in client_net);
 
 	std::string handleCookie(Sbuffer &client);
 	Settings(Config const &base);
