@@ -805,13 +805,13 @@ void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke)
 	{
 		if ((*start).second._status == PURGE_REQUIRED && difftime(actual_time, (*start).second.purge_last_time) > 2)
 		{
-			(*start).second._status = REQUEST_RECEIVED;
+			(*start).second._status = REQUEST_PARSED;
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 		}
 		if ((*start).second._buffer.size() != 0 && difftime(actual_time, (*start).second.time_start) > 30 && ((*start).second._status <= 3 && (*start).second._status > 0))
 		{
-			(*start).second._status = REQUEST_RECEIVED;
+			(*start).second._status = REQUEST_PARSED;
 			std::cout << (*start).first << ": Timed out" << std::endl;
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
