@@ -6,7 +6,7 @@
 /*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/24 11:07:16 by ydumaine         ###   ########.fr       */
+/*   Updated: 2023/04/25 10:38:44 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,10 +78,6 @@ int main(int argc, char **argv)
 							socklen_t client_addr_len = sizeof(client_addr);
 							int socket_client = accept(event[i].ident, (struct sockaddr *)&client_addr, &client_addr_len);
 							int option = 1;
-
-
-
-
 							if (getsockname(socket_client, (struct sockaddr *)&client_addr, &client_addr_len) < 0)
 							{
 								std::cout << "Erreur lors de la récupération de l'adresse du serveur" << std::endl;

@@ -576,13 +576,21 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 	}
 	case HEADER_RECEIVED:
 	{
-		if ((sbuffer._status != REQUEST_CHUNKED) && req.isFinishedRequest(sbuffer._buffer))
+		if ((sbuffer._status != REQUEST_CHUNKED))
 		{
-			sbuffer._status = REQUEST_RECEIVED;
+			int rt = 0;
+			rt = req.isFinishedRequest(sbuffer._buffer);
+			if (rt == 1) 
+			{
+				sbuffer._status = REQUEST_RECEIVED;
+			}
+			else if (rt == 2)
+			{
+				sbuffer.status_code = 400;
+				sbuffer._status = PURGE_REQUIRED;
+			}
 			break;
 		}
-		if (sbuffer._status != REQUEST_CHUNKED)
-			break;
 	}
 	case REQUEST_CHUNKED:
 	{

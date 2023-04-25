@@ -34,11 +34,11 @@ Config::Config() : _server(), _server_selected(), _pos_server(), _buffer()
 
 bool Config::selectServ(const uint32_t &int_ip ,const uint16_t &port, const std::string &host)
 {
-		uint32_t convert_ip = int_ip;
+	uint32_t convert_ip = int_ip;
 	convert_ip = (((convert_ip >> 24) & 0xFF)       | // échange des octets 1 et 4
-           ((convert_ip << 8) & 0xFF0000)   | // échange des octets 2 et 3
-           ((convert_ip >> 8) & 0xFF00)      | // échange des octets 3 et 2
-           ((convert_ip << 24) & 0xFF000000));
+    ((convert_ip << 8) & 0xFF0000)   | // échange des octets 2 et 3
+    ((convert_ip >> 8) & 0xFF00)      | // échange des octets 3 et 2
+    ((convert_ip << 24) & 0xFF000000));
 	bool first_serv = 0;
 	for (unsigned int i = 0; i < _server.size(); i++)
 	{

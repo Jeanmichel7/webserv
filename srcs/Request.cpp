@@ -1214,7 +1214,7 @@ bool Request::check_header_buffer(string buffer, Config &config, sockaddr_in &cl
 	return 0;
 }
 
-bool Request::isFinishedRequest(std::vector<char> const &req)
+int Request::isFinishedRequest(std::vector<char> const &req)
 {
 
 	size_t header_size = 0;
@@ -1251,6 +1251,10 @@ bool Request::isFinishedRequest(std::vector<char> const &req)
 			return 1;
 		else if (req.size() - header.length() - 4 == (unsigned int)cl)
 			return 1;
+		else if (req.size() - header.length() - 4 >= (unsigned int)cl)
+		{
+			return 2;
+		}
 	}
 	return 0;
 }
