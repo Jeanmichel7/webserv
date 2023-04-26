@@ -587,7 +587,7 @@ bool Server::checkServer()
 		throw(ConfigurationError("port configuration is missing for a server"));
 	if (_ip == 0)
 		throw(ConfigurationError("ip configuration is missing for a server"));
-	if (_locations.size() == 0)
+	if (_locations.size(	) == 0)
 		throw(ConfigurationError("a server need at least one Location"));
 	for (unsigned int i = 0; i < _locations.size(); i++)
 	{
@@ -868,11 +868,11 @@ Tokenizer::Tokenizer(Config &config, std::string const &path)
 		throw(ConfigurationError("Webserv need at least one server configure to working"));
 	std::vector<Server>::iterator start = config._server.begin();
 	uint32_t ip = (*start).getIp();
-	for (; start != config._server.end(); start++)
+	/*for (; start != config._server.end(); start++)
 	{
 		if ((*start).getIp() != ip)
 			throw(ConfigurationError("Webserv can't handle multiple ip address"));
-	}
+	}*/
 	start = config._server.begin();
 
 // For the moment webserv can handle multiple server with same ip, port, add this code to prevent it

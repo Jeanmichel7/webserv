@@ -165,15 +165,18 @@ void Settings::build(int ke)
 	int socket_fd;
 	struct addrinfo serv_addr, *res;
 	std::vector<std::string> all_ports;
+	std::vector<std::string> all_ip;
 
 	this->config.selectFirstServ();
 	for (unsigned int i = 0; i < this->config.getServNumb(); i++)
 	{
-		if (std::find(all_ports.begin(), all_ports.end(), this->config.getPort()) == all_ports.end())
+		if (std::find(all_ports.begin(), all_ports.end(), this->config.getPort()) == all_ports.end() || std::find(all_ip.begin(), all_ip.end(), this->config.getIp()) == all_ip.end())
 		{
 			std::memset(&serv_addr, 0, sizeof(serv_addr));
 			serv_addr.ai_family = AF_INET;
 			serv_addr.ai_socktype = SOCK_STREAM;
+			std::cout << "IP: " << this->config.getIp().c_str() << std::endl;
+			std::cout << "PORT: " << this->config.getPort().c_str() << std::endl;
 			int status = getaddrinfo(this->config.getIp().c_str(), this->config.getPort().c_str(), &serv_addr, &res);
 			if (status != 0)
 				throw Settings::badCreation();
@@ -195,6 +198,7 @@ void Settings::build(int ke)
 				throw Settings::badCreation();
 			memset(&this->check_request_timeout, 0, sizeof(this->check_request_timeout));
 			all_ports.push_back(this->config.getPort());
+			all_ip.push_back(this->config.getIp());
 		}
 		++config;
 	}
@@ -361,32 +365,6 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 	client._status = BODY_GENERATED;
 }
 
-void Settings::gestion_413(Sbuffer &client, int socket)
-{
-	// std::cout << "gestion 413\n";
-	char tmp_buff[32668];
-	client._add_eof = 1;
-	time_t actual_time;
-	time(&actual_time);
-	int o_read_p = 0;
-	if (difftime(actual_time, client.purge_last_time) > 1)
-	{
-		o_read_p = recv(socket, &tmp_buff, 32668, MSG_DONTWAIT);
-		if (o_read_p == 0 || o_read_p < 0)
-		{
-			client._status = REQUEST_RECEIVED;
-			return;
-		}
-	}
-	if (o_read_p == 0 || o_read_p < 0)
-	{
-		client._status = SOCKET_ERROR;
-		return;
-	}
-	if (o_read_p > 0)
-		time(&client.purge_last_time);
-}
-
 void Settings::del(Sbuffer &client)
 {
 	if (!this->config.getMethod(client._req.method.path).isdelete)
@@ -540,7 +518,6 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 	}
 	if (sbuffer._status == PURGE_REQUIRED)
 	{
-		// gestion_413(sbuffer, ident);
 		std::cout << o_read << std::endl;
 		if (o_read < 8197)
 		{
