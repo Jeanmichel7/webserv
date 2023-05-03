@@ -98,7 +98,7 @@ public:
 	const std::string *getServerName() const;
 	unsigned int getPort() const;
 	uint32_t getIp() const;
-	unsigned int getMaxBodySize() const;
+	size_t getMaxBodySize() const;
 	const std::string *getErrorPages(unsigned int error) const;
 	const Location *getLocation(std::string const &path) const;
 	bool checkServer();
@@ -108,7 +108,7 @@ public:
 
 private:
 	bool _default;
-	unsigned int _max_body_size;
+	size_t _max_body_size;
 	std::map<unsigned int, std::string> _error_pages;
 	std::vector<Location> _locations;
 	std::map<std::string, void (Server::*)(Tokenizer &tok)> _tokens;

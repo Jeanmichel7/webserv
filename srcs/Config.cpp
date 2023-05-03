@@ -630,7 +630,7 @@ uint32_t Server::getIp() const
 {
 	return (_ip);
 }
-unsigned int Server::getMaxBodySize() const
+size_t Server::getMaxBodySize() const
 {
 	return (_max_body_size);
 }
@@ -679,8 +679,6 @@ void Server::setServerName(Tokenizer &tok)
 
 void Server::setMaxBody(Tokenizer &tok)
 {
-	if (yd::stoui(tok.getToken().c_str()) < static_cast<unsigned int>(0) || yd::stoui(tok.getToken().c_str()) > static_cast<unsigned int>(4294967295))
-		throw(FormatError(tok.getToken(), "maxbody must be positive number and inferior to 4,294,967,295"));
 	_max_body_size = yd::stoui(tok.getToken().c_str());
 }
 
