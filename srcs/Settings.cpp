@@ -309,8 +309,10 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 		{
 			if (!this->checkextension(client._req.method.path).empty())
 				client.status_code = 404;
-			if (!this->config.getDirectoryListing(client._req.method.path).empty())
+			else if (!this->config.getDirectoryListing(client._req.method.path).empty())
 				folder_gestion(client);
+			else 
+				client.status_code = 404;
 		}
 	}
 	else if (client.status_code == 200)

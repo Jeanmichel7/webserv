@@ -11,7 +11,7 @@
 
 #define RED "\e[0;31m"
 #define DEF "\e[0m"
-#define ONE_PORT_PER_CONFIG 1
+#define ONE_PORT_PER_CONFIG 0
 
 struct Methods
 {

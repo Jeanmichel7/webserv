@@ -45,23 +45,28 @@ bool Config::selectServ(const uint32_t &int_ip ,const uint16_t &port, const std:
 		if ((uint32_t)_server[i].getIp() == convert_ip && (uint32_t)_server[i].getPort() == port)
 		{
 			if (!first_serv)
+			{
 				_server_selected = &_server[i];
+				first_serv = 1;
+			}
 			const std::string *server_name = _server[i].getServerName();
 			if ((*server_name).size() > 0)
 			{
-				for (int j = 0; (*server_name)[j] == host[j + 1]; j++)
+				for (int j = 0; (*server_name)[j] == host[j]; j++)
 				{
-					if ((*server_name)[j] == '\0' && (host[j + 1] == '/' || host[j + 1] == '\0'))
+					if ((*server_name)[j] == '\0' && host[j] == '\0')
 					{
 						_server_selected = &_server[i];
-						break;
+						return (1);
 					}
 				}
 			}
-			return (1);
 		}
 	}
-	return (0);
+	if (first_serv == 0)
+		return (0);
+	else
+		return (1);
 }
 const Location *Config::getLocation(const std::string &path) const
 {
@@ -867,7 +872,6 @@ Tokenizer::Tokenizer(Config &config, std::string const &path)
 	if (atLeastOneServer == 0)
 		throw(ConfigurationError("Webserv need at least one server configure to working"));
 	std::vector<Server>::iterator start = config._server.begin();
-	uint32_t ip = (*start).getIp();
 	/*for (; start != config._server.end(); start++)
 	{
 		if ((*start).getIp() != ip)

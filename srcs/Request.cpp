@@ -1202,7 +1202,7 @@ bool Request::check_header_buffer(string buffer, Config &config, sockaddr_in &cl
 	tmp.header.brut_header = buffer;
 	tmp.header.parseHeader();
 
-	config.selectServ(client_net.sin_addr.s_addr, ntohs(client_net.sin_port), tmp.method.path);
+	config.selectServ(client_net.sin_addr.s_addr, ntohs(client_net.sin_port), tmp.header.host);
 	if (tmp.header.content_length == "")
 		return 0;
 
