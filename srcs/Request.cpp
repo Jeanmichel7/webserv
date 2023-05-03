@@ -724,9 +724,7 @@ bool Header::parseHeader(void)
 	while ((pos = str.find("\r\n")) != string::npos)
 	{
 		line = str.substr(0, pos);
-		// std::cout << "line : " << line << std::endl;
 		str.erase(0, pos + 2);
-
 		if ((pos = line.find(": ")) != string::npos)
 		{
 			key = line.substr(0, pos);

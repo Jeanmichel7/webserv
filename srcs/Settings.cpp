@@ -369,12 +369,14 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 
 void Settings::del(Sbuffer &client)
 {
+	cerr << "DELETE\n" << endl;
 	if (!this->config.getMethod(client._req.method.path).isdelete)
 	{
 		client.status_code = 405;
 		return;
 	}
 	string path_file = this->config.getFile(client._req.method.path)->c_str();
+	std::cerr << "DELETE path file" << path_file << std::endl;
 	std::ifstream infile(path_file);
 	if (infile.good())
 	{
@@ -750,6 +752,7 @@ void Settings::folder_gestion(Sbuffer &client)
 
 bool Settings::checkmethod(Request const &req, Methods const &t)
 {
+	cerr << "req.method.isPost : " << req.method.isDelete << std::endl;
 	if (req.method.isPost && t.ispost)
 		return (true);
 	else if (req.method.isGet && t.isget)
