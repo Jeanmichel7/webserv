@@ -301,37 +301,30 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 	}
 	else if (client.status_code == 200 && (client._req.method.isGet == true || client._req.method.isPost == true))
 	{
-		if (client._req.method.isPost == true)
-		{
-			std::cout << "test opload file\n";
-			std::string str = "";
-			
-			std::cout << "PATH" << *config.getFile(client._req.method.path) << std::endl;
-			const char *path = config.getFile(client._req.method.path)->c_str();
-			std::cerr << "ici "<< client._req.method.path << std::endl;
-			std::ofstream file(path, std::ios::binary); // open in constructor
+		if (client._req.method.isPost == true && config.getUpload(client._req.method.path)) {
+			std::string str = client._buffer.data();
+			// std::cout << "str : " << str << std::endl;
+			std::string::size_type pos = 0;
+			std::string filename = "";
+
+			if((pos = str.find("filename=\"")) != string::npos){
+				filename = str.substr(pos + 10);
+				if((pos = filename.find("\"")) != string::npos)
+					filename = filename.substr(0, pos);
+			}
+			else {
+				std::cerr << "Error file doesn't not have a name\n";
+			}
+			const char *path = config.getPath(client._req.method.path)->c_str();
+			std::ofstream file(path + filename, std::ios::binary); // open in constructor
 
 			if(!file.is_open()) {
-				cerr << "error open file\n";
+				cerr << "error creating file\n";
 			}
 			std::cerr << client._buffer.size() << std::endl;
 			file.write(client._buffer.data(), client._buffer.size());
 			client._buffer.clear();
-
-
-
-			// config : body_size
-			// name programme
-			// dl file
-			// code erreur not implemented
-
-
-
-			// for (std::vector<char>::iterator it = client._buffer.begin(); it != client._buffer.end(); ++it)
-			// 	str += *it;
-			// std::cerr << str << std::endl;
-			// std::string data(str);
-			// file << data;
+			client.status_code = 201;
 		}
 		else {
 			char *file = (char *)this->config.getFile(client._req.method.path)->c_str();

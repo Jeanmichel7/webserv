@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jrasser <jrasser@42.fr>                    +#+  +:+       +#+         #
+#    By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/14 12:33:34 by lomasson          #+#    #+#              #
-#    Updated: 2023/04/04 19:35:49 by ydumaine         ###   ########.fr        #
+#    Updated: 2023/05/04 20:20:05 by ydumaine         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,7 +26,7 @@ SRCS_SERVER 	= srcs/server.cpp \
 								
 
 NAME_CLIENT 	= client
-NAME_SERVER 	= server
+NAME_SERVER 	= webserv
 
 OBJS_DIR			= objs/
 OBJS_CLIENT		= $(addprefix $(OBJS_DIR), $(notdir $(SRCS_CLIENT:.cpp=.o)))

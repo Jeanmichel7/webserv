@@ -109,6 +109,30 @@ const std::string *Config::getFile(const std::string &path)
 		}
 	}
 }
+
+const std::string *Config::getPath(const std::string &path)
+{
+	const Location *loc = getLocation(path);
+	if (loc == NULL)
+		return (NULL);
+	else
+	{
+		_buffer = path;
+		for (int i = 1; path[i]; i++)
+		{
+			if (path[i] != loc->_path[i])
+			{
+				if (i > 1)
+					_buffer.erase(0, i);
+				break;
+			}
+		}
+		_buffer = (loc->_root);
+		if (_buffer.back() != '/')
+			_buffer.push_back('/');
+		return (&_buffer);
+		}
+}
 Methods Config::getMethod(const std::string &path) const
 {
 	const Location *loc = getLocation(path);
@@ -160,12 +184,14 @@ unsigned int Config::getMaxSize() const
 	return (_server_selected->getMaxBodySize());
 }
 
-const std::string *Config::getUpload(const std::string &path) const
+bool Config::getUpload(const std::string &path) const
 {
 	const Location *loc = getLocation(path);
 	if (loc == NULL)
-		return (NULL);
-	return (&loc->_upload_file);
+		return (0);
+	if (loc->_upload_allow == 1)
+		return (1);
+	return (0);
 }
 
 const std::string *Config::getName() const
@@ -540,10 +566,12 @@ void Location::setRoot(Tokenizer &tok)
 
 void Location::setUploadFile(Tokenizer &tok)
 {
-	if (!yd::isValidPathDir(tok.getToken()))
-		throw(FormatError(tok.getToken(), "// forbiden in a path"));
-	else
-		_upload_file = tok.getToken();
+	if (tok.getToken() == "on")
+	{
+		this->_upload_allow = true;
+	}
+	else if (tok.getToken() != "off")
+		throw(FormatError(tok.getToken(), "Unexcpected token, expected \"on\" or \"off\""));
 }
 
 void Location::setPath(Tokenizer &tok)
@@ -558,7 +586,7 @@ void Location::setPath(Tokenizer &tok)
 		_path = tok.getToken();
 }
 
-Location::Location() : _upload_file(), _default_file(), _root(), _path(), _redirection_url(), _redirection_type(),
+Location::Location() : _upload_allow(false), _default_file(), _root(), _path(), _redirection_url(), _redirection_type(),
 						 _cgi(), _is_get(), _is_post(), _is_delete(), _directory_listing()
 {
 	_tokens["root"] = &Location::setRoot;
@@ -737,7 +765,7 @@ void Server::setError(Tokenizer &tok)
 		throw(ConfigurationError("redefinition of error page"));
 }
 
-Server::Server() : _server_name(), _port(INT_MAX), _ip(0), _max_body_size(4096),
+Server::Server() : _server_name(), _port(INT_MAX), _ip(0), _max_body_size(std::numeric_limits<size_t>::max()),
 									 _error_pages(), _locations(), _tokens()
 {
 	_tokens["server_name"] = &Server::setServerName;

@@ -53,7 +53,7 @@ public:
 	void setRedirection(Tokenizer &tok);
 	std::string const *getCgi(std::string const &cgi) const;
 	void (Location::*selectSetter(std::string const &token))(Tokenizer &tok);
-	std::string _upload_file;
+	bool _upload_allow;
 	std::string _default_file;
 	std::string _root;
 	std::string _path;
@@ -124,10 +124,11 @@ public:
 	Config(const std::string &path);
 	bool selectServ(const uint32_t &ip, const uint16_t &port, const std::string &host);
 	const std::string *getFile(const std::string &path);
+	const std::string *getPath(const std::string &path);
 	Methods getMethod(const std::string &path) const;
 	const std::string *getError(const unsigned int error) const;
 	const std::string *getCgi(const std::string &path, const std::string &cgi) const;
-	const std::string *getUpload(const std::string &path) const;
+	bool getUpload(const std::string &path) const;
 	const std::string getRedirectionUrl(const std::string &path);
 	const std::string getRedirectionType(const std::string &path);
 	const std::vector<Server> &getServerTab() const;
