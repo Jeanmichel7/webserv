@@ -522,7 +522,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 	}
 	if (sbuffer._status == PURGE_REQUIRED)
 	{
-		std::cout << o_read << std::endl;
+		// std::cout << o_read << std::endl;
 		if (o_read < 8197)
 		{
 			sbuffer._buffer.clear();
@@ -752,7 +752,7 @@ void Settings::folder_gestion(Sbuffer &client)
 
 bool Settings::checkmethod(Request const &req, Methods const &t)
 {
-	cerr << "req.method.isPost : " << req.method.isDelete << std::endl;
+	// cerr << "req.method.isPost : " << req.method.isDelete << std::endl;
 	if (req.method.isPost && t.ispost)
 		return (true);
 	else if (req.method.isGet && t.isget)
