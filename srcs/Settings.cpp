@@ -691,7 +691,9 @@ bool Settings::parseRequest(Sbuffer &client, sockaddr_in &client_net)
 	else if (client._req.method.protocole != "HTTP/1.1")
 		client.status_code = 400;
 	else if (!client._req.method.isGet && !client._req.method.isPost && !client._req.method.isDelete)
-		client.status_code = 405;
+	{
+		client.status_code = 501;
+	}
 	else if (!this->config.selectServ(client_net.sin_addr.s_addr, ntohs(client_net.sin_port), client._req.header.host))
 		client.status_code = 400;
 	else if (!this->checkmethod(client._req, this->config.getMethod(client._req.method.path)))
