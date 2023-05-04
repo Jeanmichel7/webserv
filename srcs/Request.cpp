@@ -86,33 +86,33 @@ bool Method::parseMethod(void)
 	}
 	this->protocole = str.substr(0);
 
-	if (this->checkType() || this->checkUri() || this->checkProtocole())
+	if (this->checkUri() || this->checkProtocole())
 	{
 		return 1;
 	}
 	return 0;
 }
 
-bool Method::checkType(void)
-{
-	if (this->type == "GET")
-	{
-		this->isGet = true;
-	}
-	else if (this->type == "POST")
-	{
-		this->isPost = true;
-	}
-	else if (this->type == "DELETE")
-	{
-		this->isDelete = true;
-	}
-	else
-	{
-		return 1;
-	}
-	return 0;
-}
+// bool Method::checkType(void)
+// {
+// 	if (this->type == "GET")
+// 	{
+// 		this->isGet = true;
+// 	}
+// 	else if (this->type == "POST")
+// 	{
+// 		this->isPost = true;
+// 	}
+// 	else if (this->type == "DELETE")
+// 	{
+// 		this->isDelete = true;
+// 	}
+// 	else
+// 	{
+// 		return 1;
+// 	}
+// 	return 0;
+// }
 
 bool Method::checkUri(void)
 {

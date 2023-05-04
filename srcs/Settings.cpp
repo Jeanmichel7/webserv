@@ -301,18 +301,52 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 	}
 	else if (client.status_code == 200 && (client._req.method.isGet == true || client._req.method.isPost == true))
 	{
-		char *file = (char *)this->config.getFile(client._req.method.path)->c_str();
-		if (file[0] == '/')
-			file++;
-		fd.open(file, std::fstream::in | std::fstream::out);
-		if (!fd.is_open())
+		if (client._req.method.isPost == true)
 		{
-			if (!this->checkextension(client._req.method.path).empty())
-				client.status_code = 404;
-			else if (!this->config.getDirectoryListing(client._req.method.path).empty())
-				folder_gestion(client);
-			else 
-				client.status_code = 404;
+			std::cout << "test opload file\n";
+			std::string str = "";
+			
+			std::cout << "PATH" << *config.getFile(client._req.method.path) << std::endl;
+			const char *path = config.getFile(client._req.method.path)->c_str();
+			std::cerr << "ici "<< client._req.method.path << std::endl;
+			std::ofstream file(path, std::ios::binary); // open in constructor
+
+			if(!file.is_open()) {
+				cerr << "error open file\n";
+			}
+			std::cerr << client._buffer.size() << std::endl;
+			file.write(client._buffer.data(), client._buffer.size());
+			client._buffer.clear();
+
+
+
+			// config : body_size
+			// name programme
+			// dl file
+			// code erreur not implemented
+
+
+
+			// for (std::vector<char>::iterator it = client._buffer.begin(); it != client._buffer.end(); ++it)
+			// 	str += *it;
+			// std::cerr << str << std::endl;
+			// std::string data(str);
+			// file << data;
+		}
+		else {
+			char *file = (char *)this->config.getFile(client._req.method.path)->c_str();
+			if (file[0] == '/')
+				file++;
+			fd.open(file, std::fstream::in | std::fstream::out);
+			if (!fd.is_open())
+			{
+				if (!this->checkextension(client._req.method.path).empty())
+					client.status_code = 404;
+				else if (!this->config.getDirectoryListing(client._req.method.path).empty())
+					folder_gestion(client);
+				else 
+					client.status_code = 404;
+			}
 		}
 	}
 	else if (client.status_code == 200)
@@ -354,6 +388,8 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 			client._buffer.insert(client._buffer.begin(), html_error_str.c_str(), html_error_str.c_str() + html_error_str.size());
 		}
 	}
+
+
 	if (fd.is_open())
 	{
 		client._buffer.clear();
