@@ -638,7 +638,12 @@ bool Header::checkSyntaxeAcceptEncoding(const string &line)
 
 	if ((pos = line.find(";q=")) != string::npos)
 	{
-		if (line.substr(pos + 3).find_first_not_of("0123456789.") != string::npos)
+		string test = line.substr(pos + 3);
+		// cerr << test << endl;
+		string::size_type postest = test.find_first_not_of("0123456789.");
+		// cerr << postest << endl;
+
+		if (postest != string::npos)
 			return 1;
 	}
 	return 0;
@@ -681,8 +686,8 @@ bool Header::parseAcceptEncodings(const string &value)
 		this->str_accept_encodings = "*";
 		return 0;
 	}
-	if (checkSyntaxeAcceptEncoding(str))
-		return 1;
+	// if (checkSyntaxeAcceptEncoding(str))
+	// 	return 1;
 	while ((pos = str.find(",")) != string::npos)
 	{
 		line = str.substr(0, pos);
