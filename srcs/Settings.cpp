@@ -303,13 +303,11 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 		if (client._req.method.isPost == true && config.getUpload(client._req.method.path))
 		{
 			std::string str = client._buffer.data();
-			// std::cout << "str : " << str << std::endl;
 			std::string delimiter = "\r\n\r\n";
 			std::vector<char>::iterator delimiterIter = std::search(client._buffer.begin(), client._buffer.end(), delimiter.begin(), delimiter.end());
 
 			if (delimiterIter != client._buffer.end())
 			{
-				// Delimiter found, erase the beginning part
 				client._buffer.erase(client._buffer.begin(), delimiterIter + delimiter.length());
 			}
 
@@ -317,7 +315,6 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 			delimiterIter = std::search(client._buffer.begin(), client._buffer.end(), delimiter.begin(), delimiter.end());
 			if (delimiterIter != client._buffer.end())
 			{
-				// Delimiter found, erase the ending part
 				client._buffer.erase(delimiterIter, client._buffer.end());
 			}
 
@@ -336,13 +333,12 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 				std::cerr << "Error file doesn't not have a name\n";
 			}
 			const char *path = config.getPath(client._req.method.path)->c_str();
-			std::ofstream file(path + filename, std::ios::binary); // open in constructor
+			std::ofstream file(path + filename, std::ios::binary);
 
 			if (!file.is_open())
 			{
 				cerr << "error creating file\n";
 			}
-			std::cerr << client._buffer.size() << std::endl;
 			file.write(client._buffer.data(), client._buffer.size());
 			client._buffer.clear();
 			client.status_code = 201;
