@@ -313,6 +313,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 					filename = filename.substr(0, pos);
 			}
 			else {
+				write(1, client._buffer.data(), client._buffer.size());
 				std::cerr << "Error file doesn't not have a name\n";
 			}
 			const char *path = config.getPath(client._req.method.path)->c_str();
@@ -333,6 +334,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 			fd.open(file, std::fstream::in | std::fstream::out);
 			if (!fd.is_open())
 			{
+				client._buffer.clear();
 				if (!this->checkextension(client._req.method.path).empty())
 					client.status_code = 404;
 				else if (!this->config.getDirectoryListing(client._req.method.path).empty())
@@ -663,6 +665,7 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 	{
 		if (client._body_cookie.size() > 0)
 		{
+			
 			if (send(socket, client._body_cookie.c_str(), client._body_cookie.size(), 0) <= 0)
 			{
 				client._status = SOCKET_ERROR;
