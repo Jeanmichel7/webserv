@@ -140,7 +140,7 @@ Settings::~Settings()
 {
 }
 
-Sbuffer::Sbuffer() : _req(),  time_start(), purge_last_time(), _chunk_index(), status_code(200), _add_eof(), _cgi_data(), _pid(), _status(), _total_sent()
+Sbuffer::Sbuffer() : _req(), time_start(), purge_last_time(), _chunk_index(), status_code(200), _add_eof(), _cgi_data(), _pid(), _status(), _total_sent()
 {
 }
 void Sbuffer::clean()
@@ -216,11 +216,10 @@ void Settings::generate_header(Sbuffer &client)
 {
 	std::stringstream header;
 
-
-
 	// std::cout << "generate_header\n";
 	header << "HTTP/1.1 " << this->error[client.status_code];
-	header << "\n" << this->date();
+	header << "\n"
+		   << this->date();
 
 	if (client.status_code == 301 || client.status_code == 307)
 		header << "\nLocation: " << this->config.getRedirectionUrl(client._req.method.path);
@@ -229,20 +228,20 @@ void Settings::generate_header(Sbuffer &client)
 	{
 		if (client.status_code < 400)
 			header << "\n"
-						 << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path));
+				   << "Content-Type: " << this->checkextension(*this->config.getFile(client._req.method.path));
 		else
 			header << "\n"
-						 << "Content-Type: text/html";
+				   << "Content-Type: text/html";
 	}
 	header << handleCookie(client);
 	if (client.header_script.find("Content-Length") == std::string::npos && (client._pid == 0))
 		header << "\n"
-					 << "Content-Length: " << (client._buffer.size() + client._body_cookie.size());
+			   << "Content-Length: " << (client._buffer.size() + client._body_cookie.size());
 	if (client.header_script.find("Content-Length") == std::string::npos && client._pid != 0)
 		client._add_eof = 1;
 	if (client.header_script.size() > 0)
 		header << "\n"
-					 << client.header_script;
+			   << client.header_script;
 	else
 		header << "\r\n\r\n";
 	client._header = header.str();
@@ -301,25 +300,46 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 	}
 	else if (client.status_code == 200 && (client._req.method.isGet == true || client._req.method.isPost == true))
 	{
-		if (client._req.method.isPost == true && config.getUpload(client._req.method.path)) {
+		if (client._req.method.isPost == true && config.getUpload(client._req.method.path))
+		{
 			std::string str = client._buffer.data();
 			// std::cout << "str : " << str << std::endl;
+			std::string delimiter = "\r\n\r\n";
+			std::vector<char>::iterator delimiterIter = std::search(client._buffer.begin(), client._buffer.end(), delimiter.begin(), delimiter.end());
+
+			if (delimiterIter != client._buffer.end())
+			{
+				// Delimiter found, erase the beginning part
+				client._buffer.erase(client._buffer.begin(), delimiterIter + delimiter.length());
+			}
+
+			delimiter = "\r\n--";
+			delimiterIter = std::search(client._buffer.begin(), client._buffer.end(), delimiter.begin(), delimiter.end());
+			if (delimiterIter != client._buffer.end())
+			{
+				// Delimiter found, erase the ending part
+				client._buffer.erase(delimiterIter, client._buffer.end());
+			}
+
 			std::string::size_type pos = 0;
 			std::string filename = "";
 
-			if((pos = str.find("filename=\"")) != string::npos){
+			if ((pos = str.find("filename=\"")) != string::npos)
+			{
 				filename = str.substr(pos + 10);
-				if((pos = filename.find("\"")) != string::npos)
+				if ((pos = filename.find("\"")) != string::npos)
 					filename = filename.substr(0, pos);
 			}
-			else {
+			else
+			{
 				write(1, client._buffer.data(), client._buffer.size());
 				std::cerr << "Error file doesn't not have a name\n";
 			}
 			const char *path = config.getPath(client._req.method.path)->c_str();
 			std::ofstream file(path + filename, std::ios::binary); // open in constructor
 
-			if(!file.is_open()) {
+			if (!file.is_open())
+			{
 				cerr << "error creating file\n";
 			}
 			std::cerr << client._buffer.size() << std::endl;
@@ -327,7 +347,8 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 			client._buffer.clear();
 			client.status_code = 201;
 		}
-		else {
+		else
+		{
 			char *file = (char *)this->config.getFile(client._req.method.path)->c_str();
 			if (file[0] == '/')
 				file++;
@@ -339,7 +360,7 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 					client.status_code = 404;
 				else if (!this->config.getDirectoryListing(client._req.method.path).empty())
 					folder_gestion(client);
-				else 
+				else
 					client.status_code = 404;
 			}
 		}
@@ -367,23 +388,22 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 			client._buffer.clear();
 			std::stringstream html_error;
 			html_error << "<!DOCTYPE html>\n"
-								 << "<html>\n"
-								 << "<head>\n"
-								 << "<title>" << error[client.status_code] << "</title>\n"
-								 << "</head>\n"
-								 << "<body bgcolor=\"white\">\n"
-								 << "<center>\n"
-								 << "<h1>" << error[client.status_code] << "</h1>\n"
-								 << "</center>\n"
-								 << "<hr>\n"
-								 << "<center>WebServ/1.0</center>\n"
-								 << "</body>\n"
-								 << "</html>";
+					   << "<html>\n"
+					   << "<head>\n"
+					   << "<title>" << error[client.status_code] << "</title>\n"
+					   << "</head>\n"
+					   << "<body bgcolor=\"white\">\n"
+					   << "<center>\n"
+					   << "<h1>" << error[client.status_code] << "</h1>\n"
+					   << "</center>\n"
+					   << "<hr>\n"
+					   << "<center>WebServ/1.0</center>\n"
+					   << "</body>\n"
+					   << "</html>";
 			std::string html_error_str = html_error.str();
 			client._buffer.insert(client._buffer.begin(), html_error_str.c_str(), html_error_str.c_str() + html_error_str.size());
 		}
 	}
-
 
 	if (fd.is_open())
 	{
@@ -400,7 +420,8 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 
 void Settings::del(Sbuffer &client)
 {
-	cerr << "DELETE\n" << endl;
+	cerr << "DELETE\n"
+		 << endl;
 	if (!this->config.getMethod(client._req.method.path).isdelete)
 	{
 		client.status_code = 405;
@@ -462,8 +483,8 @@ size_t Settings::read_hex_size(const std::vector<char> &data, size_t &index)
 		char current_char = data[index];
 
 		if ((current_char >= '0' && current_char <= '9') ||
-				(current_char >= 'a' && current_char <= 'f') ||
-				(current_char >= 'A' && current_char <= 'F'))
+			(current_char >= 'a' && current_char <= 'f') ||
+			(current_char >= 'A' && current_char <= 'F'))
 		{
 			size = size * 16 + std::stoi(std::string(1, current_char), nullptr, 16);
 			index++;
@@ -482,63 +503,62 @@ size_t Settings::read_hex_size(const std::vector<char> &data, size_t &index)
 }
 int Settings::process_chunks(std::vector<char> &data, size_t start_index, size_t &current_index)
 {
-    std::vector<char> output_data;
-    output_data.insert(output_data.end(), data.begin(), data.begin() + start_index); // Copie le header dans output_data
-    
-    size_t index = current_index;
-    if (current_index < start_index)
-    {
-        index = start_index;
-    }
-    else
-    {
-        index = current_index;
-    }
+	std::vector<char> output_data;
+	output_data.insert(output_data.end(), data.begin(), data.begin() + start_index); // Copie le header dans output_data
 
-    while (true)
-    {
-        size_t chunk_size = 0;
-        try
-        {
-            chunk_size = read_hex_size(data, index);
-        }
-        catch (std::runtime_error &e)
-        {
-            current_index = index;
-            return -1;
-        }
-        if (chunk_size == 0)
-        {
-            // Supprime le dernier CRLF après le chunk de taille 0 (fin des chunks)
-            if (index < data.size() && data[index] == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
-            {
-                index += 2;
-            }
-            break; // Fin des chunks
-        }
+	size_t index = current_index;
+	if (current_index < start_index)
+	{
+		index = start_index;
+	}
+	else
+	{
+		index = current_index;
+	}
 
-        if (index + chunk_size > data.size())
-        {
-            // Chunk incomplet ou dépassant la taille requise
-            current_index = index;
-            return -1;
-        }
+	while (true)
+	{
+		size_t chunk_size = 0;
+		try
+		{
+			chunk_size = read_hex_size(data, index);
+		}
+		catch (std::runtime_error &e)
+		{
+			current_index = index;
+			return -1;
+		}
+		if (chunk_size == 0)
+		{
+			// Supprime le dernier CRLF après le chunk de taille 0 (fin des chunks)
+			if (index < data.size() && data[index] == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
+			{
+				index += 2;
+			}
+			break; // Fin des chunks
+		}
 
-        // Copie du chunk (sans la valeur hexadécimale) dans output_data
-        output_data.insert(output_data.end(), data.begin() + index, data.begin() + index + chunk_size);
-        index += chunk_size;
+		if (index + chunk_size > data.size())
+		{
+			// Chunk incomplet ou dépassant la taille requise
+			current_index = index;
+			return -1;
+		}
 
-        // Supprime le CRLF après le chunk actuel
-        if (index < data.size() && data[index] == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
-        {
-            index += 2;
-        }
-    }
-    data = output_data; 
-    current_index = 0;
-    return 1;
+		// Copie du chunk (sans la valeur hexadécimale) dans output_data
+		output_data.insert(output_data.end(), data.begin() + index, data.begin() + index + chunk_size);
+		index += chunk_size;
+
+		// Supprime le CRLF après le chunk actuel
+		if (index < data.size() && data[index] == '\r' && index + 1 < data.size() && data[index + 1] == '\n')
+		{
+			index += 2;
+		}
+	}
+	data = output_data;
+	current_index = 0;
+	return 1;
 }
-
 
 void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ident, Request &req, sockaddr_in client_net)
 {
@@ -592,7 +612,7 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 		{
 			int rt = 0;
 			rt = req.isFinishedRequest(sbuffer._buffer);
-			if (rt == 1) 
+			if (rt == 1)
 			{
 				sbuffer._status = REQUEST_RECEIVED;
 			}
@@ -633,7 +653,9 @@ void Settings::reading_request(Sbuffer &sbuffer, Settings &server, uintptr_t ide
 
 void Settings::writeResponse(Sbuffer &client, int socket)
 {
-	for(int i = 0; i < 350000; i++){}
+	for (int i = 0; i < 350000; i++)
+	{
+	}
 	std::vector<char>::iterator start = client._buffer.begin();
 	size_t size_data = client._buffer.size();
 	if (client._status == BODY_SENT)
@@ -644,7 +666,7 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 		{
 			client._status = SOCKET_ERROR;
 			std::cout << socket << ": "
-								<< "Error socket when attempt to send header" << std::endl;
+					  << "Error socket when attempt to send header" << std::endl;
 			return;
 		}
 		client._status = HEADER_SENT;
@@ -657,7 +679,7 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 		{
 			client._status = SOCKET_ERROR;
 			std::cout << socket << ": "
-								<< "Error socket when attempt to send body" << std::endl;
+					  << "Error socket when attempt to send body" << std::endl;
 			return;
 		}
 	}
@@ -665,12 +687,12 @@ void Settings::writeResponse(Sbuffer &client, int socket)
 	{
 		if (client._body_cookie.size() > 0)
 		{
-			
+
 			if (send(socket, client._body_cookie.c_str(), client._body_cookie.size(), 0) <= 0)
 			{
 				client._status = SOCKET_ERROR;
 				std::cout << socket << ": "
-									<< "Error socket when attempt to send cookie" << std::endl;
+						  << "Error socket when attempt to send cookie" << std::endl;
 				return;
 			}
 		}
@@ -682,7 +704,6 @@ bool Settings::parseRequest(Sbuffer &client, sockaddr_in &client_net)
 {
 	std::fstream fd;
 	client._status = REQUEST_PARSED;
-
 
 	if (client.status_code == 413 || client.status_code == 408)
 	{
@@ -703,7 +724,8 @@ bool Settings::parseRequest(Sbuffer &client, sockaddr_in &client_net)
 		client.status_code = 405;
 	else if (check_forbidden(*this->config.getFile(client._req.method.path)) && !checkextension(*this->config.getFile(client._req.method.path)).empty())
 		client.status_code = 404;
-	else if(this->config.getRedirectionType(client._req.method.path) == "permanent") {
+	else if (this->config.getRedirectionType(client._req.method.path) == "permanent")
+	{
 		client.status_code = 301;
 		return 0;
 		// client.redir_url = this->config.getRedirectionUrl();
@@ -724,14 +746,13 @@ bool Settings::parseRequest(Sbuffer &client, sockaddr_in &client_net)
 	else
 		client.status_code = 400;
 
-	// else if (this->config._redirection_type == 'permanent') { 
+	// else if (this->config._redirection_type == 'permanent') {
 	// 	client.status_code = 301;
 	// }
 	// else if (this->config._redirection_type == 'temporary') {
 	// 	client.status_code = 307;
 	// }
 
-	
 	if (!client._req.header.connection)
 		client._add_eof = 1;
 	client._status = REQUEST_PARSED;
@@ -825,7 +846,7 @@ void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke)
 	time_t actual_time;
 	time(&actual_time);
 	std::map<int, Sbuffer>::iterator start = requests.begin();
-	for (;start != requests.end(); start++)
+	for (; start != requests.end(); start++)
 	{
 		if ((*start).second._status == PURGE_REQUIRED && difftime(actual_time, (*start).second.purge_last_time) > 2)
 		{
