@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lomasson <lomasson@student.42mulhouse.f    +#+  +:+       +#+        */
+/*   By: ydumaine <ydumaine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/13 11:44:18 by lomasson          #+#    #+#             */
-/*   Updated: 2023/04/26 16:50:13 by lomasson         ###   ########.fr       */
+/*   Updated: 2023/05/10 20:34:38 by ydumaine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,6 +122,10 @@ int main(int argc, char **argv)
 							{
 								std::cout << event[i].ident << ": Generate body " << std::endl;
 								server.generate_body(sbuffer[event[i].ident], clients[event[i].ident]);
+								if (sbuffer[event[i].ident]._status == CGI_PROCESS_LAUNCHED)
+								{
+									server.check_timeout(sbuffer, ke);
+								}
 							}
 							if (sbuffer[event[i].ident]._status == BODY_GENERATED)
 							{
@@ -152,7 +156,7 @@ int main(int argc, char **argv)
 								// std::memset(&sbuffer[event[i].ident], 0, sizeof(sbuffer[event[i].ident]));
 								sbuffer[event[i].ident].clean();
 								server.check_timeout(sbuffer, ke);
-								// sbuffer.erase(event[i].ident);
+								//  sbuffer.erase(event[i].ident);
 							}
 						}
 					}
@@ -165,6 +169,6 @@ int main(int argc, char **argv)
 	catch (const std::exception &e)
 	{
 		std::cerr << std::endl
-							<< e.what() << std::endl;
+				  << e.what() << std::endl;
 	}
 }

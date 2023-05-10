@@ -10,6 +10,10 @@ if (empty($data)) {
     exit(1);
 }
 
+// boucle infinie 
+for ($i = 0; $i != 1; $i) {
+    // Boucle vide pour ralentir le script
+}
 // Extraction de la limite multipart
 preg_match('/boundary=(.*)$/', $_SERVER['CONTENT_TYPE'], $matches);
 $boundary = $matches[1];

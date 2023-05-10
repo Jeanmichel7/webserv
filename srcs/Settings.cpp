@@ -287,6 +287,15 @@ void Settings::generate_body(Sbuffer &client, struct sockaddr_in const &client_a
 	// std::cout << "generate_body\n";
 	if (client.status_code == 200 && ((client._status == CGI_PROCESS_LAUNCHED) || (config.getCgi(client._req.method.path, yd::getExtension(client._req.method.path)) != NULL)))
 	{
+		char *file = (char *)this->config.getFile(client._req.method.path)->c_str();
+		if (file[0] == '/')
+			file++;
+		fd.open(file, std::fstream::in | std::fstream::out);
+		if (!fd.is_open())
+		{
+			client.status_code = 404;
+			return;
+		}
 		CGI::execute_cgi(this->config, client, client_addr);
 		if (client._status == CGI_PROCESS_LAUNCHED)
 			return;
@@ -850,13 +859,17 @@ void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke)
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 		}
-		if ((*start).second._buffer.size() != 0 && difftime(actual_time, (*start).second.time_start) > 30 && ((*start).second._status <= 3 && (*start).second._status > 0))
+		if (((*start).second._buffer.size() != 0 || (*start).second._status == CGI_PROCESS_LAUNCHED) && difftime(actual_time, (*start).second.time_start) > 10 && (((*start).second._status <= 3 && (*start).second._status > 0) || (*start).second._status == CGI_PROCESS_LAUNCHED))
 		{
+			(*start).second._buffer.clear();
+			if ((*start).second._status == CGI_PROCESS_LAUNCHED)
+				(*start).second.status_code = 504;
+			else
+				(*start).second.status_code = 408;
 			(*start).second._status = REQUEST_PARSED;
 			std::cout << (*start).first << ": Timed out" << std::endl;
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
-			(*start).second.status_code = 408;
 		}
 	}
 }
