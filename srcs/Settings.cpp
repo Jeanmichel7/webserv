@@ -234,7 +234,7 @@ void Settings::generate_header(Sbuffer &client)
 				   << "Content-Type: text/html";
 	}
 	header << handleCookie(client);
-	if (client.header_script.find("Content-Length") == std::string::npos && (client._pid == 0))
+	if (client.header_script.find("Content-Length") == std::string::npos && (client._pid == 0 || client.status_code == 504))
 		header << "\n"
 			   << "Content-Length: " << (client._buffer.size() + client._body_cookie.size());
 	if (client.header_script.find("Content-Length") == std::string::npos && client._pid != 0)
@@ -859,7 +859,7 @@ void Settings::check_timeout(std::map<int, Sbuffer> &requests, int ke)
 			this->set_event(ke, (*start).first, EVFILT_READ, EV_DELETE);
 			this->set_event(ke, (*start).first, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 		}
-		if (((*start).second._buffer.size() != 0 || (*start).second._status == CGI_PROCESS_LAUNCHED) && difftime(actual_time, (*start).second.time_start) > 10 && (((*start).second._status <= 3 && (*start).second._status > 0) || (*start).second._status == CGI_PROCESS_LAUNCHED))
+		if (((*start).second._buffer.size() != 0 || (*start).second._status == CGI_PROCESS_LAUNCHED) && difftime(actual_time, (*start).second.time_start) > 5 && (((*start).second._status <= 3 && (*start).second._status > 0) || (*start).second._status == CGI_PROCESS_LAUNCHED))
 		{
 			(*start).second._buffer.clear();
 			if ((*start).second._status == CGI_PROCESS_LAUNCHED)
