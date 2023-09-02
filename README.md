@@ -54,3 +54,14 @@ Le fichier de configuration permet de:
 - Définir les pages d'erreur par défaut.
 - Limiter la taille du body des clients.
 - Configurer diverses routes avec diverses règles.
+  
+## 🤝 Contributeurs
+
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/Jeanmichel7"><img src="https://github.com/Jeanmichel7.png?size=100" width="100px;" alt=""/><br /><sub><b>Jeanmichel7</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/YannUFLL"><img src="https://github.com/YannUFLL.png?size=100" width="100px;" alt=""/><br /><sub><b>YannUFLL</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/lomasson"><img src="https://github.com/lomasson.png?size=100" width="100px;" alt=""/><br /><sub><b>lomasson</b></sub></a><br /></td>
+
+  </tr>
+</table>
